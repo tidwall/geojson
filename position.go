@@ -130,7 +130,6 @@ func fillPositionBytes(b []byte, isCordZ bool) (Position, []byte, error) {
 func (p Position) ExternalJSON() string {
 	if p.Z != 0 {
 		return `{"lat":` + strconv.FormatFloat(p.Y, 'f', -1, 64) + `,"lon":` + strconv.FormatFloat(p.X, 'f', -1, 64) + `,"z":` + strconv.FormatFloat(p.Z, 'f', -1, 64) + `}`
-	} else {
-		return `{"lat":` + strconv.FormatFloat(p.Y, 'f', -1, 64) + `,"lon":` + strconv.FormatFloat(p.X, 'f', -1, 64) + `}`
 	}
+	return `{"lat":` + strconv.FormatFloat(p.Y, 'f', -1, 64) + `,"lon":` + strconv.FormatFloat(p.X, 'f', -1, 64) + `}`
 }

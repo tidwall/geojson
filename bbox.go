@@ -139,6 +139,7 @@ func (b BBox) ExternalJSON() string {
 	return `{"sw":` + sw.ExternalJSON() + `,"ne":` + ne.ExternalJSON() + `}`
 }
 
+// Sparse returns back an evenly distributed number of sub bboxs.
 func (b BBox) Sparse(amount byte) []BBox {
 	if amount == 0 {
 		return []BBox{b}

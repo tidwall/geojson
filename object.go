@@ -421,6 +421,7 @@ func intersectsObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin f
 	}
 }
 
+// CirclePolygon returns a Polygon around the radius.
 func CirclePolygon(x, y, meters float64, steps int) Polygon {
 	if steps < 3 {
 		steps = 3

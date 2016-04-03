@@ -72,7 +72,7 @@ func Decode(geohash string) (lat, lon float64, err error) {
 	return (neLat-swLat)/2 + swLat, (neLon-swLon)/2 + swLon, nil
 }
 
-// Returns SW/NE latitude/longitude bounds of specified geohash.
+// Bounds returns SW/NE latitude/longitude bounds of specified geohash.
 func Bounds(geohash string) (swLat, swLon, neLat, neLon float64, err error) {
 	geohash = strings.ToLower(geohash)
 	var evenBit = true
