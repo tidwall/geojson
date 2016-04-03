@@ -17,7 +17,7 @@ func TestCirclePolygon(t *testing.T) {
 	}
 	rect := Polygon{
 		Coordinates: [][]Position{
-			[]Position{
+			{
 				{X: -120, Y: 20, Z: 0},
 				{X: -120, Y: 40, Z: 0},
 				{X: -100, Y: 40, Z: 0},

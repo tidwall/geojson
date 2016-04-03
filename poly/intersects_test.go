@@ -78,13 +78,13 @@ func TestIntersectsShapes(t *testing.T) {
 
 	testIntersectsShapes(t,
 		Polygon{P(0, 0), P(0, 6), P(6, 0), P(0, 0)},
-		[]Polygon{Polygon{P(1, 1), P(1, 2), P(2, 2), P(2, 1), P(1, 1)}},
+		[]Polygon{{P(1, 1), P(1, 2), P(2, 2), P(2, 1), P(1, 1)}},
 		Polygon{P(0.5, 0.5), P(0.5, 4.5), P(4.5, 0.5), P(0.5, 0.5)},
 		true)
 
 	testIntersectsShapes(t,
 		Polygon{P(0, 0), P(0, 10), P(10, 10), P(10, 0), P(0, 0)},
-		[]Polygon{Polygon{P(2, 2), P(2, 6), P(6, 6), P(6, 2), P(2, 2)}},
+		[]Polygon{{P(2, 2), P(2, 6), P(6, 6), P(6, 2), P(2, 2)}},
 		Polygon{P(1, 1), P(1, 9), P(9, 9), P(9, 1), P(1, 1)},
 		true)
 }

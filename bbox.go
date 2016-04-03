@@ -117,11 +117,11 @@ func (b BBox) union(bbox BBox) BBox {
 
 func (b BBox) exterior() []Position {
 	return []Position{
-		Position{b.Min.X, b.Min.Y, 0},
-		Position{b.Min.X, b.Max.Y, 0},
-		Position{b.Max.X, b.Max.Y, 0},
-		Position{b.Max.X, b.Min.Y, 0},
-		Position{b.Min.X, b.Min.Y, 0},
+		{b.Min.X, b.Min.Y, 0},
+		{b.Min.X, b.Max.Y, 0},
+		{b.Max.X, b.Max.Y, 0},
+		{b.Max.X, b.Min.Y, 0},
+		{b.Min.X, b.Min.Y, 0},
 	}
 }
 
