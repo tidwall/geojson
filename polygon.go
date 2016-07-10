@@ -69,6 +69,11 @@ func (g Polygon) JSON() string {
 	return level3JSON("Polygon", g.Coordinates, g.BBox)
 }
 
+// String returns a string representation of the object. This might be JSON or something else.
+func (g Polygon) String() string {
+	return g.JSON()
+}
+
 // Bytes is the bytes representation of the object.
 func (g Polygon) Bytes() []byte {
 	return level3Bytes(polygon, g.Coordinates, g.BBox)
@@ -201,4 +206,9 @@ func (g Polygon) KML() string {
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g Polygon) IsBBoxDefined() bool {
 	return g.BBox != nil
+}
+
+// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+func (g Polygon) IsGeometry() bool {
+	return true
 }

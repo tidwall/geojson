@@ -126,6 +126,11 @@ func (g GeometryCollection) JSON() string {
 	return buf.String()
 }
 
+// String returns a string representation of the object. This might be JSON or something else.
+func (g GeometryCollection) String() string {
+	return g.JSON()
+}
+
 // Bytes is the bytes representation of the object.
 func (g GeometryCollection) Bytes() []byte {
 	var buf bytes.Buffer
@@ -247,4 +252,9 @@ func (g GeometryCollection) Nearby(center Position, meters float64) bool {
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g GeometryCollection) IsBBoxDefined() bool {
 	return g.BBox != nil
+}
+
+// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+func (g GeometryCollection) IsGeometry() bool {
+	return true
 }

@@ -56,6 +56,11 @@ func (g LineString) JSON() string {
 	return level2JSON("LineString", g.Coordinates, g.BBox)
 }
 
+// String returns a string representation of the object. This might be JSON or something else.
+func (g LineString) String() string {
+	return g.JSON()
+}
+
 // Bytes is the bytes representation of the object.
 func (g LineString) Bytes() []byte {
 	return level2Bytes(lineString, g.Coordinates, g.BBox)
@@ -125,4 +130,9 @@ func (g LineString) Nearby(center Position, meters float64) bool {
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g LineString) IsBBoxDefined() bool {
 	return g.BBox != nil
+}
+
+// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+func (g LineString) IsGeometry() bool {
+	return true
 }

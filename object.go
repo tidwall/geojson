@@ -76,6 +76,8 @@ type Object interface {
 	CalculatedPoint() Position
 	// JSON is the json representation of the object. This might not be exactly the same as the original.
 	JSON() string
+	// String returns a string represenation of the object. This may be JSON or something else.
+	String() string
 	// Bytes is the bytes representation of the object.
 	Bytes() []byte
 	// PositionCount return the number of coordinates.
@@ -88,6 +90,8 @@ type Object interface {
 	Geohash(precision int) (string, error)
 	// IsBBoxDefined returns true if the object has a defined bbox.
 	IsBBoxDefined() bool
+	// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+	IsGeometry() bool
 }
 
 func writeHeader(buf *bytes.Buffer, objType byte, bbox *BBox, isCordZ bool) {

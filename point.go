@@ -55,6 +55,11 @@ func (g Point) JSON() string {
 	return level1JSON("Point", g.Coordinates, g.BBox)
 }
 
+// String returns a string representation of the object. This might be JSON or something else.
+func (g Point) String() string {
+	return g.JSON()
+}
+
 // Bytes is the bytes representation of the object.
 func (g Point) Bytes() []byte {
 	return level1Bytes(point, g.Coordinates, g.BBox)
@@ -134,4 +139,9 @@ func (g Point) Nearby(center Position, meters float64) bool {
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g Point) IsBBoxDefined() bool {
 	return g.BBox != nil
+}
+
+// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+func (g Point) IsGeometry() bool {
+	return true
 }
