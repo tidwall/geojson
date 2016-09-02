@@ -7,6 +7,12 @@ func (p Point) Intersects(exterior Polygon, holes []Polygon) bool {
 
 // Intersects detects if a polygon intersects another polygon
 func (shape Polygon) Intersects(exterior Polygon, holes []Polygon) bool {
+	return shape.doesIntersects(false, exterior, holes)
+}
+func (shape Polygon) LineStringIntersects(exterior Polygon, holes []Polygon) bool {
+	return shape.doesIntersects(true, exterior, holes)
+}
+func (shape Polygon) doesIntersects(isLineString bool, exterior Polygon, holes []Polygon) bool {
 	switch len(shape) {
 	case 0:
 		return false
@@ -30,7 +36,6 @@ func (shape Polygon) Intersects(exterior Polygon, holes []Polygon) bool {
 	if !shape.Rect().IntersectsRect(exterior.Rect()) {
 		return false
 	}
-
 	for i := 0; i < len(shape); i++ {
 		for j := 0; j < len(exterior); j++ {
 			if lineintersects(
@@ -49,10 +54,11 @@ func (shape Polygon) Intersects(exterior Polygon, holes []Polygon) bool {
 	if shape.Inside(exterior, nil) {
 		return true
 	}
-	if exterior.Inside(shape, nil) {
-		return true
+	if !isLineString {
+		if exterior.Inside(shape, nil) {
+			return true
+		}
 	}
-
 	return false
 }
 

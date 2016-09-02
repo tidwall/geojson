@@ -109,11 +109,11 @@ func (g LineString) Within(o Object) bool {
 func (g LineString) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
-			return polyPositions(g.Coordinates).Intersects(polyExteriorHoles(v.Coordinates))
+			return polyPositions(g.Coordinates).LineStringIntersects(polyExteriorHoles(v.Coordinates))
 		},
 		func(v MultiPolygon) bool {
 			for _, c := range v.Coordinates {
-				if polyPositions(g.Coordinates).Intersects(polyExteriorHoles(c)) {
+				if polyPositions(g.Coordinates).LineStringIntersects(polyExteriorHoles(c)) {
 					return true
 				}
 			}
