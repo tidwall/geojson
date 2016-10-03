@@ -163,8 +163,8 @@ func (b BBox) Sparse(amount byte) []BBox {
 	for y := b.Min.Y; y < b.Max.Y; y += ysize {
 		for x := b.Min.X; x < b.Max.X; x += xsize {
 			bboxes = append(bboxes, BBox{
-				Min: Position{X: x, Y: y, Z: 0},
-				Max: Position{X: x + xsize, Y: y + ysize, Z: 0},
+				Min: Position{X: x, Y: y, Z: b.Min.Z},
+				Max: Position{X: x + xsize, Y: y + ysize, Z: b.Max.Z},
 			})
 		}
 	}
