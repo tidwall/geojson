@@ -177,5 +177,8 @@ func BBoxesFromCenter(lat, lon, meters float64) (outer BBox) {
 	outer.Min.Y, _ = geo.DestinationPoint(lat, lon, meters, 180)
 	_, outer.Min.X = geo.DestinationPoint(lat, lon, meters, 270)
 	_, outer.Max.X = geo.DestinationPoint(lat, lon, meters, 90)
+	if outer.Min.X > outer.Max.X {
+		outer.Min.X = -(360 - outer.Min.X)
+	}
 	return outer
 }
