@@ -3,8 +3,8 @@ package geojson
 import (
 	"bytes"
 	"strconv"
+	"math"
 
-	"github.com/tidwall/tile38/geojson/geo"
 	"github.com/tidwall/tile38/geojson/poly"
 )
 
@@ -173,12 +173,87 @@ func (b BBox) Sparse(amount byte) []BBox {
 
 // BBoxesFromCenter calculates the bounding box surrounding a circle.
 func BBoxesFromCenter(lat, lon, meters float64) (outer BBox) {
-	outer.Max.Y, _ = geo.DestinationPoint(lat, lon, meters, 0)
-	outer.Min.Y, _ = geo.DestinationPoint(lat, lon, meters, 180)
-	_, outer.Min.X = geo.DestinationPoint(lat, lon, meters, 270)
-	_, outer.Max.X = geo.DestinationPoint(lat, lon, meters, 90)
-	if outer.Min.X > outer.Max.X {
-		outer.Min.X = -(360 - outer.Min.X)
+
+	outer.Min.Y, outer.Min.X, outer.Max.Y, outer.Max.X = BBoxBounds(lat, lon, meters)
+	if outer.Min.X == outer.Max.X {
+		switch outer.Min.X {
+		case -180:
+			outer.Max.X = 180
+		case 180:
+			outer.Min.X = -180
+		}
 	}
+
 	return outer
+}
+
+func BBoxBounds(lat, lon, meters float64) (float64, float64, float64, float64) {
+
+	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Latitude
+	r := meters / earthRadius // angular radius
+
+	φ1 := toRadians(lat)
+	λ1 := toRadians(lon)
+
+	latMin := φ1 - r
+	latMax := φ1 + r
+
+	latT   := math.Asin(math.Sin(φ1) / math.Cos(r))
+	lonΔ   := math.Acos(( math.Cos(r) - math.Sin(latT) * math.Sin(φ1)) / (math.Cos(latT) * math.Cos(φ1) ))
+
+	lonMin := λ1 - lonΔ
+	lonMax := λ1 + lonΔ
+
+	// Adjust for north poll
+	if latMax > math.Pi/2 {
+
+		lonMin = -math.Pi
+
+		latMax = math.Pi/2
+		lonMax = math.Pi
+	}
+
+	// Adjust for south poll
+	if latMin < -math.Pi/2 {
+
+		latMin = -math.Pi/2
+		lonMin = -math.Pi
+
+		lonMax = math.Pi
+	}
+
+	if lonMin < -math.Pi || lonMax > math.Pi {
+		lonMin = -math.Pi
+		lonMax = math.Pi
+	}
+
+/*
+	// Consider splitting into two bboxes and using the below checks and erasing above block for performance. See http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
+
+	if lonMin < -math.Pi {
+// box 1:
+		latMin = latMin
+		latMax = latMax
+		lonMin += 2*math.Pi
+		lonMax = math.Pi
+// box 2:
+		latMin = latMin
+		latMax = latMax
+		lonMin = -math.Pi
+		lonMax = lonMax
+	}
+
+	if lonMax > math.Pi {
+// box 1:
+		lonMax = -math.Pi
+// box 2:
+		lonMin = -math.Pi
+		lonMax -= 2*math.Pi
+	}
+*/
+
+	lonMin = math.Mod(lonMin+3*math.Pi, 2*math.Pi) - math.Pi // normalise to -180..+180°
+	lonMax = math.Mod(lonMax+3*math.Pi, 2*math.Pi) - math.Pi
+
+	return toDegrees(latMin), toDegrees(lonMin), toDegrees(latMax), toDegrees(lonMax)
 }
