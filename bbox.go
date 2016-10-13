@@ -241,7 +241,7 @@ func BBoxBounds(lat, lon, meters float64) (latMin, lonMin, latMax, lonMax float6
 		lonMax = lonMax
 	}
 
-	// Adjust for wraparound if minimum longitude is greater than 180 degrees.
+	// Adjust for wraparound if maximum longitude is greater than 180 degrees.
 	if lonMax > math.Pi {
 // box 1:
 		latMin = latMin
