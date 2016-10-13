@@ -187,49 +187,47 @@ func BBoxesFromCenter(lat, lon, meters float64) (outer BBox) {
 	return outer
 }
 
-func BBoxBounds(lat, lon, meters float64) (float64, float64, float64, float64) {
+func BBoxBounds(lat, lon, meters float64) (latMin, lonMin, latMax, lonMax float64) {
 
 	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Latitude
+	lat = toRadians(lat)
+	lon = toRadians(lon)
+
 	r := meters / earthRadius // angular radius
 
-	φ1 := toRadians(lat)
-	λ1 := toRadians(lon)
+	latMin = lat - r
+	latMax = lat + r
 
-	latMin := φ1 - r
-	latMax := φ1 + r
+	latT := math.Asin(math.Sin(lat) / math.Cos(r))
+	lonΔ := math.Acos(( math.Cos(r) - math.Sin(latT) * math.Sin(lat)) / (math.Cos(latT) * math.Cos(lat) ))
 
-	latT   := math.Asin(math.Sin(φ1) / math.Cos(r))
-	lonΔ   := math.Acos(( math.Cos(r) - math.Sin(latT) * math.Sin(φ1)) / (math.Cos(latT) * math.Cos(φ1) ))
-
-	lonMin := λ1 - lonΔ
-	lonMax := λ1 + lonΔ
+	lonMin = lon - lonΔ
+	lonMax = lon + lonΔ
 
 	// Adjust for north poll
 	if latMax > math.Pi/2 {
-
 		lonMin = -math.Pi
-
 		latMax = math.Pi/2
 		lonMax = math.Pi
 	}
 
 	// Adjust for south poll
 	if latMin < -math.Pi/2 {
-
 		latMin = -math.Pi/2
 		lonMin = -math.Pi
-
 		lonMax = math.Pi
 	}
 
+	// Adjust for wraparound. Remove this if the commented-out condition below this block is added.
 	if lonMin < -math.Pi || lonMax > math.Pi {
 		lonMin = -math.Pi
 		lonMax = math.Pi
 	}
 
 /*
-	// Consider splitting into two bboxes and using the below checks and erasing above block for performance. See http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
+	// Consider splitting area into two bboxes, using the below checks, and erasing above block for performance. See http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
 
+	// Adjust for wraparound if minimum longitude is less than -180 degrees.
 	if lonMin < -math.Pi {
 // box 1:
 		latMin = latMin
@@ -243,10 +241,16 @@ func BBoxBounds(lat, lon, meters float64) (float64, float64, float64, float64) {
 		lonMax = lonMax
 	}
 
+	// Adjust for wraparound if minimum longitude is greater than -180 degrees.
 	if lonMax > math.Pi {
 // box 1:
+		latMin = latMin
+		latMax = latMax
+		lonMin = lonMin
 		lonMax = -math.Pi
 // box 2:
+		latMin = latMin
+		latMax = latMax
 		lonMin = -math.Pi
 		lonMax -= 2*math.Pi
 	}
