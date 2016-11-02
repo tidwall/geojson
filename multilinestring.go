@@ -67,10 +67,6 @@ func (g MultiLineString) String() string {
 	return g.JSON()
 }
 
-// Bytes is the bytes representation of the object.
-func (g MultiLineString) Bytes() []byte {
-	return level3Bytes(multiLineString, g.Coordinates, g.BBox)
-}
 func (g MultiLineString) bboxPtr() *BBox {
 	return g.BBox
 }

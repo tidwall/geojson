@@ -59,10 +59,6 @@ func (g MultiPoint) String() string {
 	return g.JSON()
 }
 
-// Bytes is the bytes representation of the object.
-func (g MultiPoint) Bytes() []byte {
-	return level2Bytes(multiPoint, g.Coordinates, g.BBox)
-}
 func (g MultiPoint) bboxPtr() *BBox {
 	return g.BBox
 }

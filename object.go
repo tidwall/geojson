@@ -3,11 +3,11 @@ package geojson
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/poly"
 )
 
@@ -78,8 +78,6 @@ type Object interface {
 	JSON() string
 	// String returns a string represenation of the object. This may be JSON or something else.
 	String() string
-	// Bytes is the bytes representation of the object.
-	Bytes() []byte
 	// PositionCount return the number of coordinates.
 	PositionCount() int
 	// Weight returns the in-memory size of the object.
@@ -156,13 +154,8 @@ func isLinearRing(ps []Position) bool {
 }
 
 // ObjectJSON parses geojson and returns an Object
-func ObjectJSON(s string) (Object, error) {
-	var m map[string]interface{}
-	err := json.Unmarshal([]byte(s), &m)
-	if err != nil {
-		return nil, err
-	}
-	return objectMap(m, root)
+func ObjectJSON(json string) (Object, error) {
+	return objectMap(json, root)
 }
 
 var (
@@ -172,29 +165,27 @@ var (
 	fcoll = 3 // accept only features
 )
 
-func objectMap(m map[string]interface{}, from int) (Object, error) {
+func objectMap(json string, from int) (Object, error) {
 	var err error
-	typ, ok := m["type"].(string)
-	if !ok {
+	res := gjson.Get(json, "type")
+	if res.Type != gjson.String {
 		return nil, errInvalidTypeMember
 	}
-
+	typ := res.String()
 	if from != root {
-		ok = false
 		switch from {
 		case gcoll, feat:
 			switch typ {
+			default:
+				return nil, fmt.Errorf(fmtErrTypeIsUnknown, typ)
 			case "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection":
-				ok = true
 			}
 		case fcoll:
 			switch typ {
+			default:
+				return nil, fmt.Errorf(fmtErrTypeIsUnknown, typ)
 			case "Feature":
-				ok = true
 			}
-		}
-		if !ok {
-			return nil, fmt.Errorf(fmtErrTypeIsUnknown, typ)
 		}
 	}
 
@@ -203,140 +194,25 @@ func objectMap(m map[string]interface{}, from int) (Object, error) {
 	default:
 		return nil, fmt.Errorf(fmtErrTypeIsUnknown, typ)
 	case "Point":
-		o, _, err = fillSimplePointOrPoint(fillLevel1Map(m))
+		o, _, err = fillSimplePointOrPoint(fillLevel1Map(json))
 	case "MultiPoint":
-		o, _, err = fillMultiPoint(fillLevel2Map(m))
+		o, _, err = fillMultiPoint(fillLevel2Map(json))
 	case "LineString":
-		o, _, err = fillLineString(fillLevel2Map(m))
+		o, _, err = fillLineString(fillLevel2Map(json))
 	case "MultiLineString":
-		o, _, err = fillMultiLineString(fillLevel3Map(m))
+		o, _, err = fillMultiLineString(fillLevel3Map(json))
 	case "Polygon":
-		o, _, err = fillPolygon(fillLevel3Map(m))
+		o, _, err = fillPolygon(fillLevel3Map(json))
 	case "MultiPolygon":
-		o, _, err = fillMultiPolygon(fillLevel4Map(m))
+		o, _, err = fillMultiPolygon(fillLevel4Map(json))
 	case "GeometryCollection":
-		o, _, err = fillGeometryCollectionMap(m)
+		o, _, err = fillGeometryCollectionMap(json)
 	case "Feature":
-		o, _, err = fillFeatureMap(m)
+		o, _, err = fillFeatureMap(json)
 	case "FeatureCollection":
-		o, _, err = fillFeatureCollectionMap(m)
+		o, _, err = fillFeatureCollectionMap(json)
 	}
 	return o, err
-}
-
-// ObjectBytes parses geojson bytes and returns an Object
-func ObjectBytes(b []byte) (Object, error) {
-	var o Object
-	var err error
-	o, b, err = objectBytes(b)
-	if err != nil {
-		return nil, err
-	}
-	if len(b) > 0 {
-		return nil, errTooMuchData
-	}
-	return o, nil
-}
-
-// ObjectAuto parses geojson bytes or json and returns an Object
-func ObjectAuto(b []byte) (Object, error) {
-	if len(b) == 0 {
-		return nil, errNotEnoughData
-	}
-	// Check both routes. Take an educated guess at which to try first.
-	var o Object
-	var err error
-	switch b[0] {
-	default:
-		o, err = ObjectBytes(b)
-		if err != nil {
-			o, err = ObjectJSON(string(b))
-		}
-	case '{', ' ', '\r', '\n':
-		o, err = ObjectJSON(string(b))
-		if err != nil {
-			o, err = ObjectBytes(b)
-		}
-	}
-	return o, err
-}
-
-func objectBytes(b []byte) (Object, []byte, error) {
-	if len(b) == 0 {
-		return nil, b, errNotEnoughData
-	}
-	var objType = b[0] & 0xF
-	var hasBBox = (b[0]>>4)&1 == 1
-	var isBBoxZ = (b[0]>>5)&1 == 1
-	var isCordZ = (b[0]>>6)&1 == 1
-	var bbox *BBox
-	b = b[1:] // strip header
-	if hasBBox {
-		bbox = &BBox{}
-		if len(b) < 8 {
-			return nil, b, errNotEnoughData
-		}
-		bbox.Min.X = math.Float64frombits(binary.LittleEndian.Uint64(b))
-		b = b[8:]
-		if len(b) < 8 {
-			return nil, b, errNotEnoughData
-		}
-		bbox.Min.Y = math.Float64frombits(binary.LittleEndian.Uint64(b))
-		b = b[8:]
-		if isBBoxZ {
-			if len(b) < 8 {
-				return nil, b, errNotEnoughData
-			}
-			bbox.Min.Z = math.Float64frombits(binary.LittleEndian.Uint64(b))
-			b = b[8:]
-		} else {
-			bbox.Min.Z = nilz
-		}
-		bbox.Max.X = math.Float64frombits(binary.LittleEndian.Uint64(b))
-		b = b[8:]
-		if len(b) < 8 {
-			return nil, b, errNotEnoughData
-		}
-		bbox.Max.Y = math.Float64frombits(binary.LittleEndian.Uint64(b))
-		b = b[8:]
-		if isBBoxZ {
-			if len(b) < 8 {
-				return nil, b, errNotEnoughData
-			}
-			bbox.Max.Z = math.Float64frombits(binary.LittleEndian.Uint64(b))
-			b = b[8:]
-		} else {
-			bbox.Max.Z = nilz
-		}
-	}
-	var err error
-	var o Object
-	switch objType {
-	default:
-		return nil, b, errors.New("invalid type")
-	case point:
-		o, b, err = fillSimplePointOrPoint(fillLevel1Bytes(b, bbox, isCordZ))
-	case multiPoint:
-		o, b, err = fillMultiPoint(fillLevel2Bytes(b, bbox, isCordZ))
-	case lineString:
-		o, b, err = fillLineString(fillLevel2Bytes(b, bbox, isCordZ))
-	case multiLineString:
-		o, b, err = fillMultiLineString(fillLevel3Bytes(b, bbox, isCordZ))
-	case polygon:
-		o, b, err = fillPolygon(fillLevel3Bytes(b, bbox, isCordZ))
-	case multiPolygon:
-		o, b, err = fillMultiPolygon(fillLevel4Bytes(b, bbox, isCordZ))
-	case geometryCollection:
-		o, b, err = fillGeometryCollectionBytes(b, bbox, isCordZ)
-	case feature:
-		o, b, err = fillFeatureBytes(b, bbox, isCordZ)
-	case featureCollection:
-		o, b, err = fillFeatureCollectionBytes(b, bbox, isCordZ)
-	}
-	if err != nil {
-		return nil, b, err
-	}
-	return o, b, nil
 }
 
 func withinObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin func(v MultiPolygon) bool) bool {
@@ -458,4 +334,13 @@ func nearbyObjectShared(g Object, x, y float64, meters float64) bool {
 	}
 	circlePoly := CirclePolygon(x, y, meters, 12)
 	return g.Intersects(circlePoly)
+}
+
+func mustMarshalString(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < ' ' || s[i] > 0x7f || s[i] == '"' {
+			return true
+		}
+	}
+	return false
 }

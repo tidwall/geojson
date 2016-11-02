@@ -2,8 +2,8 @@ package geojson
 
 import (
 	"bytes"
-	"encoding/binary"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/geohash"
 )
 
@@ -13,21 +13,25 @@ type GeometryCollection struct {
 	BBox       *BBox
 }
 
-func fillGeometryCollectionMap(m map[string]interface{}) (GeometryCollection, []byte, error) {
+func fillGeometryCollectionMap(json string) (GeometryCollection, []byte, error) {
 	var g GeometryCollection
-	switch v := m["geometries"].(type) {
+	res := gjson.Get(json, "geometries")
+	switch res.Type {
 	default:
 		return g, nil, errInvalidGeometries
-	case nil:
+	case gjson.Null:
 		return g, nil, errGeometriesRequired
-	case []interface{}:
+	case gjson.JSON:
+		if !resIsArray(res) {
+			return g, nil, errInvalidGeometries
+		}
+		v := res.Array()
 		g.Geometries = make([]Object, len(v))
-		for i, v := range v {
-			m, ok := v.(map[string]interface{})
-			if !ok {
+		for i, res := range v {
+			if res.Type != gjson.JSON {
 				return g, nil, errInvalidGeometry
 			}
-			o, err := objectMap(m, gcoll)
+			o, err := objectMap(res.Raw, gcoll)
 			if err != nil {
 				return g, nil, err
 			}
@@ -35,26 +39,8 @@ func fillGeometryCollectionMap(m map[string]interface{}) (GeometryCollection, []
 		}
 	}
 	var err error
-	g.BBox, err = fillBBox(m)
+	g.BBox, err = fillBBox(json)
 	return g, nil, err
-}
-
-func fillGeometryCollectionBytes(b []byte, bbox *BBox, isCordZ bool) (GeometryCollection, []byte, error) {
-	var err error
-	var g GeometryCollection
-	g.BBox = bbox
-	if len(b) < 4 {
-		return g, nil, errNotEnoughData
-	}
-	g.Geometries = make([]Object, int(binary.LittleEndian.Uint32(b)))
-	b = b[4:]
-	for i := 0; i < len(g.Geometries); i++ {
-		g.Geometries[i], b, err = objectBytes(b)
-		if err != nil {
-			return g, b, err
-		}
-	}
-	return g, b, nil
 }
 
 // CalculatedBBox is exterior bbox containing the object.
@@ -133,16 +119,7 @@ func (g GeometryCollection) String() string {
 
 // Bytes is the bytes representation of the object.
 func (g GeometryCollection) Bytes() []byte {
-	var buf bytes.Buffer
-	isCordZ := g.BBox.isCordZDefined()
-	writeHeader(&buf, geometryCollection, g.BBox, isCordZ)
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(len(g.Geometries)))
-	buf.Write(b)
-	for _, g := range g.Geometries {
-		buf.Write(g.Bytes())
-	}
-	return buf.Bytes()
+	return []byte(g.JSON())
 }
 func (g GeometryCollection) bboxPtr() *BBox {
 	return g.BBox

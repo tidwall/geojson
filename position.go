@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"unsafe"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/geo"
 	"github.com/tidwall/tile38/geojson/poly"
 )
@@ -75,29 +76,29 @@ func (p Position) Destination(meters, bearingDegrees float64) Position {
 	return Position{X: lon, Y: lat, Z: 0}
 }
 
-func fillPosition(v []interface{}) (Position, error) {
+func fillPosition(coords gjson.Result) (Position, error) {
 	var p Position
-	var ok bool
+	v := coords.Array()
 	switch len(v) {
 	case 0:
 		return p, errInvalidNumberOfPositionValues
 	case 1:
-		if _, ok := v[0].(float64); !ok {
+		if v[0].Type != gjson.Number {
 			return p, errInvalidPositionValue
 		}
 		return p, errInvalidNumberOfPositionValues
 	}
-	p.Z = nilz
-	if p.X, ok = v[0].(float64); !ok {
-		return p, errInvalidPositionValue
-	}
-	if p.Y, ok = v[1].(float64); !ok {
-		return p, errInvalidPositionValue
-	}
-	if len(v) > 2 {
-		if p.Z, ok = v[2].(float64); !ok {
+	for i := 0; i < len(v); i++ {
+		if v[i].Type != gjson.Number {
 			return p, errInvalidPositionValue
 		}
+	}
+	p.X = v[0].Float()
+	p.Y = v[1].Float()
+	if len(v) > 2 {
+		p.Z = v[2].Float()
+	} else {
+		p.Z = nilz
 	}
 	return p, nil
 }

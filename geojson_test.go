@@ -1,7 +1,6 @@
 package geojson
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -46,16 +45,7 @@ func testJSON(t *testing.T, jstr string) Object {
 		t.Fatal(err)
 	}
 	if !doesJSONMatch(o.JSON(), jstr) {
-		t.Fatalf("json != jstr")
-	}
-	b1 := o.Bytes()
-	o2, err := ObjectBytes(b1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	b2 := o2.Bytes()
-	if !bytes.Equal(b1, b2) {
-		t.Fatalf("b1 != b2")
+		t.Fatalf("expected '%v', got '%v'", o.JSON(), jstr)
 	}
 
 	return o
@@ -80,7 +70,7 @@ func TestInvalidJSON(t *testing.T) {
 	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,"asd"]}`, errInvalidPositionValue)
 	testInvalidJSON(t, `{"type":"Point","coordinates":[[1,2]]}`, errInvalidPositionValue)
 	testInvalidJSON(t, `{"type":"Point","coordinates":[[1,2],[1,3]]}`, errInvalidPositionValue)
-	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[1,2]}`, errCoordinatesMustBeArray)
+	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[1,2]}`, errInvalidCoordinates)
 	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[[]]}`, errInvalidNumberOfPositionValues)
 	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[[1]]}`, errInvalidNumberOfPositionValues)
 	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[[1,2,"asd"]]}`, errInvalidPositionValue)
@@ -88,7 +78,7 @@ func TestInvalidJSON(t *testing.T) {
 	testInvalidJSON(t, `{"type":"MultiLineString","coordinates":[[]]}`, errLineStringInvalidCoordinates)
 	testInvalidJSON(t, `{"type":"MultiLineString","coordinates":[[[]]]}`, errInvalidNumberOfPositionValues)
 	testInvalidJSON(t, `{"type":"MultiLineString","coordinates":[[[]]]}`, errInvalidNumberOfPositionValues)
-	testInvalidJSON(t, `{"type":"Polygon","coordinates":[[1,1],[2,2],[3,3],[4,4]]}`, errInvalidCoordinatesValue)
+	testInvalidJSON(t, `{"type":"Polygon","coordinates":[[1,1],[2,2],[3,3],[4,4]]}`, errInvalidCoordinates)
 	testInvalidJSON(t, `{"type":"Polygon","coordinates":[[[1,1],[2,2],[3,3],[4,4]]]}`, errMustBeALinearRing)
 	testInvalidJSON(t, `{"type":"Polygon","coordinates":[[[1,1],[2,2],[3,3],[1,1]],[[1,1],[2,2],[3,3],[4,4]]]}`, errMustBeALinearRing)
 	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":123}`, errBBoxInvalidType)

@@ -2,8 +2,8 @@ package geojson
 
 import (
 	"bytes"
-	"encoding/binary"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/geohash"
 )
 
@@ -13,21 +13,25 @@ type FeatureCollection struct {
 	BBox     *BBox
 }
 
-func fillFeatureCollectionMap(m map[string]interface{}) (FeatureCollection, []byte, error) {
+func fillFeatureCollectionMap(json string) (FeatureCollection, []byte, error) {
 	var g FeatureCollection
-	switch v := m["features"].(type) {
+	res := gjson.Get(json, "features")
+	switch res.Type {
 	default:
 		return g, nil, errInvalidFeaturesMember
-	case nil:
+	case gjson.Null:
 		return g, nil, errFeaturesMemberRequired
-	case []interface{}:
+	case gjson.JSON:
+		if !resIsArray(res) {
+			return g, nil, errInvalidFeaturesMember
+		}
+		v := res.Array()
 		g.Features = make([]Object, len(v))
-		for i, v := range v {
-			m, ok := v.(map[string]interface{})
-			if !ok {
+		for i, res := range v {
+			if res.Type != gjson.JSON {
 				return g, nil, errInvalidFeature
 			}
-			o, err := objectMap(m, fcoll)
+			o, err := objectMap(res.Raw, fcoll)
 			if err != nil {
 				return g, nil, err
 			}
@@ -35,26 +39,8 @@ func fillFeatureCollectionMap(m map[string]interface{}) (FeatureCollection, []by
 		}
 	}
 	var err error
-	g.BBox, err = fillBBox(m)
+	g.BBox, err = fillBBox(json)
 	return g, nil, err
-}
-
-func fillFeatureCollectionBytes(b []byte, bbox *BBox, isCordZ bool) (FeatureCollection, []byte, error) {
-	var err error
-	var g FeatureCollection
-	g.BBox = bbox
-	if len(b) < 4 {
-		return g, nil, errNotEnoughData
-	}
-	g.Features = make([]Object, int(binary.LittleEndian.Uint32(b)))
-	b = b[4:]
-	for i := 0; i < len(g.Features); i++ {
-		g.Features[i], b, err = objectBytes(b)
-		if err != nil {
-			return g, b, err
-		}
-	}
-	return g, b, nil
 }
 
 // Geohash converts the object to a geohash value.
@@ -133,16 +119,7 @@ func (g FeatureCollection) String() string {
 
 // Bytes is the bytes representation of the object.
 func (g FeatureCollection) Bytes() []byte {
-	var buf bytes.Buffer
-	isCordZ := g.BBox.isCordZDefined()
-	writeHeader(&buf, featureCollection, g.BBox, isCordZ)
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(len(g.Features)))
-	buf.Write(b)
-	for _, g := range g.Features {
-		buf.Write(g.Bytes())
-	}
-	return buf.Bytes()
+	return []byte(g.JSON())
 }
 func (g FeatureCollection) bboxPtr() *BBox {
 	return g.BBox

@@ -2,37 +2,51 @@ package geojson
 
 import (
 	"bytes"
-	"encoding/binary"
+
+	"github.com/tidwall/gjson"
 )
+
+func resIsArray(res gjson.Result) bool {
+	if res.Type == gjson.JSON {
+		for i := 0; i < len(res.Raw); i++ {
+			if res.Raw[i] <= ' ' {
+				continue
+			}
+			if res.Raw[i] == '[' {
+				return true
+			}
+			break
+		}
+	}
+	return false
+}
 
 ////////////////////////////////
 // level 1
 ////////////////////////////////
 
-func fillLevel1Map(m map[string]interface{}) (
+func fillLevel1Map(json string) (
 	coordinates Position, bbox *BBox, bytesOut []byte, err error,
 ) {
-	switch v := m["coordinates"].(type) {
+	coords := gjson.Get(json, "coordinates")
+	switch coords.Type {
 	default:
 		err = errInvalidCoordinates
 		return
-	case nil:
+	case gjson.Null:
 		err = errCoordinatesRequired
 		return
-	case []interface{}:
-		coordinates, err = fillPosition(v)
+	case gjson.JSON:
+		if !resIsArray(coords) {
+			err = errInvalidCoordinates
+			return
+		}
+		coordinates, err = fillPosition(coords)
+		if err != nil {
+			return
+		}
 	}
-	if err == nil {
-		bbox, err = fillBBox(m)
-	}
-	return
-}
-
-func fillLevel1Bytes(b []byte, bbox *BBox, isCordZ bool) (
-	coordinates Position, bboxOut *BBox, bytesOut []byte, err error,
-) {
-	bboxOut = bbox
-	coordinates, bytesOut, err = fillPositionBytes(b, isCordZ)
+	bbox, err = fillBBox(json)
 	return
 }
 
@@ -77,65 +91,42 @@ func level1IsCoordZDefined(coordinates Position, bbox *BBox) bool {
 	return coordinates.Z != nilz
 }
 
-func level1Bytes(objType byte, coordinates Position, bbox *BBox) []byte {
-	var buf bytes.Buffer
-	isCordZ := level1IsCoordZDefined(coordinates, bbox)
-	writeHeader(&buf, objType, bbox, isCordZ)
-	coordinates.writeBytes(&buf, isCordZ)
-	return buf.Bytes()
-}
-
 ////////////////////////////////
 // level 2
 ////////////////////////////////
 
-func fillLevel2Map(m map[string]interface{}) (
+func fillLevel2Map(json string) (
 	coordinates []Position, bbox *BBox, bytesOut []byte, err error,
 ) {
-	switch v := m["coordinates"].(type) {
+	coords := gjson.Get(json, "coordinates")
+	switch coords.Type {
 	default:
 		err = errInvalidCoordinates
 		return
-	case nil:
+	case gjson.Null:
 		err = errCoordinatesRequired
 		return
-	case []interface{}:
+	case gjson.JSON:
+		if !resIsArray(coords) {
+			err = errInvalidCoordinates
+			return
+		}
+		v := coords.Array()
 		coordinates = make([]Position, len(v))
-		for i, v := range v {
-			v, ok := v.([]interface{})
-			if !ok {
-				err = errCoordinatesMustBeArray
+		for i, coords := range v {
+			if !resIsArray(coords) {
+				err = errInvalidCoordinates
 				return
 			}
 			var p Position
-			p, err = fillPosition(v)
+			p, err = fillPosition(coords)
 			if err != nil {
 				return
 			}
 			coordinates[i] = p
 		}
 	}
-	bbox, err = fillBBox(m)
-	return
-}
-
-func fillLevel2Bytes(b []byte, bbox *BBox, isCordZ bool) (
-	coordinates []Position, bboxOut *BBox, bytesOut []byte, err error,
-) {
-	bboxOut = bbox
-	if len(b) < 4 {
-		err = errNotEnoughData
-		return
-	}
-	coordinates = make([]Position, int(binary.LittleEndian.Uint32(b)))
-	b = b[4:]
-	for i := 0; i < len(coordinates); i++ {
-		coordinates[i], b, err = fillPositionBytes(b, isCordZ)
-		if err != nil {
-			return
-		}
-	}
-	bytesOut = b
+	bbox, err = fillBBox(json)
 	return
 }
 
@@ -190,50 +181,42 @@ func level2IsCoordZDefined(coordinates []Position, bbox *BBox) bool {
 	return false
 }
 
-func level2Bytes(objType byte, coordinates []Position, bbox *BBox) []byte {
-	var buf bytes.Buffer
-	isCordZ := level2IsCoordZDefined(coordinates, bbox)
-	writeHeader(&buf, objType, bbox, isCordZ)
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(len(coordinates)))
-	buf.Write(b)
-	for _, p := range coordinates {
-		p.writeBytes(&buf, isCordZ)
-	}
-	return buf.Bytes()
-}
-
 ////////////////////////////////
 // level 3
 ////////////////////////////////
 
-func fillLevel3Map(m map[string]interface{}) (
+func fillLevel3Map(json string) (
 	coordinates [][]Position, bbox *BBox, bytesOut []byte, err error,
 ) {
-	switch v := m["coordinates"].(type) {
+	coords := gjson.Get(json, "coordinates")
+	switch coords.Type {
 	default:
 		err = errInvalidCoordinates
 		return
-	case nil:
+	case gjson.Null:
 		err = errCoordinatesRequired
 		return
-	case []interface{}:
+	case gjson.JSON:
+		if !resIsArray(coords) {
+			err = errInvalidCoordinates
+			return
+		}
+		v := coords.Array()
 		coordinates = make([][]Position, len(v))
-		for i, v := range v {
-			v, ok := v.([]interface{})
-			if !ok {
-				err = errInvalidCoordinatesValue
+		for i, coords := range v {
+			if !resIsArray(coords) {
+				err = errInvalidCoordinates
 				return
 			}
+			v := coords.Array()
 			ps := make([]Position, len(v))
-			for i, v := range v {
-				v, ok := v.([]interface{})
-				if !ok {
-					err = errInvalidCoordinatesValue
+			for i, coords := range v {
+				if !resIsArray(coords) {
+					err = errInvalidCoordinates
 					return
 				}
 				var p Position
-				p, err = fillPosition(v)
+				p, err = fillPosition(coords)
 				if err != nil {
 					return
 				}
@@ -242,36 +225,7 @@ func fillLevel3Map(m map[string]interface{}) (
 			coordinates[i] = ps
 		}
 	}
-	bbox, err = fillBBox(m)
-	return
-}
-
-func fillLevel3Bytes(b []byte, bbox *BBox, isCordZ bool) (
-	coordinates [][]Position, bboxOut *BBox, bytesOut []byte, err error,
-) {
-	bboxOut = bbox
-	if len(b) < 4 {
-		err = errNotEnoughData
-		return
-	}
-	coordinates = make([][]Position, int(binary.LittleEndian.Uint32(b)))
-	b = b[4:]
-	for i := 0; i < len(coordinates); i++ {
-		if len(b) < 4 {
-			err = errNotEnoughData
-			return
-		}
-		ps := make([]Position, int(binary.LittleEndian.Uint32(b)))
-		b = b[4:]
-		for j := 0; j < len(ps); j++ {
-			ps[j], b, err = fillPositionBytes(b, isCordZ)
-			if err != nil {
-				return
-			}
-		}
-		coordinates[i] = ps
-	}
-	bytesOut = b
+	bbox, err = fillBBox(json)
 	return
 }
 
@@ -346,61 +300,49 @@ func level3IsCoordZDefined(coordinates [][]Position, bbox *BBox) bool {
 	return false
 }
 
-func level3Bytes(objType byte, coordinates [][]Position, bbox *BBox) []byte {
-	var buf bytes.Buffer
-	isCordZ := level3IsCoordZDefined(coordinates, bbox)
-	writeHeader(&buf, objType, bbox, isCordZ)
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(len(coordinates)))
-	buf.Write(b)
-	for _, p := range coordinates {
-		binary.LittleEndian.PutUint32(b, uint32(len(p)))
-		buf.Write(b)
-		for _, p := range p {
-			p.writeBytes(&buf, isCordZ)
-		}
-	}
-	return buf.Bytes()
-}
-
 ////////////////////////////////
 // level 4
 ////////////////////////////////
 
-func fillLevel4Map(m map[string]interface{}) (
+func fillLevel4Map(json string) (
 	coordinates [][][]Position, bbox *BBox, bytesOut []byte, err error,
 ) {
-	switch v := m["coordinates"].(type) {
+	coords := gjson.Get(json, "coordinates")
+	switch coords.Type {
 	default:
 		err = errInvalidCoordinates
 		return
-	case nil:
+	case gjson.Null:
 		err = errCoordinatesRequired
 		return
-	case []interface{}:
+	case gjson.JSON:
+		if !resIsArray(coords) {
+			err = errInvalidCoordinates
+			return
+		}
+		v := coords.Array()
 		coordinates = make([][][]Position, len(v))
-		for i, v := range v {
-			v, ok := v.([]interface{})
-			if !ok {
-				err = errInvalidCoordinatesValue
+		for i, coords := range v {
+			if !resIsArray(coords) {
+				err = errInvalidCoordinates
 				return
 			}
+			v := coords.Array()
 			ps := make([][]Position, len(v))
-			for i, v := range v {
-				v, ok := v.([]interface{})
-				if !ok {
-					err = errInvalidCoordinatesValue
+			for i, coords := range v {
+				if !resIsArray(coords) {
+					err = errInvalidCoordinates
 					return
 				}
+				v := coords.Array()
 				pss := make([]Position, len(v))
-				for i, v := range v {
-					v, ok := v.([]interface{})
-					if !ok {
-						err = errInvalidCoordinatesValue
+				for i, coords := range v {
+					if !resIsArray(coords) {
+						err = errInvalidCoordinates
 						return
 					}
 					var p Position
-					p, err = fillPosition(v)
+					p, err = fillPosition(coords)
 					if err != nil {
 						return
 					}
@@ -411,45 +353,7 @@ func fillLevel4Map(m map[string]interface{}) (
 			coordinates[i] = ps
 		}
 	}
-	bbox, err = fillBBox(m)
-	return
-}
-
-func fillLevel4Bytes(b []byte, bbox *BBox, isCordZ bool) (
-	coordinates [][][]Position, bboxOut *BBox, bytesOut []byte, err error,
-) {
-	bboxOut = bbox
-	if len(b) < 4 {
-		err = errNotEnoughData
-		return
-	}
-	coordinates = make([][][]Position, int(binary.LittleEndian.Uint32(b)))
-	b = b[4:]
-	for i := 0; i < len(coordinates); i++ {
-		if len(b) < 4 {
-			err = errNotEnoughData
-			return
-		}
-		ps := make([][]Position, int(binary.LittleEndian.Uint32(b)))
-		b = b[4:]
-		for i := 0; i < len(ps); i++ {
-			if len(b) < 4 {
-				err = errNotEnoughData
-				return
-			}
-			pss := make([]Position, int(binary.LittleEndian.Uint32(b)))
-			b = b[4:]
-			for i := 0; i < len(pss); i++ {
-				pss[i], b, err = fillPositionBytes(b, isCordZ)
-				if err != nil {
-					return
-				}
-			}
-			ps[i] = pss
-		}
-		coordinates[i] = ps
-	}
-	bytesOut = b
+	bbox, err = fillBBox(json)
 	return
 }
 
@@ -532,25 +436,4 @@ func level4IsCoordZDefined(coordinates [][][]Position, bbox *BBox) bool {
 		}
 	}
 	return false
-}
-
-func level4Bytes(objType byte, coordinates [][][]Position, bbox *BBox) []byte {
-	var buf bytes.Buffer
-	isCordZ := level4IsCoordZDefined(coordinates, bbox)
-	writeHeader(&buf, objType, bbox, isCordZ)
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(len(coordinates)))
-	buf.Write(b)
-	for _, p := range coordinates {
-		binary.LittleEndian.PutUint32(b, uint32(len(p)))
-		buf.Write(b)
-		for _, p := range p {
-			binary.LittleEndian.PutUint32(b, uint32(len(p)))
-			buf.Write(b)
-			for _, p := range p {
-				p.writeBytes(&buf, isCordZ)
-			}
-		}
-	}
-	return buf.Bytes()
 }

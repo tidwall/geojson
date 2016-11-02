@@ -64,10 +64,6 @@ func (g SimplePoint) String() string {
 	return g.JSON()
 }
 
-// Bytes is the bytes representation of the object.
-func (g SimplePoint) Bytes() []byte {
-	return level1Bytes(point, Position{X: g.X, Y: g.Y, Z: 0}, nil)
-}
 func (g SimplePoint) bboxPtr() *BBox {
 	return nil
 }

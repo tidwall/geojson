@@ -61,10 +61,6 @@ func (g LineString) String() string {
 	return g.JSON()
 }
 
-// Bytes is the bytes representation of the object.
-func (g LineString) Bytes() []byte {
-	return level2Bytes(lineString, g.Coordinates, g.BBox)
-}
 func (g LineString) bboxPtr() *BBox {
 	return g.BBox
 }

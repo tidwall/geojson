@@ -71,10 +71,6 @@ func (g MultiPolygon) String() string {
 	return g.JSON()
 }
 
-// Bytes is the bytes representation of the object.
-func (g MultiPolygon) Bytes() []byte {
-	return level4Bytes(multiPolygon, g.Coordinates, g.BBox)
-}
 func (g MultiPolygon) bboxPtr() *BBox {
 	return g.BBox
 }

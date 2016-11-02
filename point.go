@@ -60,11 +60,6 @@ func (g Point) String() string {
 	return g.JSON()
 }
 
-// Bytes is the bytes representation of the object.
-func (g Point) Bytes() []byte {
-	return level1Bytes(point, g.Coordinates, g.BBox)
-}
-
 // PositionCount return the number of coordinates.
 func (g Point) PositionCount() int {
 	return level1PositionCount(g.Coordinates, g.BBox)
