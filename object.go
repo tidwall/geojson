@@ -344,3 +344,43 @@ func mustMarshalString(s string) bool {
 	}
 	return false
 }
+
+func stripWhitespace(s string) string {
+	var p []byte
+	var str bool
+	var escs int
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if str {
+			// We're inside of a string. Look out for '"' and '\' characters.
+			if c == '\\' {
+				// Increment the escape character counter.
+				escs++
+			} else {
+				if c == '"' && escs%2 == 0 {
+					// We reached the end of string
+					str = false
+				}
+				// Reset the escape counter
+				escs = 0
+			}
+		} else if c == '"' {
+			// We encountared a double quote character.
+			str = true
+		} else if c <= ' ' {
+			// Ignore the whitespace
+			if p == nil {
+				p = []byte(s[:i])
+			}
+			continue
+		}
+		// Append the character
+		if p != nil {
+			p = append(p, c)
+		}
+	}
+	if p == nil {
+		return s
+	}
+	return string(p)
+}

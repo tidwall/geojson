@@ -46,9 +46,11 @@ func fillFeatureMap(json string) (Feature, []byte, error) {
 	}
 	id := gjson.Get(json, "id")
 	if id.Exists() || propsExists {
-		raw := make([]byte, len(id.Raw)+len(props.Raw)+1)
-		copy(raw, id.Raw)
-		copy(raw[len(id.Raw)+1:], props.Raw)
+		idRaw := stripWhitespace(id.Raw)
+		propsRaw := stripWhitespace(props.Raw)
+		raw := make([]byte, len(idRaw)+len(propsRaw)+1)
+		copy(raw, idRaw)
+		copy(raw[len(idRaw)+1:], propsRaw)
 		g.idprops = string(raw)
 	}
 	return g, nil, err
