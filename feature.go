@@ -2,6 +2,7 @@ package geojson
 
 import (
 	"bytes"
+	"encoding/binary"
 
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/geohash"
@@ -46,12 +47,7 @@ func fillFeatureMap(json string) (Feature, []byte, error) {
 	}
 	id := gjson.Get(json, "id")
 	if id.Exists() || propsExists {
-		idRaw := stripWhitespace(id.Raw)
-		propsRaw := stripWhitespace(props.Raw)
-		raw := make([]byte, len(idRaw)+len(propsRaw)+1)
-		copy(raw, idRaw)
-		copy(raw[len(idRaw)+1:], propsRaw)
-		g.idprops = string(raw)
+		g.idprops = makeCompositeRaw(id.Raw, props.Raw)
 	}
 	return g, nil, err
 }
@@ -97,12 +93,39 @@ func (g Feature) MarshalJSON() ([]byte, error) {
 }
 
 func (g Feature) getRaw() (id, props string) {
-	for i := 0; i < len(g.idprops); i++ {
-		if g.idprops[i] == 0 {
-			return g.idprops[:i], g.idprops[i+1:]
-		}
+	if len(g.idprops) == 0 {
+		return "", ""
 	}
-	return "", ""
+	switch g.idprops[0] {
+	default:
+		lnp := int(g.idprops[0]) + 1
+		return g.idprops[1:lnp], g.idprops[lnp:]
+	case 255:
+		lnp := int(binary.LittleEndian.Uint64([]byte(g.idprops[1:9]))) + 9
+		return g.idprops[9:lnp], g.idprops[lnp:]
+	}
+}
+
+func makeCompositeRaw(idRaw, propsRaw string) string {
+	idRaw = stripWhitespace(idRaw)
+	propsRaw = stripWhitespace(propsRaw)
+	if len(idRaw) == 0 && len(propsRaw) == 0 {
+		return ""
+	}
+	var raw []byte
+	if len(idRaw) > 0xFF-1 {
+		raw = make([]byte, len(idRaw)+len(propsRaw)+9)
+		raw[0] = 0xFF
+		binary.LittleEndian.PutUint64(raw[1:9], uint64(len(idRaw)))
+		copy(raw[9:], idRaw)
+		copy(raw[len(idRaw)+9:], propsRaw)
+	} else {
+		raw = make([]byte, len(idRaw)+len(propsRaw)+1)
+		raw[0] = byte(len(idRaw))
+		copy(raw[1:], idRaw)
+		copy(raw[len(idRaw)+1:], propsRaw)
+	}
+	return string(raw)
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.

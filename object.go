@@ -3,6 +3,7 @@ package geojson
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -336,13 +337,18 @@ func nearbyObjectShared(g Object, x, y float64, meters float64) bool {
 	return g.Intersects(circlePoly)
 }
 
-func mustMarshalString(s string) bool {
+func jsonMarshalString(s string) []byte {
 	for i := 0; i < len(s); i++ {
-		if s[i] < ' ' || s[i] > 0x7f || s[i] == '"' {
-			return true
+		if s[i] < ' ' || s[i] == '\\' || s[i] == '"' || s[i] > 126 {
+			b, _ := json.Marshal(s)
+			return b
 		}
 	}
-	return false
+	b := make([]byte, len(s)+2)
+	b[0] = '"'
+	copy(b[1:], s)
+	b[len(b)-1] = '"'
+	return b
 }
 
 func stripWhitespace(s string) string {

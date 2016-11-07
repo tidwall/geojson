@@ -1,7 +1,5 @@
 package geojson
 
-import "encoding/json"
-
 // String is a not a geojson object, but just a string
 type String string
 
@@ -80,7 +78,7 @@ func (s String) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (s String) MarshalJSON() ([]byte, error) {
-	return json.Marshal(string(s))
+	return jsonMarshalString(string(s)), nil
 }
 
 // Geohash converts the object to a geohash value.
