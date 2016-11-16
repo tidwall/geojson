@@ -76,7 +76,7 @@ type Object interface {
 	CalculatedPoint() Position
 	// JSON is the json representation of the object. This might not be exactly the same as the original.
 	JSON() string
-	// String returns a string represenation of the object. This may be JSON or something else.
+	// String returns a string representation of the object. This may be JSON or something else.
 	String() string
 	// Bytes is the bytes representation of the object.
 	Bytes() []byte
