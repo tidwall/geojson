@@ -42,10 +42,10 @@ func insideshpext(p Point, shape Polygon, exterior bool) bool {
 	in := false
 	for i := 0; i < len(shape); i++ {
 		res := raycast(p, shape[i], shape[(i+1)%len(shape)])
-		if res == on {
+		if res.on {
 			return exterior
 		}
-		if res == left {
+		if res.in {
 			in = !in
 		}
 	}
