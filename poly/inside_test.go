@@ -34,6 +34,14 @@ func TestRayInside(t *testing.T) {
 	testRayInside(t, P(1, -0.1), strange, false)
 }
 
+func TestRayInside2(t *testing.T) {
+	normal := []Point{P(0, 0), P(4, 3), P(5, 2), P(0, 0)}
+	testRayInside(t, P(1, 2), normal, false)
+	testRayInside(t, P(1, 3), normal, false)
+	testRayInside(t, P(4, 2), normal, true)
+	testRayInside(t, P(2, 1), normal, true)
+}
+
 var texterior = Polygon{
 	P(0, 0),
 	P(0, 6),
@@ -74,6 +82,10 @@ func TestRayExteriorHoles(t *testing.T) {
 		{P(8, -3), false},
 		{P(8, 1), false},
 		{P(14, -1), false},
+
+		{P(8, -0.5), true},
+		{P(8, -1.5), true},
+		{P(8, -1), true},
 	}
 	// add the edges, all should be inside
 	for i := 0; i < len(texterior); i++ {

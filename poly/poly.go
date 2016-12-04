@@ -1,8 +1,9 @@
+// Package poly provides polygon detection methods.
 package poly
 
 import "fmt"
 
-// Point is simple 3D point
+// Point is simple 2D point
 type Point struct {
 	X, Y, Z float64
 }

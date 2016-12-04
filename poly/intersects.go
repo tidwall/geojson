@@ -9,6 +9,8 @@ func (p Point) Intersects(exterior Polygon, holes []Polygon) bool {
 func (shape Polygon) Intersects(exterior Polygon, holes []Polygon) bool {
 	return shape.doesIntersects(false, exterior, holes)
 }
+
+// LineStringIntersects detects if a polygon intersects a linestring
 func (shape Polygon) LineStringIntersects(exterior Polygon, holes []Polygon) bool {
 	return shape.doesIntersects(true, exterior, holes)
 }
