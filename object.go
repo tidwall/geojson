@@ -313,7 +313,7 @@ func CirclePolygon(x, y, meters float64, steps int) Polygon {
 	center := Position{X: x, Y: y, Z: 0}
 	step := 360.0 / float64(steps)
 	i := 0
-	for deg := float64(0); deg < 360; deg += step {
+	for deg := 360.0; deg > 0; deg -= step {
 		c := Position(poly.Point(center.Destination(meters, deg)))
 		p.Coordinates[0][i] = c
 		i++
