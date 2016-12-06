@@ -224,6 +224,10 @@ func withinObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin func(
 	switch v := o.(type) {
 	default:
 		return false
+	case Point:
+		return g.WithinBBox(v.CalculatedBBox())
+	case SimplePoint:
+		return g.WithinBBox(v.CalculatedBBox())
 	case Polygon:
 		if len(v.Coordinates) == 0 {
 			return false
@@ -267,6 +271,10 @@ func intersectsObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin f
 	switch v := o.(type) {
 	default:
 		return false
+	case Point:
+		return g.IntersectsBBox(v.CalculatedBBox())
+	case SimplePoint:
+		return g.IntersectsBBox(v.CalculatedBBox())
 	case Polygon:
 		if len(v.Coordinates) == 0 {
 			return false
