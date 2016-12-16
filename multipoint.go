@@ -11,11 +11,11 @@ type MultiPoint struct {
 	BBox        *BBox
 }
 
-func fillMultiPoint(coordinates []Position, bbox *BBox, b []byte, err error) (MultiPoint, []byte, error) {
+func fillMultiPoint(coordinates []Position, bbox *BBox, err error) (MultiPoint, error) {
 	return MultiPoint{
 		Coordinates: coordinates,
 		BBox:        bbox,
-	}, b, err
+	}, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.

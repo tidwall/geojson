@@ -12,18 +12,18 @@ type Point struct {
 	BBox        *BBox
 }
 
-func fillSimplePointOrPoint(coordinates Position, bbox *BBox, b []byte, err error) (Object, []byte, error) {
+func fillSimplePointOrPoint(coordinates Position, bbox *BBox, err error) (Object, error) {
 	if coordinates.Z == 0 && bbox == nil {
-		return fillSimplePoint(coordinates, bbox, b, err)
+		return fillSimplePoint(coordinates, bbox, err)
 	}
-	return fillPoint(coordinates, bbox, b, err)
+	return fillPoint(coordinates, bbox, err)
 }
 
-func fillPoint(coordinates Position, bbox *BBox, b []byte, err error) (Point, []byte, error) {
+func fillPoint(coordinates Position, bbox *BBox, err error) (Point, error) {
 	return Point{
 		Coordinates: coordinates,
 		BBox:        bbox,
-	}, b, err
+	}, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.

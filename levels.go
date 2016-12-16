@@ -9,11 +9,11 @@ import (
 func resIsArray(res gjson.Result) bool {
 	if res.Type == gjson.JSON {
 		for i := 0; i < len(res.Raw); i++ {
-			if res.Raw[i] <= ' ' {
-				continue
-			}
 			if res.Raw[i] == '[' {
 				return true
+			}
+			if res.Raw[i] <= ' ' {
+				continue
 			}
 			break
 		}
@@ -26,7 +26,7 @@ func resIsArray(res gjson.Result) bool {
 ////////////////////////////////
 
 func fillLevel1Map(json string) (
-	coordinates Position, bbox *BBox, bytesOut []byte, err error,
+	coordinates Position, bbox *BBox, err error,
 ) {
 	coords := gjson.Get(json, "coordinates")
 	switch coords.Type {
@@ -96,7 +96,7 @@ func level1IsCoordZDefined(coordinates Position, bbox *BBox) bool {
 ////////////////////////////////
 
 func fillLevel2Map(json string) (
-	coordinates []Position, bbox *BBox, bytesOut []byte, err error,
+	coordinates []Position, bbox *BBox, err error,
 ) {
 	coords := gjson.Get(json, "coordinates")
 	switch coords.Type {
@@ -186,7 +186,7 @@ func level2IsCoordZDefined(coordinates []Position, bbox *BBox) bool {
 ////////////////////////////////
 
 func fillLevel3Map(json string) (
-	coordinates [][]Position, bbox *BBox, bytesOut []byte, err error,
+	coordinates [][]Position, bbox *BBox, err error,
 ) {
 	coords := gjson.Get(json, "coordinates")
 	switch coords.Type {
@@ -305,7 +305,7 @@ func level3IsCoordZDefined(coordinates [][]Position, bbox *BBox) bool {
 ////////////////////////////////
 
 func fillLevel4Map(json string) (
-	coordinates [][][]Position, bbox *BBox, bytesOut []byte, err error,
+	coordinates [][][]Position, bbox *BBox, err error,
 ) {
 	coords := gjson.Get(json, "coordinates")
 	switch coords.Type {

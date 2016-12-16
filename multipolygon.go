@@ -8,7 +8,7 @@ type MultiPolygon struct {
 	BBox        *BBox
 }
 
-func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, b []byte, err error) (MultiPolygon, []byte, error) {
+func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiPolygon, error) {
 	if err == nil {
 	outer:
 		for _, ps := range coordinates {
@@ -27,7 +27,7 @@ func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, b []byte, err erro
 	return MultiPolygon{
 		Coordinates: coordinates,
 		BBox:        bbox,
-	}, b, err
+	}, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.

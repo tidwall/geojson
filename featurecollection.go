@@ -13,34 +13,34 @@ type FeatureCollection struct {
 	BBox     *BBox
 }
 
-func fillFeatureCollectionMap(json string) (FeatureCollection, []byte, error) {
+func fillFeatureCollectionMap(json string) (FeatureCollection, error) {
 	var g FeatureCollection
 	res := gjson.Get(json, "features")
 	switch res.Type {
 	default:
-		return g, nil, errInvalidFeaturesMember
+		return g, errInvalidFeaturesMember
 	case gjson.Null:
-		return g, nil, errFeaturesMemberRequired
+		return g, errFeaturesMemberRequired
 	case gjson.JSON:
 		if !resIsArray(res) {
-			return g, nil, errInvalidFeaturesMember
+			return g, errInvalidFeaturesMember
 		}
 		v := res.Array()
 		g.Features = make([]Object, len(v))
 		for i, res := range v {
 			if res.Type != gjson.JSON {
-				return g, nil, errInvalidFeature
+				return g, errInvalidFeature
 			}
 			o, err := objectMap(res.Raw, fcoll)
 			if err != nil {
-				return g, nil, err
+				return g, err
 			}
 			g.Features[i] = o
 		}
 	}
 	var err error
 	g.BBox, err = fillBBox(json)
-	return g, nil, err
+	return g, err
 }
 
 // Geohash converts the object to a geohash value.

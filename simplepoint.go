@@ -16,8 +16,8 @@ func New2DPoint(x, y float64) SimplePoint {
 	return SimplePoint{x, y}
 }
 
-func fillSimplePoint(coordinates Position, bbox *BBox, b []byte, err error) (SimplePoint, []byte, error) {
-	return SimplePoint{X: coordinates.X, Y: coordinates.Y}, b, err
+func fillSimplePoint(coordinates Position, bbox *BBox, err error) (SimplePoint, error) {
+	return SimplePoint{X: coordinates.X, Y: coordinates.Y}, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.

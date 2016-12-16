@@ -195,23 +195,23 @@ func objectMap(json string, from int) (Object, error) {
 	default:
 		return nil, fmt.Errorf(fmtErrTypeIsUnknown, typ)
 	case "Point":
-		o, _, err = fillSimplePointOrPoint(fillLevel1Map(json))
+		o, err = fillSimplePointOrPoint(fillLevel1Map(json))
 	case "MultiPoint":
-		o, _, err = fillMultiPoint(fillLevel2Map(json))
+		o, err = fillMultiPoint(fillLevel2Map(json))
 	case "LineString":
-		o, _, err = fillLineString(fillLevel2Map(json))
+		o, err = fillLineString(fillLevel2Map(json))
 	case "MultiLineString":
-		o, _, err = fillMultiLineString(fillLevel3Map(json))
+		o, err = fillMultiLineString(fillLevel3Map(json))
 	case "Polygon":
-		o, _, err = fillPolygon(fillLevel3Map(json))
+		o, err = fillPolygon(fillLevel3Map(json))
 	case "MultiPolygon":
-		o, _, err = fillMultiPolygon(fillLevel4Map(json))
+		o, err = fillMultiPolygon(fillLevel4Map(json))
 	case "GeometryCollection":
-		o, _, err = fillGeometryCollectionMap(json)
+		o, err = fillGeometryCollectionMap(json)
 	case "Feature":
-		o, _, err = fillFeatureMap(json)
+		o, err = fillFeatureMap(json)
 	case "FeatureCollection":
-		o, _, err = fillFeatureCollectionMap(json)
+		o, err = fillFeatureCollectionMap(json)
 	}
 	return o, err
 }

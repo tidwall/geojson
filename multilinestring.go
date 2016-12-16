@@ -11,7 +11,7 @@ type MultiLineString struct {
 	BBox        *BBox
 }
 
-func fillMultiLineString(coordinates [][]Position, bbox *BBox, b []byte, err error) (MultiLineString, []byte, error) {
+func fillMultiLineString(coordinates [][]Position, bbox *BBox, err error) (MultiLineString, error) {
 	if err == nil {
 		for _, coordinates := range coordinates {
 			if len(coordinates) < 2 {
@@ -23,7 +23,7 @@ func fillMultiLineString(coordinates [][]Position, bbox *BBox, b []byte, err err
 	return MultiLineString{
 		Coordinates: coordinates,
 		BBox:        bbox,
-	}, b, err
+	}, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.

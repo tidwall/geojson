@@ -13,34 +13,34 @@ type GeometryCollection struct {
 	BBox       *BBox
 }
 
-func fillGeometryCollectionMap(json string) (GeometryCollection, []byte, error) {
+func fillGeometryCollectionMap(json string) (GeometryCollection, error) {
 	var g GeometryCollection
 	res := gjson.Get(json, "geometries")
 	switch res.Type {
 	default:
-		return g, nil, errInvalidGeometries
+		return g, errInvalidGeometries
 	case gjson.Null:
-		return g, nil, errGeometriesRequired
+		return g, errGeometriesRequired
 	case gjson.JSON:
 		if !resIsArray(res) {
-			return g, nil, errInvalidGeometries
+			return g, errInvalidGeometries
 		}
 		v := res.Array()
 		g.Geometries = make([]Object, len(v))
 		for i, res := range v {
 			if res.Type != gjson.JSON {
-				return g, nil, errInvalidGeometry
+				return g, errInvalidGeometry
 			}
 			o, err := objectMap(res.Raw, gcoll)
 			if err != nil {
-				return g, nil, err
+				return g, err
 			}
 			g.Geometries[i] = o
 		}
 	}
 	var err error
 	g.BBox, err = fillBBox(json)
-	return g, nil, err
+	return g, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.

@@ -15,32 +15,32 @@ type Feature struct {
 	idprops  string // raw id and properties seperated by a '\0'
 }
 
-func fillFeatureMap(json string) (Feature, []byte, error) {
+func fillFeatureMap(json string) (Feature, error) {
 	var g Feature
 	v := gjson.Get(json, "geometry")
 	switch v.Type {
 	default:
-		return g, nil, errInvalidGeometryMember
+		return g, errInvalidGeometryMember
 	case gjson.Null:
-		return g, nil, errGeometryMemberRequired
+		return g, errGeometryMemberRequired
 	case gjson.JSON:
 		var err error
 		g.Geometry, err = objectMap(v.Raw, feat)
 		if err != nil {
-			return g, nil, err
+			return g, err
 		}
 	}
 	var err error
 	g.BBox, err = fillBBox(json)
 	if err != nil {
-		return g, nil, err
+		return g, err
 	}
 
 	var propsExists bool
 	props := gjson.Get(json, "properties")
 	switch props.Type {
 	default:
-		return g, nil, errInvalidPropertiesMember
+		return g, errInvalidPropertiesMember
 	case gjson.Null:
 	case gjson.JSON:
 		propsExists = true
@@ -49,7 +49,7 @@ func fillFeatureMap(json string) (Feature, []byte, error) {
 	if id.Exists() || propsExists {
 		g.idprops = makeCompositeRaw(id.Raw, props.Raw)
 	}
-	return g, nil, err
+	return g, err
 }
 
 // Geohash converts the object to a geohash value.

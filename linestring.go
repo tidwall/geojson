@@ -8,7 +8,7 @@ type LineString struct {
 	BBox        *BBox
 }
 
-func fillLineString(coordinates []Position, bbox *BBox, b []byte, err error) (LineString, []byte, error) {
+func fillLineString(coordinates []Position, bbox *BBox, err error) (LineString, error) {
 	if err == nil {
 		if len(coordinates) < 2 {
 			err = errLineStringInvalidCoordinates
@@ -17,7 +17,7 @@ func fillLineString(coordinates []Position, bbox *BBox, b []byte, err error) (Li
 	return LineString{
 		Coordinates: coordinates,
 		BBox:        bbox,
-	}, b, err
+	}, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.

@@ -13,7 +13,7 @@ type Polygon struct {
 	BBox        *BBox
 }
 
-func fillPolygon(coordinates [][]Position, bbox *BBox, b []byte, err error) (Polygon, []byte, error) {
+func fillPolygon(coordinates [][]Position, bbox *BBox, err error) (Polygon, error) {
 	if err == nil {
 		if len(coordinates) == 0 {
 			err = errMustBeALinearRing
@@ -30,7 +30,7 @@ func fillPolygon(coordinates [][]Position, bbox *BBox, b []byte, err error) (Pol
 	return Polygon{
 		Coordinates: coordinates,
 		BBox:        bbox,
-	}, b, err
+	}, err
 }
 
 // CalculatedBBox is exterior bbox containing the object.
