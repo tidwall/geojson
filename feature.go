@@ -2,7 +2,9 @@ package geojson
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/binary"
+	"io/ioutil"
 
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/geohash"
@@ -12,7 +14,7 @@ import (
 type Feature struct {
 	Geometry Object
 	BBox     *BBox
-	idprops  string // raw id and properties seperated by a '\0'
+	idprops  []byte // raw id and properties combined
 }
 
 func fillFeatureMap(json string) (Feature, error) {
@@ -92,25 +94,30 @@ func (g Feature) MarshalJSON() ([]byte, error) {
 	return []byte(g.JSON()), nil
 }
 
-func (g Feature) getRaw() (id, props string) {
+func (g Feature) getRaw() (id, props []byte) {
 	if len(g.idprops) == 0 {
-		return "", ""
+		return nil, nil
 	}
-	switch g.idprops[0] {
+	buf := g.idprops
+	rd, err := gzip.NewReader(bytes.NewReader(buf))
+	if err == nil {
+		buf, _ = ioutil.ReadAll(rd)
+	}
+	switch buf[0] {
 	default:
-		lnp := int(g.idprops[0]) + 1
-		return g.idprops[1:lnp], g.idprops[lnp:]
+		lnp := int(buf[0]) + 1
+		return buf[1:lnp], buf[lnp:]
 	case 255:
-		lnp := int(binary.LittleEndian.Uint64([]byte(g.idprops[1:9]))) + 9
-		return g.idprops[9:lnp], g.idprops[lnp:]
+		lnp := int(binary.LittleEndian.Uint64([]byte(buf[1:9]))) + 9
+		return buf[9:lnp], buf[lnp:]
 	}
 }
 
-func makeCompositeRaw(idRaw, propsRaw string) string {
+func makeCompositeRaw(idRaw, propsRaw string) []byte {
 	idRaw = stripWhitespace(idRaw)
 	propsRaw = stripWhitespace(propsRaw)
 	if len(idRaw) == 0 && len(propsRaw) == 0 {
-		return ""
+		return nil
 	}
 	var raw []byte
 	if len(idRaw) > 0xFF-1 {
@@ -125,7 +132,16 @@ func makeCompositeRaw(idRaw, propsRaw string) string {
 		copy(raw[1:], idRaw)
 		copy(raw[len(idRaw)+1:], propsRaw)
 	}
-	return string(raw)
+	if len(raw) < 256 {
+		return raw
+	}
+	var buf bytes.Buffer
+	gbuf := gzip.NewWriter(&buf)
+	gbuf.Write(raw)
+	gbuf.Close()
+	tight := make([]byte, len(buf.Bytes()))
+	copy(tight, buf.Bytes())
+	return tight
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
@@ -135,13 +151,13 @@ func (g Feature) JSON() string {
 	buf.WriteString(g.Geometry.JSON())
 	g.BBox.write(&buf)
 	idRaw, propsRaw := g.getRaw()
-	if propsRaw != "" {
+	if len(propsRaw) != 0 {
 		buf.WriteString(`,"properties":`)
-		buf.WriteString(propsRaw)
+		buf.Write(propsRaw)
 	}
-	if idRaw != "" {
+	if len(idRaw) != 0 {
 		buf.WriteString(`,"id":`)
-		buf.WriteString(idRaw)
+		buf.Write(idRaw)
 	}
 	buf.WriteByte('}')
 	return buf.String()
