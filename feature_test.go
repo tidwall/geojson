@@ -1,9 +1,6 @@
 package geojson
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 func TestFeature(t *testing.T) {
 	testJSON(t, `{
@@ -117,7 +114,5 @@ func TestComplexFeature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return
-	println(len(o.(Feature).idprops), cap(o.(Feature).idprops))
-	fmt.Printf("%v\n", o.JSON())
+	o = o
 }
