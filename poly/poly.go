@@ -62,6 +62,17 @@ type Rect struct {
 	Min, Max Point
 }
 
+// Polygon returns a polygon for the rect
+func (r Rect) Polygon() Polygon {
+	p := Polygon(make([]Point, 5))
+	p[0] = Point{X: r.Min.X, Y: r.Max.Y}
+	p[1] = Point{X: r.Max.X, Y: r.Max.Y}
+	p[2] = Point{X: r.Max.X, Y: r.Min.Y}
+	p[3] = Point{X: r.Min.X, Y: r.Min.Y}
+	p[4] = Point{X: r.Min.X, Y: r.Max.Y}
+	return p
+}
+
 // Rect returns the bounding box rectangle for the polygon
 func (p Polygon) Rect() Rect {
 	var bbox Rect

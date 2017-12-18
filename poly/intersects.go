@@ -5,6 +5,11 @@ func (p Point) Intersects(exterior Polygon, holes []Polygon) bool {
 	return p.Inside(exterior, holes)
 }
 
+// Intersects detects if a rect intersects another polygon
+func (r Rect) Intersects(exterior Polygon, holes []Polygon) bool {
+	return r.Polygon().Inside(exterior, holes)
+}
+
 // Intersects detects if a polygon intersects another polygon
 func (shape Polygon) Intersects(exterior Polygon, holes []Polygon) bool {
 	return shape.doesIntersects(false, exterior, holes)

@@ -17,6 +17,11 @@ func (p Point) Inside(exterior Polygon, holes []Polygon) bool {
 	return true
 }
 
+// Inside detects if a rect intersects another polygon
+func (r Rect) Inside(exterior Polygon, holes []Polygon) bool {
+	return r.Polygon().Inside(exterior, holes)
+}
+
 // Inside returns true if shape is inside of exterior and not in a hole.
 func (shape Polygon) Inside(exterior Polygon, holes []Polygon) bool {
 	var ok bool

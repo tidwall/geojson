@@ -97,7 +97,15 @@ func (g Polygon) WithinBBox(bbox BBox) bool {
 	if len(g.Coordinates) == 0 {
 		return false
 	}
-	return polyPositions(g.Coordinates[0]).InsideRect(rectBBox(bbox))
+	rbbox := rectBBox(bbox)
+	ext, holes := polyExteriorHoles(g.Coordinates)
+	if len(holes) > 0 {
+		if rbbox.Max == rbbox.Min {
+			return rbbox.Min.Inside(ext, holes)
+		}
+		return rbbox.Inside(ext, holes)
+	}
+	return ext.InsideRect(rectBBox(bbox))
 }
 
 // IntersectsBBox detects if the object intersects a bbox.
@@ -108,7 +116,15 @@ func (g Polygon) IntersectsBBox(bbox BBox) bool {
 	if len(g.Coordinates) == 0 {
 		return false
 	}
-	return polyPositions(g.Coordinates[0]).IntersectsRect(rectBBox(bbox))
+	rbbox := rectBBox(bbox)
+	ext, holes := polyExteriorHoles(g.Coordinates)
+	if len(holes) > 0 {
+		if rbbox.Max == rbbox.Min {
+			return rbbox.Min.Intersects(ext, holes)
+		}
+		return rbbox.Intersects(ext, holes)
+	}
+	return ext.IntersectsRect(rectBBox(bbox))
 }
 
 // Within detects if the object is fully contained inside another object.
