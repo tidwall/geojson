@@ -1,7 +1,6 @@
 package geojson
 
 import (
-	"bytes"
 	"encoding/binary"
 
 	"github.com/tidwall/gjson"
@@ -10,9 +9,10 @@ import (
 
 // Feature is a geojson object with the type "Feature"
 type Feature struct {
-	Geometry Object
-	BBox     *BBox
-	idprops  string // raw id and properties seperated by a '\0'
+	Geometry    Object
+	BBox        *BBox
+	bboxDefined bool
+	idprops     string // raw id and properties seperated by a '\0'
 }
 
 func fillFeatureMap(json string) (Feature, error) {
@@ -35,7 +35,11 @@ func fillFeatureMap(json string) (Feature, error) {
 	if err != nil {
 		return g, err
 	}
-
+	g.bboxDefined = g.BBox != nil
+	if !g.bboxDefined {
+		cbbox := g.CalculatedBBox()
+		g.BBox = &cbbox
+	}
 	var propsExists bool
 	props := gjson.Get(json, "properties")
 	switch props.Type {
@@ -89,7 +93,7 @@ func (g Feature) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g Feature) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
 }
 
 func (g Feature) getRaw() (id, props string) {
@@ -128,23 +132,27 @@ func makeCompositeRaw(idRaw, propsRaw string) string {
 	return string(raw)
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
-func (g Feature) JSON() string {
-	var buf bytes.Buffer
-	buf.WriteString(`{"type":"Feature","geometry":`)
-	buf.WriteString(g.Geometry.JSON())
-	g.BBox.write(&buf)
+func (g Feature) appendJSON(json []byte) []byte {
+	json = append(json, `{"type":"Feature","geometry":`...)
+	json = append(json, g.Geometry.JSON()...)
+	if g.bboxDefined {
+		json = appendBBoxJSON(json, g.BBox)
+	}
 	idRaw, propsRaw := g.getRaw()
 	if propsRaw != "" {
-		buf.WriteString(`,"properties":`)
-		buf.WriteString(propsRaw)
+		json = append(json, `,"properties":`...)
+		json = append(json, propsRaw...)
 	}
 	if idRaw != "" {
-		buf.WriteString(`,"id":`)
-		buf.WriteString(idRaw)
+		json = append(json, `,"id":`...)
+		json = append(json, idRaw...)
 	}
-	buf.WriteByte('}')
-	return buf.String()
+	return append(json, '}')
+}
+
+// JSON is the json representation of the object. This might not be exactly the same as the original.
+func (g Feature) JSON() string {
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -160,7 +168,7 @@ func (g Feature) bboxPtr() *BBox {
 	return g.BBox
 }
 func (g Feature) hasPositions() bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return true
 	}
 	return g.Geometry.hasPositions()
@@ -168,7 +176,7 @@ func (g Feature) hasPositions() bool {
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g Feature) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	return g.Geometry.WithinBBox(bbox)
@@ -176,7 +184,7 @@ func (g Feature) WithinBBox(bbox BBox) bool {
 
 // IntersectsBBox detects if the object intersects a bbox.
 func (g Feature) IntersectsBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
 	return g.Geometry.IntersectsBBox(bbox)
@@ -213,7 +221,7 @@ func (g Feature) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g Feature) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

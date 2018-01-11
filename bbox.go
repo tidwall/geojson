@@ -1,7 +1,6 @@
 package geojson
 
 import (
-	"bytes"
 	"math"
 	"strconv"
 
@@ -63,28 +62,29 @@ func (b *BBox) isCordZDefined() bool {
 	return b != nil && (b.Min.Z != nilz || b.Max.Z != nilz)
 }
 
-func (b *BBox) write(buf *bytes.Buffer) {
+func appendBBoxJSON(json []byte, b *BBox) []byte {
 	if b == nil {
-		return
+		return json
 	}
 	hasZ := b.Min.Z != nilz && b.Max.Z != nilz
-	buf.WriteString(`,"bbox":[`)
-	buf.WriteString(strconv.FormatFloat(b.Min.X, 'f', -1, 64))
-	buf.WriteByte(',')
-	buf.WriteString(strconv.FormatFloat(b.Min.Y, 'f', -1, 64))
+	json = append(json, `,"bbox":[`...)
+	json = strconv.AppendFloat(json, b.Min.X, 'f', -1, 64)
+	json = append(json, ',')
+	json = strconv.AppendFloat(json, b.Min.Y, 'f', -1, 64)
 	if hasZ {
-		buf.WriteByte(',')
-		buf.WriteString(strconv.FormatFloat(b.Min.Z, 'f', -1, 64))
+		json = append(json, ',')
+		json = strconv.AppendFloat(json, b.Min.Z, 'f', -1, 64)
 	}
-	buf.WriteByte(',')
-	buf.WriteString(strconv.FormatFloat(b.Max.X, 'f', -1, 64))
-	buf.WriteByte(',')
-	buf.WriteString(strconv.FormatFloat(b.Max.Y, 'f', -1, 64))
+	json = append(json, ',')
+	json = strconv.AppendFloat(json, b.Max.X, 'f', -1, 64)
+	json = append(json, ',')
+	json = strconv.AppendFloat(json, b.Max.Y, 'f', -1, 64)
 	if hasZ {
-		buf.WriteByte(',')
-		buf.WriteString(strconv.FormatFloat(b.Max.Z, 'f', -1, 64))
+		json = append(json, ',')
+		json = strconv.AppendFloat(json, b.Max.Z, 'f', -1, 64)
 	}
-	buf.WriteByte(']')
+	json = append(json, ']')
+	return json
 }
 
 func (b BBox) center() Position {

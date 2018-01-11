@@ -1,16 +1,12 @@
 package geojson
 
-import (
-	"bytes"
-	"strconv"
-
-	"github.com/tidwall/tile38/geojson/geohash"
-)
+import "github.com/tidwall/tile38/geojson/geohash"
 
 // Polygon is a geojson object with the type "Polygon"
 type Polygon struct {
 	Coordinates [][]Position
 	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillPolygon(coordinates [][]Position, bbox *BBox, err error) (Polygon, error) {
@@ -27,9 +23,15 @@ func fillPolygon(coordinates [][]Position, bbox *BBox, err error) (Polygon, erro
 			}
 		}
 	}
+	bboxDefined := bbox != nil
+	if !bboxDefined {
+		cbbox := level3CalculatedBBox(coordinates, nil, true)
+		bbox = &cbbox
+	}
 	return Polygon{
 		Coordinates: coordinates,
 		BBox:        bbox,
+		bboxDefined: bboxDefined,
 	}, err
 }
 
@@ -61,12 +63,16 @@ func (g Polygon) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g Polygon) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
+}
+
+func (g Polygon) appendJSON(json []byte) []byte {
+	return appendLevel3JSON(json, "Polygon", g.Coordinates, g.BBox, g.bboxDefined)
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g Polygon) JSON() string {
-	return level3JSON("Polygon", g.Coordinates, g.BBox)
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -78,7 +84,7 @@ func (g Polygon) bboxPtr() *BBox {
 	return g.BBox
 }
 func (g Polygon) hasPositions() bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return true
 	}
 	for _, c := range g.Coordinates {
@@ -91,7 +97,7 @@ func (g Polygon) hasPositions() bool {
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g Polygon) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	if len(g.Coordinates) == 0 {
@@ -110,7 +116,7 @@ func (g Polygon) WithinBBox(bbox BBox) bool {
 
 // IntersectsBBox detects if the object intersects a bbox.
 func (g Polygon) IntersectsBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
 	if len(g.Coordinates) == 0 {
@@ -178,46 +184,9 @@ func (g Polygon) Nearby(center Position, meters float64) bool {
 	return nearbyObjectShared(g, center.X, center.Y, meters)
 }
 
-// KML outputs kml
-func (g Polygon) KML() string {
-	var buf bytes.Buffer
-	buf.WriteString(`<?xml version="1.0" encoding="UTF-8"?>`)
-	buf.WriteString(`<kml xmlns="http://www.opengis.net/kml/2.2">`)
-	buf.WriteString(`<Placemark>`)
-	buf.WriteString(`<Polygon>`)
-	buf.WriteString(`<extrude>1</extrude>`)
-	buf.WriteString(`<altitudeMode>relativeToGround</altitudeMode>`)
-	for i, c := range g.Coordinates {
-		if i == 0 {
-			buf.WriteString(`<outerBoundaryIs>`)
-		} else {
-			buf.WriteString(`<innerBoundaryIs>`)
-		}
-		buf.WriteString(`<LinearRing>`)
-		buf.WriteString(`<coordinates>`)
-		for _, c := range c {
-			buf.WriteString("\n" + strconv.FormatFloat(c.X, 'f', -1, 64) + `,` + strconv.FormatFloat(c.Y, 'f', -1, 64) + `,` + strconv.FormatFloat(c.Z, 'f', -1, 64))
-		}
-		if len(c) > 0 {
-			buf.WriteString("\n")
-		}
-		buf.WriteString(`</coordinates>`)
-		buf.WriteString(`</LinearRing>`)
-		if i == 0 {
-			buf.WriteString(`</outerBoundaryIs>`)
-		} else {
-			buf.WriteString(`</innerBoundaryIs>`)
-		}
-	}
-	buf.WriteString(`</Polygon>`)
-	buf.WriteString(`</Placemark>`)
-	buf.WriteString(`</kml>`)
-	return buf.String()
-}
-
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g Polygon) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

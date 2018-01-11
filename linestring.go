@@ -6,6 +6,7 @@ import "github.com/tidwall/tile38/geojson/geohash"
 type LineString struct {
 	Coordinates []Position
 	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillLineString(coordinates []Position, bbox *BBox, err error) (LineString, error) {
@@ -14,9 +15,15 @@ func fillLineString(coordinates []Position, bbox *BBox, err error) (LineString, 
 			err = errLineStringInvalidCoordinates
 		}
 	}
+	bboxDefined := bbox != nil
+	if !bboxDefined {
+		cbbox := level2CalculatedBBox(coordinates, nil)
+		bbox = &cbbox
+	}
 	return LineString{
 		Coordinates: coordinates,
 		BBox:        bbox,
+		bboxDefined: bboxDefined,
 	}, err
 }
 
@@ -46,14 +53,18 @@ func (g LineString) Weight() int {
 	return level2Weight(g.Coordinates, g.BBox)
 }
 
+func (g LineString) appendJSON(json []byte) []byte {
+	return appendLevel2JSON(json, "LineString", g.Coordinates, g.BBox, g.bboxDefined)
+}
+
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g LineString) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g LineString) JSON() string {
-	return level2JSON("LineString", g.Coordinates, g.BBox)
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -64,13 +75,14 @@ func (g LineString) String() string {
 func (g LineString) bboxPtr() *BBox {
 	return g.BBox
 }
+
 func (g LineString) hasPositions() bool {
-	return g.BBox != nil || len(g.Coordinates) > 0
+	return g.bboxDefined || len(g.Coordinates) > 0
 }
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g LineString) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	return polyPositions(g.Coordinates).InsideRect(rectBBox(bbox))
@@ -78,7 +90,7 @@ func (g LineString) WithinBBox(bbox BBox) bool {
 
 // IntersectsBBox detects if the object intersects a bbox.
 func (g LineString) IntersectsBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
 	return polyPositions(g.Coordinates).IntersectsRect(rectBBox(bbox))
@@ -125,7 +137,7 @@ func (g LineString) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g LineString) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

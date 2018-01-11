@@ -10,6 +10,7 @@ import (
 type Point struct {
 	Coordinates Position
 	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillSimplePointOrPoint(coordinates Position, bbox *BBox, err error) (Object, error) {
@@ -20,9 +21,15 @@ func fillSimplePointOrPoint(coordinates Position, bbox *BBox, err error) (Object
 }
 
 func fillPoint(coordinates Position, bbox *BBox, err error) (Point, error) {
+	bboxDefined := bbox != nil
+	if !bboxDefined {
+		cbbox := level1CalculatedBBox(coordinates, nil)
+		bbox = &cbbox
+	}
 	return Point{
 		Coordinates: coordinates,
 		BBox:        bbox,
+		bboxDefined: bboxDefined,
 	}, err
 }
 
@@ -47,12 +54,16 @@ func (g Point) Geohash(precision int) (string, error) {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g Point) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
+}
+
+func (g Point) appendJSON(json []byte) []byte {
+	return appendLevel1JSON(json, "Point", g.Coordinates, g.BBox, g.bboxDefined)
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g Point) JSON() string {
-	return level1JSON("Point", g.Coordinates, g.BBox)
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -78,7 +89,7 @@ func (g Point) hasPositions() bool {
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g Point) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	return poly.Point(g.Coordinates).InsideRect(rectBBox(bbox))
@@ -86,7 +97,7 @@ func (g Point) WithinBBox(bbox BBox) bool {
 
 // IntersectsBBox detects if the object intersects a bbox.
 func (g Point) IntersectsBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
 	return poly.Point(g.Coordinates).InsideRect(rectBBox(bbox))
@@ -133,7 +144,7 @@ func (g Point) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g Point) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

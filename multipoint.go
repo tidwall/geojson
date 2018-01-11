@@ -9,12 +9,19 @@ import (
 type MultiPoint struct {
 	Coordinates []Position
 	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillMultiPoint(coordinates []Position, bbox *BBox, err error) (MultiPoint, error) {
+	bboxDefined := bbox != nil
+	if !bboxDefined {
+		cbbox := level2CalculatedBBox(coordinates, nil)
+		bbox = &cbbox
+	}
 	return MultiPoint{
 		Coordinates: coordinates,
 		BBox:        bbox,
+		bboxDefined: bboxDefined,
 	}, err
 }
 
@@ -46,12 +53,16 @@ func (g MultiPoint) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g MultiPoint) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
+}
+
+func (g MultiPoint) appendJSON(json []byte) []byte {
+	return appendLevel2JSON(json, "MultiPoint", g.Coordinates, g.BBox, g.bboxDefined)
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g MultiPoint) JSON() string {
-	return level2JSON("MultiPoint", g.Coordinates, g.BBox)
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -63,12 +74,12 @@ func (g MultiPoint) bboxPtr() *BBox {
 	return g.BBox
 }
 func (g MultiPoint) hasPositions() bool {
-	return g.BBox != nil || len(g.Coordinates) > 0
+	return g.bboxDefined || len(g.Coordinates) > 0
 }
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g MultiPoint) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	if len(g.Coordinates) == 0 {
@@ -162,7 +173,7 @@ func (g MultiPoint) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g MultiPoint) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

@@ -1,6 +1,8 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMultiLineString(t *testing.T) {
 	testJSON(t, `{"type":"MultiLineString","coordinates":[[[100.1,5.1],[101.1,6.1]],[[102.1,7.1],[103.1,8.1]]]}`)

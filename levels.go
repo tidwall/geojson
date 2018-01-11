@@ -1,10 +1,6 @@
 package geojson
 
-import (
-	"bytes"
-
-	"github.com/tidwall/gjson"
-)
+import "github.com/tidwall/gjson"
 
 func resIsArray(res gjson.Result) bool {
 	if res.Type == gjson.JSON {
@@ -71,17 +67,20 @@ func level1Weight(coordinates Position, bbox *BBox) int {
 	return level1PositionCount(coordinates, bbox) * sizeofPosition
 }
 
-func level1JSON(name string, coordinates Position, bbox *BBox) string {
+func appendLevel1JSON(json []byte, name string, coordinates Position, bbox *BBox, bboxDefined bool) []byte {
+	if bbox != nil && !bboxDefined {
+		bbox = nil
+	}
 	isCordZ := level1IsCoordZDefined(coordinates, bbox)
-	var buf bytes.Buffer
-	buf.WriteString(`{"type":"`)
-	buf.WriteString(name)
-	buf.WriteString(`","coordinates":[`)
-	coordinates.writeJSON(&buf, isCordZ)
-	buf.WriteByte(']')
-	bbox.write(&buf)
-	buf.WriteByte('}')
-	return buf.String()
+	json = append(json, `{"type":"`...)
+	json = append(json, name...)
+	json = append(json, `","coordinates":[`...)
+	json = appendPositionJSON(json, coordinates, isCordZ)
+	json = append(json, ']')
+	if bboxDefined {
+		json = appendBBoxJSON(json, bbox)
+	}
+	return append(json, '}')
 }
 
 func level1IsCoordZDefined(coordinates Position, bbox *BBox) bool {
@@ -149,24 +148,28 @@ func level2Weight(coordinates []Position, bbox *BBox) int {
 	return level2PositionCount(coordinates, bbox) * sizeofPosition
 }
 
-func level2JSON(name string, coordinates []Position, bbox *BBox) string {
+func appendLevel2JSON(json []byte, name string, coordinates []Position, bbox *BBox, bboxDefined bool) []byte {
+	if bbox != nil && !bboxDefined {
+		bbox = nil
+	}
 	isCordZ := level2IsCoordZDefined(coordinates, bbox)
-	var buf bytes.Buffer
-	buf.WriteString(`{"type":"`)
-	buf.WriteString(name)
-	buf.WriteString(`","coordinates":[`)
+	json = append(json, `{"type":"`...)
+	json = append(json, name...)
+	json = append(json, `","coordinates":[`...)
 	for i, p := range coordinates {
 		if i > 0 {
-			buf.WriteByte(',')
+			json = append(json, ',')
 		}
-		buf.WriteByte('[')
-		p.writeJSON(&buf, isCordZ)
-		buf.WriteByte(']')
+		json = append(json, '[')
+		json = appendPositionJSON(json, p, isCordZ)
+		json = append(json, ']')
 	}
-	buf.WriteByte(']')
-	bbox.write(&buf)
-	buf.WriteByte('}')
-	return buf.String()
+	json = append(json, ']')
+	if bboxDefined {
+		json = appendBBoxJSON(json, bbox)
+	}
+	json = append(json, '}')
+	return json
 }
 
 func level2IsCoordZDefined(coordinates []Position, bbox *BBox) bool {
@@ -259,31 +262,34 @@ func level3PositionCount(coordinates [][]Position, bbox *BBox) int {
 	return res
 }
 
-func level3JSON(name string, coordinates [][]Position, bbox *BBox) string {
+func appendLevel3JSON(json []byte, name string, coordinates [][]Position, bbox *BBox, bboxDefined bool) []byte {
+	if bbox != nil && !bboxDefined {
+		bbox = nil
+	}
 	isCordZ := level3IsCoordZDefined(coordinates, bbox)
-	var buf bytes.Buffer
-	buf.WriteString(`{"type":"`)
-	buf.WriteString(name)
-	buf.WriteString(`","coordinates":[`)
+	json = append(json, `{"type":"`...)
+	json = append(json, name...)
+	json = append(json, `","coordinates":[`...)
 	for i, p := range coordinates {
 		if i > 0 {
-			buf.WriteByte(',')
+			json = append(json, ',')
 		}
-		buf.WriteByte('[')
+		json = append(json, '[')
 		for i, p := range p {
 			if i > 0 {
-				buf.WriteByte(',')
+				json = append(json, ',')
 			}
-			buf.WriteByte('[')
-			p.writeJSON(&buf, isCordZ)
-			buf.WriteByte(']')
+			json = append(json, '[')
+			json = appendPositionJSON(json, p, isCordZ)
+			json = append(json, ']')
 		}
-		buf.WriteByte(']')
+		json = append(json, ']')
 	}
-	buf.WriteByte(']')
-	bbox.write(&buf)
-	buf.WriteByte('}')
-	return buf.String()
+	json = append(json, ']')
+	if bboxDefined {
+		json = appendBBoxJSON(json, bbox)
+	}
+	return append(json, '}')
 }
 
 func level3IsCoordZDefined(coordinates [][]Position, bbox *BBox) bool {
@@ -388,38 +394,41 @@ func level4PositionCount(coordinates [][][]Position, bbox *BBox) int {
 	return res
 }
 
-func level4JSON(name string, coordinates [][][]Position, bbox *BBox) string {
+func appendLevel4JSON(json []byte, name string, coordinates [][][]Position, bbox *BBox, bboxDefined bool) []byte {
+	if bbox != nil && !bboxDefined {
+		bbox = nil
+	}
 	isCordZ := level4IsCoordZDefined(coordinates, bbox)
-	var buf bytes.Buffer
-	buf.WriteString(`{"type":"`)
-	buf.WriteString(name)
-	buf.WriteString(`","coordinates":[`)
+	json = append(json, `{"type":"`...)
+	json = append(json, name...)
+	json = append(json, `","coordinates":[`...)
 	for i, p := range coordinates {
 		if i > 0 {
-			buf.WriteByte(',')
+			json = append(json, ',')
 		}
-		buf.WriteByte('[')
+		json = append(json, '[')
 		for i, p := range p {
 			if i > 0 {
-				buf.WriteByte(',')
+				json = append(json, ',')
 			}
-			buf.WriteByte('[')
+			json = append(json, '[')
 			for i, p := range p {
 				if i > 0 {
-					buf.WriteByte(',')
+					json = append(json, ',')
 				}
-				buf.WriteByte('[')
-				p.writeJSON(&buf, isCordZ)
-				buf.WriteByte(']')
+				json = append(json, '[')
+				json = appendPositionJSON(json, p, isCordZ)
+				json = append(json, ']')
 			}
-			buf.WriteByte(']')
+			json = append(json, ']')
 		}
-		buf.WriteByte(']')
+		json = append(json, ']')
 	}
-	buf.WriteByte(']')
-	bbox.write(&buf)
-	buf.WriteByte('}')
-	return buf.String()
+	json = append(json, ']')
+	if bboxDefined {
+		json = appendBBoxJSON(json, bbox)
+	}
+	return append(json, '}')
 }
 
 func level4IsCoordZDefined(coordinates [][][]Position, bbox *BBox) bool {

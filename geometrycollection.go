@@ -1,16 +1,15 @@
 package geojson
 
 import (
-	"bytes"
-
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/geohash"
 )
 
 // GeometryCollection is a geojson object with the type "GeometryCollection"
 type GeometryCollection struct {
-	Geometries []Object
-	BBox       *BBox
+	Geometries  []Object
+	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillGeometryCollectionMap(json string) (GeometryCollection, error) {
@@ -40,6 +39,14 @@ func fillGeometryCollectionMap(json string) (GeometryCollection, error) {
 	}
 	var err error
 	g.BBox, err = fillBBox(json)
+	if err != nil {
+		return g, err
+	}
+	g.bboxDefined = g.BBox != nil
+	if !g.bboxDefined {
+		cbbox := g.CalculatedBBox()
+		g.BBox = &cbbox
+	}
 	return g, err
 }
 
@@ -93,23 +100,26 @@ func (g GeometryCollection) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g GeometryCollection) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
+}
+func (g GeometryCollection) appendJSON(json []byte) []byte {
+	json = append(json, `{"type":"GeometryCollection","geometries":[`...)
+	for i, g := range g.Geometries {
+		if i != 0 {
+			json = append(json, ',')
+		}
+		json = append(json, g.JSON()...)
+	}
+	json = append(json, ']')
+	if g.bboxDefined {
+		json = appendBBoxJSON(json, g.BBox)
+	}
+	return append(json, '}')
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g GeometryCollection) JSON() string {
-	var buf bytes.Buffer
-	buf.WriteString(`{"type":"GeometryCollection","geometries":[`)
-	for i, g := range g.Geometries {
-		if i != 0 {
-			buf.WriteByte(',')
-		}
-		buf.WriteString(g.JSON())
-	}
-	buf.WriteByte(']')
-	g.BBox.write(&buf)
-	buf.WriteByte('}')
-	return buf.String()
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -138,7 +148,7 @@ func (g GeometryCollection) hasPositions() bool {
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g GeometryCollection) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	if len(g.Geometries) == 0 {
@@ -154,7 +164,7 @@ func (g GeometryCollection) WithinBBox(bbox BBox) bool {
 
 // IntersectsBBox detects if the object intersects a bbox.
 func (g GeometryCollection) IntersectsBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
 	for _, g := range g.Geometries {
@@ -228,7 +238,7 @@ func (g GeometryCollection) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g GeometryCollection) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

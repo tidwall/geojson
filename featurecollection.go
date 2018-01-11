@@ -1,16 +1,15 @@
 package geojson
 
 import (
-	"bytes"
-
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/tile38/geojson/geohash"
 )
 
 // FeatureCollection is a geojson object with the type "FeatureCollection"
 type FeatureCollection struct {
-	Features []Object
-	BBox     *BBox
+	Features    []Object
+	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillFeatureCollectionMap(json string) (FeatureCollection, error) {
@@ -40,6 +39,14 @@ func fillFeatureCollectionMap(json string) (FeatureCollection, error) {
 	}
 	var err error
 	g.BBox, err = fillBBox(json)
+	if err != nil {
+		return g, err
+	}
+	g.bboxDefined = g.BBox != nil
+	if !g.bboxDefined {
+		cbbox := g.CalculatedBBox()
+		g.BBox = &cbbox
+	}
 	return g, err
 }
 
@@ -93,23 +100,27 @@ func (g FeatureCollection) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g FeatureCollection) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
+}
+
+func (g FeatureCollection) appendJSON(json []byte) []byte {
+	json = append(json, `{"type":"FeatureCollection","features":[`...)
+	for i, g := range g.Features {
+		if i != 0 {
+			json = append(json, ',')
+		}
+		json = append(json, g.JSON()...)
+	}
+	json = append(json, ']')
+	if g.bboxDefined {
+		json = appendBBoxJSON(json, g.BBox)
+	}
+	return append(json, '}')
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g FeatureCollection) JSON() string {
-	var buf bytes.Buffer
-	buf.WriteString(`{"type":"FeatureCollection","features":[`)
-	for i, g := range g.Features {
-		if i != 0 {
-			buf.WriteByte(',')
-		}
-		buf.WriteString(g.JSON())
-	}
-	buf.WriteByte(']')
-	g.BBox.write(&buf)
-	buf.WriteByte('}')
-	return buf.String()
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -138,7 +149,7 @@ func (g FeatureCollection) hasPositions() bool {
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g FeatureCollection) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	if len(g.Features) == 0 {
@@ -154,7 +165,7 @@ func (g FeatureCollection) WithinBBox(bbox BBox) bool {
 
 // IntersectsBBox detects if the object intersects a bbox.
 func (g FeatureCollection) IntersectsBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
 	for _, g := range g.Features {
@@ -228,7 +239,7 @@ func (g FeatureCollection) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g FeatureCollection) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

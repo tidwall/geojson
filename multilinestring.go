@@ -9,6 +9,7 @@ import (
 type MultiLineString struct {
 	Coordinates [][]Position
 	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillMultiLineString(coordinates [][]Position, bbox *BBox, err error) (MultiLineString, error) {
@@ -20,9 +21,15 @@ func fillMultiLineString(coordinates [][]Position, bbox *BBox, err error) (Multi
 			}
 		}
 	}
+	bboxDefined := bbox != nil
+	if !bboxDefined {
+		cbbox := level3CalculatedBBox(coordinates, nil, false)
+		bbox = &cbbox
+	}
 	return MultiLineString{
 		Coordinates: coordinates,
 		BBox:        bbox,
+		bboxDefined: bboxDefined,
 	}, err
 }
 
@@ -54,12 +61,16 @@ func (g MultiLineString) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g MultiLineString) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
+}
+
+func (g MultiLineString) appendJSON(json []byte) []byte {
+	return appendLevel3JSON(json, "MultiLineString", g.Coordinates, g.BBox, g.bboxDefined)
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g MultiLineString) JSON() string {
-	return level3JSON("MultiLineString", g.Coordinates, g.BBox)
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -71,7 +82,7 @@ func (g MultiLineString) bboxPtr() *BBox {
 	return g.BBox
 }
 func (g MultiLineString) hasPositions() bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return true
 	}
 	for _, c := range g.Coordinates {
@@ -84,7 +95,7 @@ func (g MultiLineString) hasPositions() bool {
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g MultiLineString) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	if len(g.Coordinates) == 0 {
@@ -105,7 +116,7 @@ func (g MultiLineString) WithinBBox(bbox BBox) bool {
 
 // IntersectsBBox detects if the object intersects a bbox.
 func (g MultiLineString) IntersectsBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
 	for _, ls := range g.Coordinates {
@@ -183,7 +194,7 @@ func (g MultiLineString) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g MultiLineString) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

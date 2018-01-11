@@ -40,6 +40,7 @@ func doesJSONMatch(js1, js2 string) bool {
 }
 
 func testJSON(t *testing.T, jstr string) Object {
+	t.Helper()
 	o, err := ObjectJSON(jstr)
 	if err != nil {
 		t.Fatal(err)
@@ -47,11 +48,11 @@ func testJSON(t *testing.T, jstr string) Object {
 	if !doesJSONMatch(o.JSON(), jstr) {
 		t.Fatalf("expected '%v', got '%v'", o.JSON(), jstr)
 	}
-
 	return o
 }
 
 func testInvalidJSON(t *testing.T, js string, expecting error) {
+	t.Helper()
 	_, err := ObjectJSON(js)
 	if err == nil {
 		t.Fatalf("expecting an error for json '%s'", js)
@@ -86,33 +87,3 @@ func TestInvalidJSON(t *testing.T) {
 	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3]}`, errBBoxInvalidNumberOfValues)
 	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,"a"]}`, errBBoxInvalidValue)
 }
-
-// func TestJunk(t *testing.T) {
-// 	type ThreePoint struct{ X, Y, Z float64 }
-
-// 	var s1 = ThreePoint{50, 50, 50}
-// 	var s2 = &s1
-// 	var o1 interface{} = s1
-// 	var o2 interface{} = s2
-
-// 	t1 := reflect.TypeOf(s1)
-// 	t2 := reflect.TypeOf(s2)
-// 	t3 := reflect.TypeOf(o1)
-// 	t4 := reflect.TypeOf(o2)
-
-// 	fmt.Printf("typeof: %s\n", t1)
-// 	fmt.Printf("typeof: %s\n", t2)
-// 	fmt.Printf("typeof: %s\n", t3)
-// 	fmt.Printf("typeof: %s\n", t4)
-
-// 	z1 := unsafe.Sizeof(s1)
-// 	z2 := unsafe.Sizeof(s2)
-// 	z3 := unsafe.Sizeof(o1)
-// 	z4 := unsafe.Sizeof(o2.(*ThreePoint))
-
-// 	fmt.Printf("sizeof: %d\n", z1)
-// 	fmt.Printf("sizeof: %d\n", z2)
-// 	fmt.Printf("sizeof: %d\n", z3)
-// 	fmt.Printf("sizeof: %d\n", z4)
-
-// }

@@ -6,6 +6,7 @@ import "github.com/tidwall/tile38/geojson/geohash"
 type MultiPolygon struct {
 	Coordinates [][][]Position
 	BBox        *BBox
+	bboxDefined bool
 }
 
 func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiPolygon, error) {
@@ -24,9 +25,15 @@ func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiP
 			}
 		}
 	}
+	bboxDefined := bbox != nil
+	if !bboxDefined {
+		cbbox := level4CalculatedBBox(coordinates, nil)
+		bbox = &cbbox
+	}
 	return MultiPolygon{
 		Coordinates: coordinates,
 		BBox:        bbox,
+		bboxDefined: bboxDefined,
 	}, err
 }
 
@@ -58,12 +65,16 @@ func (g MultiPolygon) Weight() int {
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
 func (g MultiPolygon) MarshalJSON() ([]byte, error) {
-	return []byte(g.JSON()), nil
+	return g.appendJSON(nil), nil
+}
+
+func (g MultiPolygon) appendJSON(json []byte) []byte {
+	return appendLevel4JSON(json, "MultiPolygon", g.Coordinates, g.BBox, g.bboxDefined)
 }
 
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (g MultiPolygon) JSON() string {
-	return level4JSON("MultiPolygon", g.Coordinates, g.BBox)
+	return string(g.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -75,7 +86,7 @@ func (g MultiPolygon) bboxPtr() *BBox {
 	return g.BBox
 }
 func (g MultiPolygon) hasPositions() bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return true
 	}
 	for _, c := range g.Coordinates {
@@ -90,7 +101,7 @@ func (g MultiPolygon) hasPositions() bool {
 
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g MultiPolygon) WithinBBox(bbox BBox) bool {
-	if g.BBox != nil {
+	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
 	}
 	if len(g.Coordinates) == 0 {
@@ -192,7 +203,7 @@ func (g MultiPolygon) Nearby(center Position, meters float64) bool {
 
 // IsBBoxDefined returns true if the object has a defined bbox.
 func (g MultiPolygon) IsBBoxDefined() bool {
-	return g.BBox != nil
+	return g.bboxDefined
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.

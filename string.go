@@ -45,10 +45,14 @@ func (s String) CalculatedPoint() Position {
 	return Position{}
 }
 
+func (s String) appendJSON(json []byte) []byte {
+	b, _ := s.MarshalJSON()
+	return append(json, b...)
+}
+
 // JSON is the json representation of the object. This might not be exactly the same as the original.
 func (s String) JSON() string {
-	b, _ := s.MarshalJSON()
-	return string(b)
+	return string(s.appendJSON(nil))
 }
 
 // String returns a string representation of the object. This might be JSON or something else.
@@ -57,7 +61,7 @@ func (s String) String() string {
 }
 
 // IsGeometry return true if the object is a geojson geometry object. false if it something else.
-func (g String) IsGeometry() bool {
+func (s String) IsGeometry() bool {
 	return false
 }
 

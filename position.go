@@ -1,7 +1,6 @@
 package geojson
 
 import (
-	"bytes"
 	"encoding/binary"
 	"math"
 	"strconv"
@@ -38,26 +37,15 @@ func polyExteriorHoles(positions [][]Position) (exterior poly.Polygon, holes []p
 	return
 }
 
-func (p Position) writeJSON(buf *bytes.Buffer, isCordZ bool) {
-	buf.WriteString(strconv.FormatFloat(p.X, 'f', -1, 64))
-	buf.WriteByte(',')
-	buf.WriteString(strconv.FormatFloat(p.Y, 'f', -1, 64))
+func appendPositionJSON(json []byte, p Position, isCordZ bool) []byte {
+	json = strconv.AppendFloat(json, p.X, 'f', -1, 64)
+	json = append(json, ',')
+	json = strconv.AppendFloat(json, p.Y, 'f', -1, 64)
 	if isCordZ {
-		buf.WriteByte(',')
-		buf.WriteString(strconv.FormatFloat(p.Z, 'f', -1, 64))
+		json = append(json, ',')
+		json = strconv.AppendFloat(json, p.Z, 'f', -1, 64)
 	}
-}
-
-func (p Position) writeBytes(buf *bytes.Buffer, isCordZ bool) {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, math.Float64bits(p.X))
-	buf.Write(b)
-	binary.LittleEndian.PutUint64(b, math.Float64bits(p.Y))
-	buf.Write(b)
-	if isCordZ {
-		binary.LittleEndian.PutUint64(b, math.Float64bits(p.Z))
-		buf.Write(b)
-	}
+	return json
 }
 
 const earthRadius = 6371e3
