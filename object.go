@@ -182,7 +182,7 @@ func objectMap(json string, from int) (Object, error) {
 	return o, err
 }
 
-func withinObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin func(v MultiPolygon) bool) bool {
+func withinObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
 	bbp := o.bboxPtr()
 	if bbp != nil {
 		if !g.WithinBBox(*bbp) {
@@ -205,10 +205,12 @@ func withinObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin func(
 		}
 		return pin(v)
 	case MultiPolygon:
-		if len(v.Coordinates) == 0 {
-			return false
+		for _, coords := range v.Coordinates {
+			if pin(Polygon{Coordinates: coords}) {
+				return true
+			}
 		}
-		return mpin(v)
+		return false
 	case Feature:
 		return g.Within(v.Geometry)
 	case FeatureCollection:
@@ -234,7 +236,7 @@ func withinObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin func(
 	}
 }
 
-func intersectsObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin func(v MultiPolygon) bool) bool {
+func intersectsObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
 	bbp := o.bboxPtr()
 	if bbp != nil {
 		if !g.IntersectsBBox(*bbp) {
@@ -257,10 +259,12 @@ func intersectsObjectShared(g Object, o Object, pin func(v Polygon) bool, mpin f
 		}
 		return pin(v)
 	case MultiPolygon:
-		if len(v.Coordinates) == 0 {
-			return false
+		for _, coords := range v.Coordinates {
+			if pin(Polygon{Coordinates: coords}) {
+				return true
+			}
 		}
-		return mpin(v)
+		return false
 	case Feature:
 		return g.Intersects(v.Geometry)
 	case FeatureCollection:

@@ -102,14 +102,6 @@ func (g LineString) Within(o Object) bool {
 		func(v Polygon) bool {
 			return polyPositions(g.Coordinates).Inside(polyExteriorHoles(v.Coordinates))
 		},
-		func(v MultiPolygon) bool {
-			for _, c := range v.Coordinates {
-				if !polyPositions(g.Coordinates).Inside(polyExteriorHoles(c)) {
-					return false
-				}
-			}
-			return true
-		},
 	)
 }
 
@@ -118,14 +110,6 @@ func (g LineString) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
 			return polyPositions(g.Coordinates).LineStringIntersects(polyExteriorHoles(v.Coordinates))
-		},
-		func(v MultiPolygon) bool {
-			for _, c := range v.Coordinates {
-				if polyPositions(g.Coordinates).LineStringIntersects(polyExteriorHoles(c)) {
-					return true
-				}
-			}
-			return false
 		},
 	)
 }

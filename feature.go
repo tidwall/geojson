@@ -196,9 +196,6 @@ func (g Feature) Within(o Object) bool {
 		func(v Polygon) bool {
 			return g.Geometry.Within(o)
 		},
-		func(v MultiPolygon) bool {
-			return g.Geometry.Within(o)
-		},
 	)
 }
 
@@ -206,9 +203,6 @@ func (g Feature) Within(o Object) bool {
 func (g Feature) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
-			return g.Geometry.Intersects(o)
-		},
-		func(v MultiPolygon) bool {
 			return g.Geometry.Intersects(o)
 		},
 	)

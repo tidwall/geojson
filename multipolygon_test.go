@@ -1,6 +1,8 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMultiPolygon(t *testing.T) {
 	testJSON(t, `
@@ -220,4 +222,20 @@ func TestMultiPolygon(t *testing.T) {
 		    ]
 		}
 `)
+}
+func TestIssue244(t *testing.T) {
+	json := `{"type":"MultiPolygon","coordinates":[[[[180.0,40.0],[180.0,50.0],[170.0,50.0],[170.0,40.0],[180.0,40.0]]],[[[-170.0,40.0],[-170.0,50.0],[-180.0,50.0],[-180.0,40.0],[-170.0,40.0]]]]}`
+	g := testJSON(t, json).(MultiPolygon)
+	if !(SimplePoint{180.0, 40.0}).Within(g) {
+		t.Fatal("!")
+	}
+	if !(SimplePoint{179.0, 45.0}).Within(g) {
+		t.Fatal("!")
+	}
+	if !(SimplePoint{179.0, 45.0}).Within(Polygon{Coordinates: g.Coordinates[0]}) {
+		t.Fatal("!")
+	}
+	if (SimplePoint{179.0, 45.0}).Within(Polygon{Coordinates: g.Coordinates[1]}) {
+		t.Fatal("!")
+	}
 }

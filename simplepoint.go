@@ -91,14 +91,6 @@ func (g SimplePoint) Within(o Object) bool {
 		func(v Polygon) bool {
 			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Inside(polyExteriorHoles(v.Coordinates))
 		},
-		func(v MultiPolygon) bool {
-			for _, c := range v.Coordinates {
-				if !poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Inside(polyExteriorHoles(c)) {
-					return false
-				}
-			}
-			return true
-		},
 	)
 }
 
@@ -107,14 +99,6 @@ func (g SimplePoint) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
 			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Intersects(polyExteriorHoles(v.Coordinates))
-		},
-		func(v MultiPolygon) bool {
-			for _, c := range v.Coordinates {
-				if poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Intersects(polyExteriorHoles(c)) {
-					return true
-				}
-			}
-			return false
 		},
 	)
 }

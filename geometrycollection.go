@@ -189,17 +189,6 @@ func (g GeometryCollection) Within(o Object) bool {
 			}
 			return true
 		},
-		func(v MultiPolygon) bool {
-			if len(g.Geometries) == 0 {
-				return false
-			}
-			for _, g := range g.Geometries {
-				if !g.Within(o) {
-					return false
-				}
-			}
-			return true
-		},
 	)
 }
 
@@ -207,17 +196,6 @@ func (g GeometryCollection) Within(o Object) bool {
 func (g GeometryCollection) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
-			if len(g.Geometries) == 0 {
-				return false
-			}
-			for _, g := range g.Geometries {
-				if g.Intersects(o) {
-					return true
-				}
-			}
-			return false
-		},
-		func(v MultiPolygon) bool {
 			if len(g.Geometries) == 0 {
 				return false
 			}

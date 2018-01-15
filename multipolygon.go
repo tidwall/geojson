@@ -144,21 +144,6 @@ func (g MultiPolygon) Within(o Object) bool {
 			}
 			return true
 		},
-		func(v MultiPolygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, p := range g.Coordinates {
-				if len(p) > 0 {
-					for _, c := range v.Coordinates {
-						if !polyPositions(p[0]).Inside(polyExteriorHoles(c)) {
-							return false
-						}
-					}
-				}
-			}
-			return true
-		},
 	)
 }
 
@@ -173,21 +158,6 @@ func (g MultiPolygon) Intersects(o Object) bool {
 				if len(p) > 0 {
 					if polyPositions(p[0]).Intersects(polyExteriorHoles(v.Coordinates)) {
 						return true
-					}
-				}
-			}
-			return false
-		},
-		func(v MultiPolygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, p := range g.Coordinates {
-				if len(p) > 0 {
-					for _, c := range v.Coordinates {
-						if polyPositions(p[0]).Intersects(polyExteriorHoles(c)) {
-							return true
-						}
 					}
 				}
 			}

@@ -141,19 +141,6 @@ func (g MultiLineString) Within(o Object) bool {
 			}
 			return true
 		},
-		func(v MultiPolygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, ls := range g.Coordinates {
-				for _, c := range v.Coordinates {
-					if !polyPositions(ls).Inside(polyExteriorHoles(c)) {
-						return false
-					}
-				}
-			}
-			return true
-		},
 	)
 }
 
@@ -167,19 +154,6 @@ func (g MultiLineString) Intersects(o Object) bool {
 			for _, ls := range g.Coordinates {
 				if polyPositions(ls).Intersects(polyExteriorHoles(v.Coordinates)) {
 					return true
-				}
-			}
-			return false
-		},
-		func(v MultiPolygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, ls := range g.Coordinates {
-				for _, c := range v.Coordinates {
-					if polyPositions(ls).Intersects(polyExteriorHoles(c)) {
-						return true
-					}
 				}
 			}
 			return false

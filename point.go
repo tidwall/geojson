@@ -109,14 +109,6 @@ func (g Point) Within(o Object) bool {
 		func(v Polygon) bool {
 			return poly.Point(g.Coordinates).Inside(polyExteriorHoles(v.Coordinates))
 		},
-		func(v MultiPolygon) bool {
-			for _, c := range v.Coordinates {
-				if !poly.Point(g.Coordinates).Inside(polyExteriorHoles(c)) {
-					return false
-				}
-			}
-			return true
-		},
 	)
 }
 
@@ -125,14 +117,6 @@ func (g Point) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
 			return poly.Point(g.Coordinates).Intersects(polyExteriorHoles(v.Coordinates))
-		},
-		func(v MultiPolygon) bool {
-			for _, c := range v.Coordinates {
-				if poly.Point(g.Coordinates).Intersects(polyExteriorHoles(c)) {
-					return true
-				}
-			}
-			return false
 		},
 	)
 }
