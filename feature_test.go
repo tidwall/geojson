@@ -116,7 +116,7 @@ func TestComplexFeature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	o = o
+	_ = o
 }
 
 func TestIssue245(t *testing.T) {

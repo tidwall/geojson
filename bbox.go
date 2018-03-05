@@ -170,7 +170,7 @@ func (b BBox) Sparse(amount byte) []BBox {
 // BBoxesFromCenter calculates the bounding box surrounding a circle.
 func BBoxesFromCenter(lat, lon, meters float64) (outer BBox) {
 
-	outer.Min.Y, outer.Min.X, outer.Max.Y, outer.Max.X = BBoxBounds(lat, lon, meters)
+	outer.Min.Y, outer.Min.X, outer.Max.Y, outer.Max.X = BoundsFromCenter(lat, lon, meters)
 	if outer.Min.X == outer.Max.X {
 		switch outer.Min.X {
 		case -180:
@@ -183,7 +183,8 @@ func BBoxesFromCenter(lat, lon, meters float64) (outer BBox) {
 	return outer
 }
 
-func BBoxBounds(lat, lon, meters float64) (latMin, lonMin, latMax, lonMax float64) {
+// BoundsFromCenter calculates the bounding box surrounding a circle.
+func BoundsFromCenter(lat, lon, meters float64) (latMin, lonMin, latMax, lonMax float64) {
 
 	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Latitude
 	lat = toRadians(lat)
