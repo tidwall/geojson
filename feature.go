@@ -12,7 +12,7 @@ type Feature struct {
 	Geometry    Object
 	BBox        *BBox
 	bboxDefined bool
-	idprops     string // raw id and properties seperated by a '\0'
+	idprops     string // raw id and properties separated by a '\0'
 }
 
 func fillFeatureMap(json string) (Feature, error) {
