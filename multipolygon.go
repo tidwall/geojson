@@ -7,27 +7,22 @@ type MultiPolygon struct {
 	Coordinates [][][]Position
 	BBox        *BBox
 	bboxDefined bool
+	polygons    []Polygon
 }
 
 func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiPolygon, error) {
+	polygons := make([]Polygon, len(coordinates))
 	if err == nil {
-	outer:
-		for _, ps := range coordinates {
-			if len(ps) == 0 {
-				err = errMustBeALinearRing
+		for i, ps := range coordinates {
+			polygons[i], err = fillPolygon(ps, nil, nil)
+			if err != nil {
 				break
-			}
-			for _, ps := range ps {
-				if !isLinearRing(ps) {
-					err = errMustBeALinearRing
-					break outer
-				}
 			}
 		}
 	}
 	bboxDefined := bbox != nil
 	if !bboxDefined {
-		cbbox := level4CalculatedBBox(coordinates, nil)
+		cbbox := calculatedBBox(polygons, nil)
 		bbox = &cbbox
 	}
 	return MultiPolygon{
@@ -37,9 +32,24 @@ func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiP
 	}, err
 }
 
+func calculatedBBox(polygons []Polygon, bbox *BBox) BBox {
+	if bbox != nil {
+		return *bbox
+	}
+	var cbbox BBox
+	for i, p := range polygons {
+		if i == 0 {
+			cbbox = p.CalculatedBBox()
+		} else {
+			cbbox = cbbox.union(p.CalculatedBBox())
+		}
+	}
+	return cbbox
+}
+
 // CalculatedBBox is exterior bbox containing the object.
 func (g MultiPolygon) CalculatedBBox() BBox {
-	return level4CalculatedBBox(g.Coordinates, g.BBox)
+	return calculatedBBox(g.polygons, g.BBox)
 }
 
 // CalculatedPoint is a point representation of the object.
@@ -99,6 +109,13 @@ func (g MultiPolygon) hasPositions() bool {
 	return false
 }
 
+func (g MultiPolygon) getPolygon(index int) Polygon {
+	if index < len(g.polygons) {
+		return g.polygons[index]
+	}
+	return Polygon{Coordinates: g.Coordinates[index]}
+}
+
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g MultiPolygon) WithinBBox(bbox BBox) bool {
 	if g.bboxDefined {
@@ -107,8 +124,8 @@ func (g MultiPolygon) WithinBBox(bbox BBox) bool {
 	if len(g.Coordinates) == 0 {
 		return false
 	}
-	for _, p := range g.Coordinates {
-		if !(Polygon{Coordinates: p}).WithinBBox(bbox) {
+	for i := range g.Coordinates {
+		if !g.getPolygon(i).WithinBBox(bbox) {
 			return false
 		}
 	}
@@ -120,8 +137,8 @@ func (g MultiPolygon) IntersectsBBox(bbox BBox) bool {
 	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
-	for _, p := range g.Coordinates {
-		if (Polygon{Coordinates: p}).IntersectsBBox(bbox) {
+	for i := range g.Coordinates {
+		if g.getPolygon(i).IntersectsBBox(bbox) {
 			return true
 		}
 	}
@@ -135,12 +152,8 @@ func (g MultiPolygon) Within(o Object) bool {
 			if len(g.Coordinates) == 0 {
 				return false
 			}
-			for _, p := range g.Coordinates {
-				if len(p) > 0 {
-					if !polyPositions(p[0]).Inside(polyExteriorHoles(v.Coordinates)) {
-						return false
-					}
-				}
+			if !v.Within(o) {
+				return false
 			}
 			return true
 		},
@@ -154,12 +167,8 @@ func (g MultiPolygon) Intersects(o Object) bool {
 			if len(g.Coordinates) == 0 {
 				return false
 			}
-			for _, p := range g.Coordinates {
-				if len(p) > 0 {
-					if polyPositions(p[0]).Intersects(polyExteriorHoles(v.Coordinates)) {
-						return true
-					}
-				}
+			if v.Intersects(o) {
+				return true
 			}
 			return false
 		},

@@ -363,20 +363,6 @@ func fillLevel4Map(json string) (
 	return
 }
 
-func level4CalculatedBBox(coordinates [][][]Position, bbox *BBox) BBox {
-	if bbox != nil {
-		return *bbox
-	}
-	var bbox2 BBox
-	var i = 0
-	for _, ps := range coordinates {
-		for _, ps := range ps {
-			i, bbox2 = positionBBox(i, bbox2, ps)
-		}
-	}
-	return bbox2
-}
-
 func level4Weight(coordinates [][][]Position, bbox *BBox) int {
 	return level4PositionCount(coordinates, bbox) * sizeofPosition
 }

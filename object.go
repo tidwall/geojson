@@ -205,8 +205,8 @@ func withinObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
 		}
 		return pin(v)
 	case MultiPolygon:
-		for _, coords := range v.Coordinates {
-			if pin(Polygon{Coordinates: coords}) {
+		for i := range v.Coordinates {
+			if pin(v.getPolygon(i)) {
 				return true
 			}
 		}
