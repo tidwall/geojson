@@ -103,6 +103,11 @@ func (g Polygon) WithinBBox(bbox BBox) bool {
 	if len(g.Coordinates) == 0 {
 		return false
 	}
+	if g.BBox != nil {
+		if !rectBBox(*g.BBox).IntersectsRect(rectBBox(bbox)) {
+			return false
+		}
+	}
 	rbbox := rectBBox(bbox)
 	ext, holes := polyExteriorHoles(g.Coordinates)
 	if len(holes) > 0 {
@@ -121,6 +126,11 @@ func (g Polygon) IntersectsBBox(bbox BBox) bool {
 	}
 	if len(g.Coordinates) == 0 {
 		return false
+	}
+	if g.BBox != nil {
+		if !rectBBox(*g.BBox).IntersectsRect(rectBBox(bbox)) {
+			return false
+		}
 	}
 	rbbox := rectBBox(bbox)
 	ext, holes := polyExteriorHoles(g.Coordinates)

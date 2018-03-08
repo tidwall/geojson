@@ -29,6 +29,7 @@ func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiP
 		Coordinates: coordinates,
 		BBox:        bbox,
 		bboxDefined: bboxDefined,
+		polygons:    polygons,
 	}, err
 }
 
