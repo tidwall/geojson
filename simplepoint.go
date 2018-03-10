@@ -87,12 +87,20 @@ func (g SimplePoint) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g SimplePoint) Within(o Object) bool {
-	return withinObjectShared(g, o)
+	return withinObjectShared(g, o,
+		func(v Polygon) bool {
+			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Inside(polyExteriorHoles(v.Coordinates))
+		},
+	)
 }
 
 // Intersects detects if the object intersects another object.
 func (g SimplePoint) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o)
+	return intersectsObjectShared(g, o,
+		func(v Polygon) bool {
+			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Intersects(polyExteriorHoles(v.Coordinates))
+		},
+	)
 }
 
 // Nearby detects if the object is nearby a position.

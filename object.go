@@ -182,6 +182,171 @@ func objectMap(json string, from int) (Object, error) {
 	return o, err
 }
 
+func withinObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
+	bbp := o.bboxPtr()
+	if bbp != nil {
+		if !g.WithinBBox(*bbp) {
+			return false
+		}
+		if o.IsBBoxDefined() {
+			return true
+		}
+	}
+	switch v := o.(type) {
+	default:
+		return false
+	case Point:
+		return g.WithinBBox(v.CalculatedBBox())
+	case SimplePoint:
+		return g.WithinBBox(v.CalculatedBBox())
+	case MultiPoint:
+		for i := range v.Coordinates {
+			if g.Within(Point{Coordinates: v.Coordinates[i]}) {
+				return true
+			}
+		}
+		return false
+	case LineString:
+		if len(v.Coordinates) == 0 {
+			return false
+		}
+		switch g := g.(type) {
+		default:
+			return false
+		case SimplePoint:
+			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).IntersectsLineString(polyPositions(v.Coordinates))
+		case Point:
+			return poly.Point(g.Coordinates).IntersectsLineString(polyPositions(v.Coordinates))
+		case MultiPoint:
+			if len(v.Coordinates) == 0 {
+				return false
+			}
+			for _, p := range v.Coordinates {
+				if !poly.Point(p).IntersectsLineString(polyPositions(v.Coordinates)) {
+					return false
+				}
+			}
+			return true
+		}
+	case MultiLineString:
+		for i := range v.Coordinates {
+			if g.Within(v.getLineString(i)) {
+				return true
+			}
+		}
+		return false
+	case Polygon:
+		if len(v.Coordinates) == 0 {
+			return false
+		}
+		return pin(v)
+	case MultiPolygon:
+		for i := range v.Coordinates {
+			if pin(v.getPolygon(i)) {
+				return true
+			}
+		}
+		return false
+	case Feature:
+		return g.Within(v.Geometry)
+	case FeatureCollection:
+		if len(v.Features) == 0 {
+			return false
+		}
+		for _, f := range v.Features {
+			if !g.Within(f) {
+				return false
+			}
+		}
+		return true
+	case GeometryCollection:
+		if len(v.Geometries) == 0 {
+			return false
+		}
+		for _, f := range v.Geometries {
+			if !g.Within(f) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func intersectsObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
+	bbp := o.bboxPtr()
+	if bbp != nil {
+		if !g.IntersectsBBox(*bbp) {
+			return false
+		}
+		if o.IsBBoxDefined() {
+			return true
+		}
+	}
+	switch v := o.(type) {
+	default:
+		return false
+	case Point:
+		return g.IntersectsBBox(v.CalculatedBBox())
+	case SimplePoint:
+		return g.IntersectsBBox(v.CalculatedBBox())
+	case MultiPoint:
+		for i := range v.Coordinates {
+			if (Point{Coordinates: v.Coordinates[i]}).Intersects(g) {
+				return true
+			}
+		}
+		return false
+	case LineString:
+		if g, ok := g.(LineString); ok {
+			a := polyPositions(g.Coordinates)
+			b := polyPositions(v.Coordinates)
+			return a.LineStringIntersectsLineString(b)
+		}
+		return o.Intersects(g)
+	case MultiLineString:
+		for i := range v.Coordinates {
+			if g.Intersects(v.getLineString(i)) {
+				return true
+			}
+		}
+		return false
+	case Polygon:
+		if len(v.Coordinates) == 0 {
+			return false
+		}
+		return pin(v)
+	case MultiPolygon:
+		for _, coords := range v.Coordinates {
+			if pin(Polygon{Coordinates: coords}) {
+				return true
+			}
+		}
+		return false
+	case Feature:
+		return g.Intersects(v.Geometry)
+	case FeatureCollection:
+		if len(v.Features) == 0 {
+			return false
+		}
+		for _, f := range v.Features {
+			if g.Intersects(f) {
+				return true
+			}
+		}
+		return false
+	case GeometryCollection:
+		if len(v.Geometries) == 0 {
+			return false
+		}
+		for _, f := range v.Geometries {
+			if g.Intersects(f) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
 // CirclePolygon returns a Polygon around the radius.
 func CirclePolygon(x, y, meters float64, steps int) Polygon {
 	if steps < 3 {
@@ -200,6 +365,21 @@ func CirclePolygon(x, y, meters float64, steps int) Polygon {
 	}
 	p.Coordinates[0][i] = p.Coordinates[0][0]
 	return p
+}
+
+// The object's calculated bounding box must intersect the radius of the circle to pass.
+func nearbyObjectShared(g Object, x, y float64, meters float64) bool {
+	if !g.hasPositions() {
+		return false
+	}
+	center := Position{X: x, Y: y, Z: 0}
+	bbox := g.CalculatedBBox()
+	if bbox.Min.X == bbox.Max.X && bbox.Min.Y == bbox.Max.Y {
+		// just a point, return is point is inside of the circle
+		return center.DistanceTo(bbox.Min) <= meters
+	}
+	circlePoly := CirclePolygon(x, y, meters, 12)
+	return g.Intersects(circlePoly)
 }
 
 func jsonMarshalString(s string) []byte {

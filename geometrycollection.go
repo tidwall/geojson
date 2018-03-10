@@ -177,12 +177,36 @@ func (g GeometryCollection) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g GeometryCollection) Within(o Object) bool {
-	return withinObjectShared(g, o)
+	return withinObjectShared(g, o,
+		func(v Polygon) bool {
+			if len(g.Geometries) == 0 {
+				return false
+			}
+			for _, g := range g.Geometries {
+				if !g.Within(o) {
+					return false
+				}
+			}
+			return true
+		},
+	)
 }
 
 // Intersects detects if the object intersects another object.
 func (g GeometryCollection) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o)
+	return intersectsObjectShared(g, o,
+		func(v Polygon) bool {
+			if len(g.Geometries) == 0 {
+				return false
+			}
+			for _, g := range g.Geometries {
+				if g.Intersects(o) {
+					return true
+				}
+			}
+			return false
+		},
+	)
 }
 
 // Nearby detects if the object is nearby a position.

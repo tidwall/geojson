@@ -98,12 +98,20 @@ func (g LineString) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g LineString) Within(o Object) bool {
-	return withinObjectShared(g, o)
+	return withinObjectShared(g, o,
+		func(v Polygon) bool {
+			return polyPositions(g.Coordinates).Inside(polyExteriorHoles(v.Coordinates))
+		},
+	)
 }
 
 // Intersects detects if the object intersects another object.
 func (g LineString) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o)
+	return intersectsObjectShared(g, o,
+		func(v Polygon) bool {
+			return polyPositions(g.Coordinates).LineStringIntersects(polyExteriorHoles(v.Coordinates))
+		},
+	)
 }
 
 // Nearby detects if the object is nearby a position.

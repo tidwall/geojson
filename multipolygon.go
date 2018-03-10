@@ -22,7 +22,7 @@ func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiP
 	}
 	bboxDefined := bbox != nil
 	if !bboxDefined {
-		cbbox := mpCalculatedBBox(polygons, nil)
+		cbbox := calculatedBBox(polygons, nil)
 		bbox = &cbbox
 	}
 	return MultiPolygon{
@@ -33,16 +33,16 @@ func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiP
 	}, err
 }
 
-func mpCalculatedBBox(polygons []Polygon, bbox *BBox) BBox {
+func calculatedBBox(polygons []Polygon, bbox *BBox) BBox {
 	if bbox != nil {
 		return *bbox
 	}
 	var cbbox BBox
-	for i, g := range polygons {
+	for i, p := range polygons {
 		if i == 0 {
-			cbbox = g.CalculatedBBox()
+			cbbox = p.CalculatedBBox()
 		} else {
-			cbbox = cbbox.union(g.CalculatedBBox())
+			cbbox = cbbox.union(p.CalculatedBBox())
 		}
 	}
 	return cbbox
@@ -50,7 +50,7 @@ func mpCalculatedBBox(polygons []Polygon, bbox *BBox) BBox {
 
 // CalculatedBBox is exterior bbox containing the object.
 func (g MultiPolygon) CalculatedBBox() BBox {
-	return mpCalculatedBBox(g.polygons, g.BBox)
+	return calculatedBBox(g.polygons, g.BBox)
 }
 
 // CalculatedPoint is a point representation of the object.
@@ -148,12 +148,32 @@ func (g MultiPolygon) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g MultiPolygon) Within(o Object) bool {
-	return withinObjectShared(g, o)
+	return withinObjectShared(g, o,
+		func(v Polygon) bool {
+			if len(g.Coordinates) == 0 {
+				return false
+			}
+			if !v.Within(o) {
+				return false
+			}
+			return true
+		},
+	)
 }
 
 // Intersects detects if the object intersects another object.
 func (g MultiPolygon) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o)
+	return intersectsObjectShared(g, o,
+		func(v Polygon) bool {
+			if len(g.Coordinates) == 0 {
+				return false
+			}
+			if v.Intersects(o) {
+				return true
+			}
+			return false
+		},
+	)
 }
 
 // Nearby detects if the object is nearby a position.

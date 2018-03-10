@@ -25,10 +25,6 @@ func fillMultiPoint(coordinates []Position, bbox *BBox, err error) (MultiPoint, 
 	}, err
 }
 
-func (g MultiPoint) getPoint(index int) Point {
-	return Point{Coordinates: g.Coordinates[index]}
-}
-
 // CalculatedBBox is exterior bbox containing the object.
 func (g MultiPoint) CalculatedBBox() BBox {
 	return level2CalculatedBBox(g.Coordinates, g.BBox)
@@ -112,12 +108,36 @@ func (g MultiPoint) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g MultiPoint) Within(o Object) bool {
-	return withinObjectShared(g, o)
+	return withinObjectShared(g, o,
+		func(v Polygon) bool {
+			if len(g.Coordinates) == 0 {
+				return false
+			}
+			for _, p := range g.Coordinates {
+				if !poly.Point(p).Inside(polyExteriorHoles(v.Coordinates)) {
+					return false
+				}
+			}
+			return true
+		},
+	)
 }
 
 // Intersects detects if the object intersects another object.
 func (g MultiPoint) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o)
+	return intersectsObjectShared(g, o,
+		func(v Polygon) bool {
+			if len(g.Coordinates) == 0 {
+				return false
+			}
+			for _, p := range g.Coordinates {
+				if poly.Point(p).Intersects(polyExteriorHoles(v.Coordinates)) {
+					return true
+				}
+			}
+			return true
+		},
+	)
 }
 
 // Nearby detects if the object is nearby a position.
