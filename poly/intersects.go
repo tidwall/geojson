@@ -1,5 +1,15 @@
 package poly
 
+// IntersectsLineString detect if a point intersects a linestring
+func (p Point) IntersectsLineString(exterior Polygon) bool {
+	for j := 0; j < len(exterior); j++ {
+		if raycast(p, exterior[j], exterior[(j+1)%len(exterior)]).on {
+			return true
+		}
+	}
+	return false
+}
+
 // Intersects detects if a point intersects another polygon
 func (p Point) Intersects(exterior Polygon, holes []Polygon) bool {
 	return p.Inside(exterior, holes)
@@ -7,7 +17,7 @@ func (p Point) Intersects(exterior Polygon, holes []Polygon) bool {
 
 // Intersects detects if a rect intersects another polygon
 func (r Rect) Intersects(exterior Polygon, holes []Polygon) bool {
-	return r.Polygon().Inside(exterior, holes)
+	return r.Polygon().Intersects(exterior, holes)
 }
 
 // Intersects detects if a polygon intersects another polygon
@@ -15,7 +25,24 @@ func (shape Polygon) Intersects(exterior Polygon, holes []Polygon) bool {
 	return shape.doesIntersects(false, exterior, holes)
 }
 
+// LineStringIntersectsLineString detects if a linestring intersects a linestring
+// assume shape and exterior are actually linestrings
+func (shape Polygon) LineStringIntersectsLineString(exterior Polygon) bool {
+	for i := 0; i < len(shape); i++ {
+		for j := 0; j < len(exterior); j++ {
+			if lineintersects(
+				shape[i], shape[(i+1)%len(shape)],
+				exterior[j], exterior[(j+1)%len(exterior)],
+			) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // LineStringIntersects detects if a polygon intersects a linestring
+// assume shape is a linestring
 func (shape Polygon) LineStringIntersects(exterior Polygon, holes []Polygon) bool {
 	return shape.doesIntersects(true, exterior, holes)
 }

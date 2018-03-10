@@ -2,7 +2,6 @@ package geojson
 
 import (
 	"github.com/tidwall/tile38/geojson/geohash"
-	"github.com/tidwall/tile38/geojson/poly"
 )
 
 // MultiLineString is a geojson object with the type "MultiLineString"
@@ -10,32 +9,50 @@ type MultiLineString struct {
 	Coordinates [][]Position
 	BBox        *BBox
 	bboxDefined bool
+	linestrings []LineString
 }
 
 func fillMultiLineString(coordinates [][]Position, bbox *BBox, err error) (MultiLineString, error) {
+	linestrings := make([]LineString, len(coordinates))
 	if err == nil {
-		for _, coordinates := range coordinates {
-			if len(coordinates) < 2 {
-				err = errLineStringInvalidCoordinates
+		for i, ps := range coordinates {
+			linestrings[i], err = fillLineString(ps, nil, nil)
+			if err != nil {
 				break
 			}
 		}
 	}
 	bboxDefined := bbox != nil
 	if !bboxDefined {
-		cbbox := level3CalculatedBBox(coordinates, nil, false)
+		cbbox := mlCalculatedBBox(linestrings, nil)
 		bbox = &cbbox
 	}
 	return MultiLineString{
 		Coordinates: coordinates,
 		BBox:        bbox,
 		bboxDefined: bboxDefined,
+		linestrings: linestrings,
 	}, err
+}
+
+func mlCalculatedBBox(linestrings []LineString, bbox *BBox) BBox {
+	if bbox != nil {
+		return *bbox
+	}
+	var cbbox BBox
+	for i, g := range linestrings {
+		if i == 0 {
+			cbbox = g.CalculatedBBox()
+		} else {
+			cbbox = cbbox.union(g.CalculatedBBox())
+		}
+	}
+	return cbbox
 }
 
 // CalculatedBBox is exterior bbox containing the object.
 func (g MultiLineString) CalculatedBBox() BBox {
-	return level3CalculatedBBox(g.Coordinates, g.BBox, false)
+	return mlCalculatedBBox(g.linestrings, g.BBox)
 }
 
 // CalculatedPoint is a point representation of the object.
@@ -93,6 +110,13 @@ func (g MultiLineString) hasPositions() bool {
 	return false
 }
 
+func (g MultiLineString) getLineString(index int) LineString {
+	if index < len(g.linestrings) {
+		return g.linestrings[index]
+	}
+	return LineString{Coordinates: g.Coordinates[index]}
+}
+
 // WithinBBox detects if the object is fully contained inside a bbox.
 func (g MultiLineString) WithinBBox(bbox BBox) bool {
 	if g.bboxDefined {
@@ -101,14 +125,9 @@ func (g MultiLineString) WithinBBox(bbox BBox) bool {
 	if len(g.Coordinates) == 0 {
 		return false
 	}
-	for _, ls := range g.Coordinates {
-		if len(ls) == 0 {
+	for i := range g.Coordinates {
+		if !g.getLineString(i).WithinBBox(bbox) {
 			return false
-		}
-		for _, p := range ls {
-			if !poly.Point(p).InsideRect(rectBBox(bbox)) {
-				return false
-			}
 		}
 	}
 	return true
@@ -119,8 +138,8 @@ func (g MultiLineString) IntersectsBBox(bbox BBox) bool {
 	if g.bboxDefined {
 		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
 	}
-	for _, ls := range g.Coordinates {
-		if polyPositions(ls).IntersectsRect(rectBBox(bbox)) {
+	for i := range g.Coordinates {
+		if g.getLineString(i).IntersectsBBox(bbox) {
 			return true
 		}
 	}
@@ -129,36 +148,12 @@ func (g MultiLineString) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g MultiLineString) Within(o Object) bool {
-	return withinObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, ls := range g.Coordinates {
-				if !polyPositions(ls).Inside(polyExteriorHoles(v.Coordinates)) {
-					return false
-				}
-			}
-			return true
-		},
-	)
+	return withinObjectShared(g, o)
 }
 
 // Intersects detects if the object intersects another object.
 func (g MultiLineString) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, ls := range g.Coordinates {
-				if polyPositions(ls).Intersects(polyExteriorHoles(v.Coordinates)) {
-					return true
-				}
-			}
-			return false
-		},
-	)
+	return intersectsObjectShared(g, o)
 }
 
 // Nearby detects if the object is nearby a position.

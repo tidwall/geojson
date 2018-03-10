@@ -192,20 +192,12 @@ func (g Feature) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g Feature) Within(o Object) bool {
-	return withinObjectShared(g, o,
-		func(v Polygon) bool {
-			return g.Geometry.Within(o)
-		},
-	)
+	return withinObjectShared(g, o)
 }
 
 // Intersects detects if the object intersects another object.
 func (g Feature) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o,
-		func(v Polygon) bool {
-			return g.Geometry.Intersects(o)
-		},
-	)
+	return intersectsObjectShared(g, o)
 }
 
 // Nearby detects if the object is nearby a position.

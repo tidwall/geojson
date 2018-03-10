@@ -145,26 +145,12 @@ func (g Polygon) IntersectsBBox(bbox BBox) bool {
 
 // Within detects if the object is fully contained inside another object.
 func (g Polygon) Within(o Object) bool {
-	return withinObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			return polyPositions(g.Coordinates[0]).Inside(polyExteriorHoles(v.Coordinates))
-		},
-	)
+	return withinObjectShared(g, o)
 }
 
 // Intersects detects if the object intersects another object.
 func (g Polygon) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			return polyPositions(g.Coordinates[0]).Intersects(polyExteriorHoles(v.Coordinates))
-		},
-	)
+	return intersectsObjectShared(g, o)
 }
 
 // Nearby detects if the object is nearby a position.
