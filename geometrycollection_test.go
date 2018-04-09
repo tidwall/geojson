@@ -66,3 +66,20 @@ func TestGeometryCollection(t *testing.T) {
     ]
 }`)
 }
+func TestPointBoundingGeomColl(t *testing.T) {
+	geometryCollectionJSON := `{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[-75.1,56.283333]}]}`
+	polyFeatureJSON := `{"type": "GeometryCollection","geometries": [{"type": "Polygon","coordinates": [[
+		[-112.8515625,-29.535229562948444],
+		[85.4296875,-2.535229562948444],
+		[85.4296875,65.36683689226321],
+		[-112.8515625,65.36683689226321],
+		[-112.8515625,-29.535229562948444]
+	]]}]}`
+	geometryCollection := testJSON(t, geometryCollectionJSON).(GeometryCollection)
+	poly := testJSON(t, polyFeatureJSON).(GeometryCollection)
+	r1 := geometryCollection.Within(poly)
+	r2 := geometryCollection.Intersects(poly)
+	if r1 != r2 || !r1 {
+		t.Fatalf("expected %v/%v, got %v/%v", true, true, r1, r2)
+	}
+}

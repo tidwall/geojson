@@ -170,10 +170,10 @@ func (g FeatureCollection) IntersectsBBox(bbox BBox) bool {
 	}
 	for _, g := range g.Features {
 		if g.IntersectsBBox(bbox) {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // Within detects if the object is fully contained inside another object.
@@ -201,6 +201,7 @@ func (g FeatureCollection) Intersects(o Object) bool {
 				return false
 			}
 			for _, f := range g.Features {
+
 				if f.Intersects(o) {
 					return true
 				}

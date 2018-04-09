@@ -169,10 +169,10 @@ func (g GeometryCollection) IntersectsBBox(bbox BBox) bool {
 	}
 	for _, g := range g.Geometries {
 		if g.IntersectsBBox(bbox) {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // Within detects if the object is fully contained inside another object.

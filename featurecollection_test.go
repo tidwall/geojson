@@ -1,6 +1,8 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestFeatureCollection(t *testing.T) {
 	testJSON(t, `{
@@ -89,4 +91,24 @@ func TestFeatureCollection(t *testing.T) {
         }
     ]
 }`)
+}
+
+func TestPointBounding(t *testing.T) {
+	featureCollectionJSON := `{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-75.1,56.283333]}}]}`
+	polyFeatureJSON := `{"type": "FeatureCollection","features": [{"type": "Feature","properties": {},"geometry": {"type": "Polygon","coordinates": [[
+		[-112.8515625,-29.535229562948444],
+		[85.4296875,-2.535229562948444],
+		[85.4296875,65.36683689226321],
+		[-112.8515625,65.36683689226321],
+		[-112.8515625,-29.535229562948444]
+	]]}}]}`
+
+	featureCollection := testJSON(t, featureCollectionJSON).(FeatureCollection)
+	poly := testJSON(t, polyFeatureJSON).(FeatureCollection)
+
+	r1 := featureCollection.Within(poly)
+	r2 := featureCollection.Intersects(poly)
+	if r1 != r2 || !r1 {
+		t.Fatalf("expected %v/%v, got %v/%v", true, true, r1, r2)
+	}
 }
