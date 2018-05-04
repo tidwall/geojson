@@ -199,6 +199,11 @@ func (g Feature) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g Feature) WithinCircle(center Position, meters float64) bool {
+	return g.Geometry.WithinCircle(center, meters)
+}
+
 // Intersects detects if the object intersects another object.
 func (g Feature) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -206,6 +211,11 @@ func (g Feature) Intersects(o Object) bool {
 			return g.Geometry.Intersects(o)
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g Feature) IntersectsCircle(center Position, meters float64) bool {
+	return g.Geometry.IntersectsCircle(center, meters)
 }
 
 // Nearby detects if the object is nearby a position.

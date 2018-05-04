@@ -155,6 +155,19 @@ func (g Polygon) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g Polygon) WithinCircle(center Position, meters float64) bool {
+	if len(g.Coordinates) == 0 {
+		return false
+	}
+	for _, position := range g.Coordinates[0] {
+		if center.DistanceTo(position) >= meters {
+			return false
+		}
+	}
+	return true
+}
+
 // Intersects detects if the object intersects another object.
 func (g Polygon) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -165,6 +178,21 @@ func (g Polygon) Intersects(o Object) bool {
 			return polyPositions(g.Coordinates[0]).Intersects(polyExteriorHoles(v.Coordinates))
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g Polygon) IntersectsCircle(center Position, meters float64) bool {
+	if g.Intersects(New2DPoint(center.X, center.Y)) {
+		return true
+	}
+	for _, polygon := range g.Coordinates {
+		for i := 0; i < len(polygon) - 1 ; i++ {
+			if SegmentIntersectsCircle(polygon[i], polygon[i + 1], center, meters) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Nearby detects if the object is nearby a position.

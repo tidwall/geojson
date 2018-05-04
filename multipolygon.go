@@ -161,6 +161,19 @@ func (g MultiPolygon) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g MultiPolygon) WithinCircle(center Position, meters float64) bool {
+	if len(g.polygons) == 0 {
+		return false
+	}
+	for _, polygon := range g.polygons {
+		if !polygon.WithinCircle(center, meters) {
+			return false
+		}
+	}
+	return true
+}
+
 // Intersects detects if the object intersects another object.
 func (g MultiPolygon) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -174,6 +187,16 @@ func (g MultiPolygon) Intersects(o Object) bool {
 			return false
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g MultiPolygon) IntersectsCircle(center Position, meters float64) bool {
+	for _, polygon := range g.polygons {
+		if polygon.IntersectsCircle(center, meters) {
+			return true
+		}
+	}
+	return false
 }
 
 // Nearby detects if the object is nearby a position.

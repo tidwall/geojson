@@ -192,6 +192,19 @@ func (g GeometryCollection) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g GeometryCollection) WithinCircle(center Position, meters float64) bool {
+	if len(g.Geometries) == 0 {
+		return false
+	}
+	for _, geometry := range g.Geometries {
+		if !geometry.WithinCircle(center, meters) {
+			return false
+		}
+	}
+	return true
+}
+
 // Intersects detects if the object intersects another object.
 func (g GeometryCollection) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -207,6 +220,16 @@ func (g GeometryCollection) Intersects(o Object) bool {
 			return false
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g GeometryCollection) IntersectsCircle(center Position, meters float64) bool {
+	for _, geometry := range g.Geometries {
+		if geometry.IntersectsCircle(center, meters) {
+			return true
+		}
+	}
+	return false
 }
 
 // Nearby detects if the object is nearby a position.

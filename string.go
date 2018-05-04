@@ -25,8 +25,16 @@ func (s String) Within(o Object) bool {
 	return false
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (s String) WithinCircle(center Position, meters float64) bool {
+	return false
+}
+
 // Intersects detects if the object intersects another object.
 func (s String) Intersects(o Object) bool {
+	return false
+}
+func (s String) IntersectsCircle(center Position, meters float64) bool {
 	return false
 }
 

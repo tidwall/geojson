@@ -123,6 +123,19 @@ func (g MultiPoint) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g MultiPoint) WithinCircle(center Position, meters float64) bool {
+	if len(g.Coordinates) == 0 {
+		return false
+	}
+	for _, position := range g.Coordinates {
+		if center.DistanceTo(position) >= meters {
+			return false
+		}
+	}
+	return true
+}
+
 // Intersects detects if the object intersects another object.
 func (g MultiPoint) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -138,6 +151,16 @@ func (g MultiPoint) Intersects(o Object) bool {
 			return true
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g MultiPoint) IntersectsCircle(center Position, meters float64) bool {
+	for _, position := range g.Coordinates {
+		if center.DistanceTo(position) <= meters {
+			return true
+		}
+	}
+	return false
 }
 
 // Nearby detects if the object is nearby a position.

@@ -94,6 +94,11 @@ func (g SimplePoint) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g SimplePoint) WithinCircle(center Position, meters float64) bool {
+	return geo.DistanceTo(center.Y, center.X, g.Y, g.X) < meters
+}
+
 // Intersects detects if the object intersects another object.
 func (g SimplePoint) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -101,6 +106,11 @@ func (g SimplePoint) Intersects(o Object) bool {
 			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Intersects(polyExteriorHoles(v.Coordinates))
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g SimplePoint) IntersectsCircle(center Position, meters float64) bool {
+	return geo.DistanceTo(center.Y, center.X, g.Y, g.X) <= meters
 }
 
 // Nearby detects if the object is nearby a position.

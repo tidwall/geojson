@@ -105,6 +105,19 @@ func (g LineString) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g LineString) WithinCircle(center Position, meters float64) bool {
+	if len(g.Coordinates) == 0 {
+		return false
+	}
+	for _, position := range g.Coordinates {
+		if center.DistanceTo(position) >= meters {
+			return false
+		}
+	}
+	return true
+}
+
 // Intersects detects if the object intersects another object.
 func (g LineString) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -112,6 +125,16 @@ func (g LineString) Intersects(o Object) bool {
 			return polyPositions(g.Coordinates).LineStringIntersects(polyExteriorHoles(v.Coordinates))
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g LineString) IntersectsCircle(center Position, meters float64) bool {
+	for i := 0; i < len(g.Coordinates) - 1 ; i++ {
+		if SegmentIntersectsCircle(g.Coordinates[i], g.Coordinates[i + 1], center, meters) {
+			return true
+		}
+	}
+	return false
 }
 
 // Nearby detects if the object is nearby a position.

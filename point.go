@@ -112,6 +112,11 @@ func (g Point) Within(o Object) bool {
 	)
 }
 
+// WithinCircle detects if the object is fully contained inside a circle.
+func (g Point) WithinCircle(center Position, meters float64) bool {
+	return geo.DistanceTo(g.Coordinates.Y, g.Coordinates.X, center.Y, center.X) < meters
+}
+
 // Intersects detects if the object intersects another object.
 func (g Point) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
@@ -119,6 +124,11 @@ func (g Point) Intersects(o Object) bool {
 			return poly.Point(g.Coordinates).Intersects(polyExteriorHoles(v.Coordinates))
 		},
 	)
+}
+
+// IntersectsCircle detects if the object intersects a circle.
+func (g Point) IntersectsCircle(center Position, meters float64) bool {
+	return geo.DistanceTo(g.Coordinates.Y, g.Coordinates.X, center.Y, center.X) <= meters
 }
 
 // Nearby detects if the object is nearby a position.

@@ -68,6 +68,10 @@ type Object interface {
 	Within(o Object) bool
 	// Intersects detects if the object intersects another object.
 	Intersects(o Object) bool
+	// WithinCircle detects if the object is fully contained inside a circle.
+	WithinCircle(center Position, meters float64) bool
+	// IntersectsCircle detects if the object intersects a circle.
+	IntersectsCircle(center Position, meters float64) bool
 	// Nearby detects if the object is nearby a position.
 	Nearby(center Position, meters float64) bool
 	// CalculatedBBox is exterior bbox containing the object.
