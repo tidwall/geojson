@@ -209,3 +209,18 @@ func (g MultiLineString) IsBBoxDefined() bool {
 func (g MultiLineString) IsGeometry() bool {
 	return true
 }
+
+// Clip returns the object obtained by clipping this object by a bbox.
+func (g MultiLineString) Clipped(bbox BBox) Object {
+	var new_coordinates [][]Position
+
+	for ix := range g.Coordinates {
+		clippedMultiLineString, _ := g.getLineString(ix).Clipped(bbox).(MultiLineString)
+		for _, ls := range clippedMultiLineString.Coordinates {
+			new_coordinates = append(new_coordinates, ls)
+		}
+	}
+
+	res, _ := fillMultiLineString(new_coordinates, nil, nil)
+	return res
+}

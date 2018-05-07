@@ -127,3 +127,12 @@ func (g SimplePoint) IsBBoxDefined() bool {
 func (g SimplePoint) IsGeometry() bool {
 	return true
 }
+
+// Clip returns the object obtained by clipping this object by a bbox.
+func (g SimplePoint) Clipped(bbox BBox) Object {
+	if g.IntersectsBBox(bbox) {
+		return g
+	}
+	res, _ := fillMultiPoint([]Position{}, nil, nil)
+	return res
+}
