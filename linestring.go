@@ -151,3 +151,31 @@ func (g LineString) IsBBoxDefined() bool {
 func (g LineString) IsGeometry() bool {
 	return true
 }
+
+// Clip returns the object obtained by clipping this object by a bbox.
+func (g LineString) Clipped(bbox BBox) Object {
+	var new_coordinates [][]Position
+	var clipedStart, clippedEnd Position
+	var rejected bool
+	var line []Position
+
+	for i := 0; i < len(g.Coordinates) - 1 ; i++ {
+		clipedStart, clippedEnd, rejected = ClipSegment(g.Coordinates[i], g.Coordinates[i + 1], bbox)
+		if rejected {
+			continue
+		}
+		if len(line) > 0 && line[len(line) - 1] != clipedStart {
+			new_coordinates = append(new_coordinates, line)
+			line = []Position{clipedStart}
+		} else if len(line) == 0 {
+			line = append(line, clipedStart)
+		}
+		line = append(line, clippedEnd)
+	}
+	if len(line) > 0 {
+		new_coordinates = append(new_coordinates, line)
+	}
+
+	res, _ := fillMultiLineString(new_coordinates, nil, nil)
+	return res
+}

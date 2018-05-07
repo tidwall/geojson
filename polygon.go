@@ -209,3 +209,15 @@ func (g Polygon) IsBBoxDefined() bool {
 func (g Polygon) IsGeometry() bool {
 	return true
 }
+
+// Clip returns the object obtained by clipping this object by a bbox.
+func (g Polygon) Clipped(bbox BBox) Object {
+	var new_coordinates [][]Position
+
+	for _, ring := range g.Coordinates {
+		new_coordinates = append(new_coordinates, ClipRing(ring, bbox))
+	}
+
+	res, _ := fillPolygon(new_coordinates, nil, nil)
+	return res
+}

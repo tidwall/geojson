@@ -94,6 +94,8 @@ type Object interface {
 	IsBBoxDefined() bool
 	// IsGeometry return true if the object is a geojson geometry object. false if it something else.
 	IsGeometry() bool
+	// Clip returns the object obtained by clipping this object by a bbox.
+	Clipped(bbox BBox) Object
 }
 
 func positionBBox(i int, bbox BBox, ps []Position) (int, BBox) {

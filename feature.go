@@ -232,3 +232,14 @@ func (g Feature) IsBBoxDefined() bool {
 func (g Feature) IsGeometry() bool {
 	return true
 }
+
+// Clip returns the object obtained by clipping this object by a bbox.
+func (g Feature) Clipped(bbox BBox) Object {
+	clippedGeometry := g.Geometry.Clipped(bbox)
+
+	res := Feature{Geometry: clippedGeometry, idprops: g.idprops}
+	cbbox := clippedGeometry.CalculatedBBox()
+	res.BBox = &cbbox
+
+	return res
+}
