@@ -219,10 +219,8 @@ func (g MultiPolygon) Clipped(bbox BBox) Object {
 	var new_coordinates [][][]Position
 
 	for _, polygon := range g.polygons {
-		clippedMultiPolygon, _ := polygon.Clipped(bbox).(MultiPolygon)
-		for _, pg := range clippedMultiPolygon.Coordinates {
-			new_coordinates = append(new_coordinates, pg)
-		}
+		clippedPolygon, _ := polygon.Clipped(bbox).(Polygon)
+		new_coordinates = append(new_coordinates, clippedPolygon.Coordinates)
 	}
 
 	res, _ := fillMultiPolygon(new_coordinates, nil, nil)
