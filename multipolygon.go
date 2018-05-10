@@ -1,6 +1,8 @@
 package geojson
 
-import "github.com/tidwall/tile38/pkg/geojson/geohash"
+import (
+	"github.com/tidwall/tile38/pkg/geojson/geohash"
+)
 
 // MultiPolygon is a geojson object with the type "MultiPolygon"
 type MultiPolygon struct {
@@ -153,7 +155,7 @@ func (g MultiPolygon) Within(o Object) bool {
 			if len(g.Coordinates) == 0 {
 				return false
 			}
-			if !v.Within(o) {
+			if !v.Within(g) {
 				return false
 			}
 			return true
@@ -181,7 +183,7 @@ func (g MultiPolygon) Intersects(o Object) bool {
 			if len(g.Coordinates) == 0 {
 				return false
 			}
-			if v.Intersects(o) {
+			if v.Intersects(g) {
 				return true
 			}
 			return false
