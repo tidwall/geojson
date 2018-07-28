@@ -4,8 +4,9 @@ package poly
 import "fmt"
 
 // Point is simple 2D point
+// For geo locations: X is lat, Y is lon, and Z is elev or time measure.
 type Point struct {
-	X, Y, Z float64 // X=latitude, Y=longitude, (Z is optional, e.g. for elevation or timestamp)
+	X, Y, Z float64
 }
 
 // InsideRect detects point is inside of another rect
