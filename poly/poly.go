@@ -5,7 +5,7 @@ import "fmt"
 
 // Point is simple 2D point
 type Point struct {
-	X, Y, Z float64
+	X, Y, Z float64 // X=latitude, Y=longitude, (Z is optional, e.g. for elevation or timestamp)
 }
 
 // InsideRect detects point is inside of another rect
