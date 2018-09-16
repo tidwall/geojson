@@ -193,31 +193,41 @@ func objectMap(json string, from int) (Object, error) {
 }
 
 func withinObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
+	println("B")
+	println(g.String())
+	println("---------")
+	println(o.String())
 	bbp := o.bboxPtr()
 	if bbp != nil {
+		println("C")
 		if !g.WithinBBox(*bbp) {
+			println("D")
 			return false
 		}
+		println("E")
 		if o.IsBBoxDefined() {
+			println("F")
 			return true
 		}
 	}
-	switch v := o.(type) {
+	println("G")
+
+	switch o := o.(type) {
 	default:
 		return false
 	case Point:
-		return g.WithinBBox(v.CalculatedBBox())
+		return g.WithinBBox(o.CalculatedBBox())
 	case SimplePoint:
-		return g.WithinBBox(v.CalculatedBBox())
+		return g.WithinBBox(o.CalculatedBBox())
 	case MultiPoint:
-		for i := range v.Coordinates {
-			if g.Within(Point{Coordinates: v.Coordinates[i]}) {
+		for i := range o.Coordinates {
+			if g.Within(Point{Coordinates: o.Coordinates[i]}) {
 				return true
 			}
 		}
 		return false
 	case LineString:
-		if len(v.Coordinates) == 0 {
+		if len(o.Coordinates) == 0 {
 			return false
 		}
 		switch g := g.(type) {
@@ -226,19 +236,19 @@ func withinObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
 		case SimplePoint:
 			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).
 				IntersectsLineString(
-					polyPositions(v.Coordinates),
+					polyPositions(o.Coordinates),
 				)
 		case Point:
 			return poly.Point(g.Coordinates).IntersectsLineString(
-				polyPositions(v.Coordinates),
+				polyPositions(o.Coordinates),
 			)
 		case MultiPoint:
-			if len(v.Coordinates) == 0 {
+			if len(o.Coordinates) == 0 {
 				return false
 			}
-			for _, p := range v.Coordinates {
+			for _, p := range o.Coordinates {
 				if !poly.Point(p).IntersectsLineString(
-					polyPositions(v.Coordinates),
+					polyPositions(o.Coordinates),
 				) {
 					return false
 				}
@@ -246,41 +256,41 @@ func withinObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
 			return true
 		}
 	case MultiLineString:
-		for i := range v.Coordinates {
-			if g.Within(v.getLineString(i)) {
+		for i := range o.Coordinates {
+			if g.Within(o.getLineString(i)) {
 				return true
 			}
 		}
 		return false
 	case Polygon:
-		if len(v.Coordinates) == 0 {
+		if len(o.Coordinates) == 0 {
 			return false
 		}
-		return pin(v)
+		return pin(o)
 	case MultiPolygon:
-		for i := range v.Coordinates {
-			if pin(v.getPolygon(i)) {
+		for i := range o.Coordinates {
+			if pin(o.getPolygon(i)) {
 				return true
 			}
 		}
 		return false
 	case Feature:
-		return g.Within(v.Geometry)
+		return g.Within(o.Geometry)
 	case FeatureCollection:
-		if len(v.Features) == 0 {
+		if len(o.Features) == 0 {
 			return false
 		}
-		for _, f := range v.Features {
+		for _, f := range o.Features {
 			if !g.Within(f) {
 				return false
 			}
 		}
 		return true
 	case GeometryCollection:
-		if len(v.Geometries) == 0 {
+		if len(o.Geometries) == 0 {
 			return false
 		}
-		for _, f := range v.Geometries {
+		for _, f := range o.Geometries {
 			if !g.Within(f) {
 				return false
 			}

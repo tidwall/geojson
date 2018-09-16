@@ -4,8 +4,8 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/tidwall/gjson"
 	"github.com/tidwall/geojson/poly"
+	"github.com/tidwall/gjson"
 )
 
 // BBox is a bounding box
@@ -17,8 +17,8 @@ type BBox struct {
 // New2DBBox creates a new bounding box
 func New2DBBox(minX, minY, maxX, maxY float64) BBox {
 	return BBox{
-		Min: Position{X: minX, Y: minY, Z: 0},
-		Max: Position{X: maxX, Y: maxY, Z: 0},
+		Min: Position{X: minX, Y: minY},
+		Max: Position{X: maxX, Y: maxY},
 	}
 }
 

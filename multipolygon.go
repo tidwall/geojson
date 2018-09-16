@@ -158,13 +158,23 @@ func (g MultiPolygon) IntersectsBBox(bbox BBox) bool {
 func (g MultiPolygon) Within(o Object) bool {
 	return withinObjectShared(g, o,
 		func(v Polygon) bool {
-			if len(g.Coordinates) == 0 {
+			if len(g.polygons) == 0 {
 				return false
 			}
-			if !v.Within(g) {
-				return false
+			for _, p := range g.polygons {
+				if !p.Within(o) {
+					return false
+				}
 			}
 			return true
+
+			// if len(g.Coordinates) == 0 {
+			// 	return false
+			// }
+			// if !v.Within(g) {
+			// 	return false
+			// }
+			// return true
 		},
 	)
 }

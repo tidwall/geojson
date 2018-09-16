@@ -11,7 +11,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-const sizeofPosition = 24 // (X,Y,Z) * 8
+const sizeofPosition = 16 // (X,Y) * 8
 const earthRadius = 6371e3
 const radians = math.Pi / 180
 const degrees = 180 / math.Pi
