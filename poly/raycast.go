@@ -19,9 +19,8 @@ func raycast(p, a, b Point) rayres {
 		if a.X == b.X {
 			if p == a {
 				return rayres{false, true}
-			} else {
-				return rayres{false, false}
 			}
+			return rayres{false, false}
 		}
 		if p.Y == b.Y {
 			// horizontal segment
