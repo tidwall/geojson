@@ -1,12 +1,14 @@
 // Package poly provides polygon detection methods.
 package poly
 
-import "fmt"
+import (
+	"strconv"
+)
 
 // Point is simple 2D point
 // For geo locations: X is lat, Y is lon, and Z is elev or time measure.
 type Point struct {
-	X, Y, Z float64
+	X, Y float64
 }
 
 // InsideRect detects point is inside of another rect
@@ -41,21 +43,25 @@ func (p Polygon) IntersectsRect(rect Rect) bool {
 	if len(p) == 0 {
 		return false
 	}
-	rectPoly := Polygon{rect.Min, {rect.Min.X, rect.Max.Y, 0}, rect.Max, {rect.Max.X, rect.Min.Y, 0}, rect.Min}
-	return p.Intersects(rectPoly, nil)
+	return p.Intersects(rect.Polygon(), nil)
 }
 
 // String returns a string representation of the polygon.
 func (p Polygon) String() string {
-	s := "{"
+	var b []byte
+	b = append(b, '[')
 	for i, p := range p {
 		if i > 0 {
-			s += ", "
+			b = append(b, ',')
 		}
-		s += fmt.Sprintf("{%v, %v}", p.X, p.Y)
+		b = append(b, '[')
+		b = strconv.AppendFloat(b, p.X, 'f', -1, 64)
+		b = append(b, ',')
+		b = strconv.AppendFloat(b, p.Y, 'f', -1, 64)
+		b = append(b, ']')
 	}
-	s += "}"
-	return s
+	b = append(b, ']')
+	return string(b)
 }
 
 // Rect is rectangle
@@ -65,13 +71,9 @@ type Rect struct {
 
 // Polygon returns a polygon for the rect
 func (r Rect) Polygon() Polygon {
-	p := Polygon(make([]Point, 5))
-	p[0] = Point{X: r.Min.X, Y: r.Max.Y}
-	p[1] = Point{X: r.Max.X, Y: r.Max.Y}
-	p[2] = Point{X: r.Max.X, Y: r.Min.Y}
-	p[3] = Point{X: r.Min.X, Y: r.Min.Y}
-	p[4] = Point{X: r.Min.X, Y: r.Max.Y}
-	return p
+	return Polygon{
+		r.Min, {r.Max.X, r.Min.Y}, r.Max, {r.Min.X, r.Max.Y}, r.Min,
+	}
 }
 
 // Rect returns the bounding box rectangle for the polygon

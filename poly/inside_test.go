@@ -123,3 +123,93 @@ func TestInsideShapes(t *testing.T) {
 		t.Fatalf("expect false, got true")
 	}
 }
+
+func TestRectInsidePolygon(t *testing.T) {
+	r1 := R(10, 10, 20, 20)
+	r2 := R(0, 0, 30, 30)
+	if !r1.Inside(r2.Polygon(), nil) {
+		t.Fatalf("expected 'true'")
+	}
+	r3 := R(40, 40, 50, 50)
+	if r1.Inside(r3.Polygon(), nil) {
+		t.Fatalf("expected 'false'")
+	}
+}
+
+func TestPointInsideRect(t *testing.T) {
+	if !P(10, 10).InsideRect(R(0, 0, 20, 20)) {
+		t.Fatalf("expected true")
+	}
+	if P(10, -1).InsideRect(R(0, 0, 20, 20)) {
+		t.Fatalf("expected false")
+	}
+	if P(21, 10).InsideRect(R(0, 0, 20, 20)) {
+		t.Fatalf("expected false")
+	}
+}
+
+func TestPolygonInsideRect(t *testing.T) {
+	r1 := R(10, 10, 20, 20)
+	r2 := R(0, 0, 30, 30)
+	if !r1.Polygon().InsideRect(r2) {
+		t.Fatalf("expected true")
+	}
+	r3 := R(40, 40, 50, 50)
+	if r1.Polygon().InsideRect(r3) {
+		t.Fatalf("expected false")
+	}
+	if (Polygon{}).InsideRect(r3) {
+		t.Fatalf("expected false")
+	}
+}
+
+func TestPolygonIntersectsRect(t *testing.T) {
+	r1 := R(10, 10, 20, 20)
+	r2 := R(0, 0, 30, 30)
+	if !r1.Polygon().IntersectsRect(r2) {
+		t.Fatalf("expected true")
+	}
+	r3 := R(40, 40, 50, 50)
+	if r1.Polygon().IntersectsRect(r3) {
+		t.Fatalf("expected false")
+	}
+	if (Polygon{}).IntersectsRect(r3) {
+		t.Fatalf("expected false")
+	}
+}
+
+func TestPolygonString(t *testing.T) {
+	str := R(10, 10, 20, 20).Polygon().String()
+	exp := "[[10,10],[20,10],[20,20],[10,20],[10,10]]"
+	if str != exp {
+		t.Fatalf("expected '%v', got '%v'", exp, str)
+	}
+}
+
+func TestPolygonRect(t *testing.T) {
+	p := Polygon{
+		P(10, 10), P(20, 10), P(30, 20), P(40, 0),
+		P(50, 50), P(40, 30), P(30, 20), P(0, 0),
+		P(10, 10),
+	}
+	r := p.Rect()
+	exp := R(0, 0, 50, 50)
+	if r != exp {
+		t.Fatalf("expected '%v', got '%v'", exp, r)
+	}
+}
+
+func TestInsideRect(t *testing.T) {
+	if !R(10, 10, 20, 20).InsideRect(R(0, 0, 30, 30)) {
+		t.Fatal("expected true")
+	}
+	if R(10, 10, 20, 20).InsideRect(R(20, 20, 30, 30)) {
+		t.Fatal("expected false")
+	}
+	if R(10, 10, 20, 20).InsideRect(R(0, 0, 15, 15)) {
+		t.Fatal("expected false")
+	}
+	if R(10, 10, 20, 20).InsideRect(R(0, 20, 30, 50)) {
+		t.Fatal("expected false")
+	}
+}

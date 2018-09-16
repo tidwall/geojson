@@ -25,14 +25,14 @@ func (shape Polygon) Intersects(exterior Polygon, holes []Polygon) bool {
 	return shape.doesIntersects(false, exterior, holes)
 }
 
-// LineStringIntersectsLineString detects if a linestring intersects a linestring
-// assume shape and exterior are actually linestrings
+// LineStringIntersectsLineString detects if a linestring intersects a
+// linestring assume shape and exterior are actually linestrings
 func (shape Polygon) LineStringIntersectsLineString(exterior Polygon) bool {
-	for i := 0; i < len(shape); i++ {
-		for j := 0; j < len(exterior); j++ {
+	for i := 0; i < len(shape)-1; i++ {
+		for j := 0; j < len(exterior)-1; j++ {
 			if lineintersects(
-				shape[i], shape[(i+1)%len(shape)],
-				exterior[j], exterior[(j+1)%len(exterior)],
+				shape[i], shape[i+1],
+				exterior[i], exterior[i+1],
 			) {
 				return true
 			}
@@ -43,10 +43,14 @@ func (shape Polygon) LineStringIntersectsLineString(exterior Polygon) bool {
 
 // LineStringIntersects detects if a polygon intersects a linestring
 // assume shape is a linestring
-func (shape Polygon) LineStringIntersects(exterior Polygon, holes []Polygon) bool {
+func (shape Polygon) LineStringIntersects(
+	exterior Polygon, holes []Polygon,
+) bool {
 	return shape.doesIntersects(true, exterior, holes)
 }
-func (shape Polygon) doesIntersects(isLineString bool, exterior Polygon, holes []Polygon) bool {
+func (shape Polygon) doesIntersects(
+	isLineString bool, exterior Polygon, holes []Polygon,
+) bool {
 	switch len(shape) {
 	case 0:
 		return false
@@ -151,7 +155,8 @@ func lineintersects(
 	cmpxr := cmpx*ry - cmpy*rx
 	if cmpxr == 0 {
 		// Lines are collinear, and so intersect if they have any overlap
-		if !(((c.X-a.X <= 0) != (c.X-b.X <= 0)) || ((c.Y-a.Y <= 0) != (c.Y-b.Y <= 0))) {
+		if !(((c.X-a.X <= 0) != (c.X-b.X <= 0)) ||
+			((c.Y-a.Y <= 0) != (c.Y-b.Y <= 0))) {
 			return false
 		}
 		return true

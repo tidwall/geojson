@@ -1,7 +1,8 @@
 package poly
 
 // Inside returns true if point is inside of exterior and not in a hole.
-// The validity of the exterior and holes must be done elsewhere and are assumed valid.
+// The validity of the exterior and holes must be done elsewhere and are
+// assumed valid.
 //   A valid exterior is a near-linear ring.
 //   A valid hole is one that is full contained inside the exterior.
 //   A valid hole may not share the same segment line as the exterior.

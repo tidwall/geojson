@@ -88,3 +88,122 @@ func TestIntersectsShapes(t *testing.T) {
 		Polygon{P(1, 1), P(1, 9), P(9, 9), P(9, 1), P(1, 1)},
 		true)
 }
+
+func TestPointIntersectsLineString(t *testing.T) {
+	poly := Polygon{P(0, 0), P(10, 10), P(20, 0)}
+	if !P(0, 0).IntersectsLineString(poly) {
+		t.Fatal("expected true")
+	}
+	if !P(10, 10).IntersectsLineString(poly) {
+		t.Fatal("expected true")
+	}
+	if !P(20, 0).IntersectsLineString(poly) {
+		t.Fatal("expected true")
+	}
+	if !P(5, 5).IntersectsLineString(poly) {
+		t.Fatal("expected true")
+	}
+	if !P(15, 5).IntersectsLineString(poly) {
+		t.Fatal("expected true")
+	}
+	if P(20, 5).IntersectsLineString(poly) {
+		t.Fatal("expected false")
+	}
+}
+
+func TestPointIntersects(t *testing.T) {
+	poly := Polygon{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
+
+	if !P(0, 0).Intersects(poly, nil) {
+		t.Fatal("expected true")
+	}
+	if !P(10, 0).Intersects(poly, nil) {
+		t.Fatal("expected true")
+	}
+	if !P(0, 10).Intersects(poly, nil) {
+		t.Fatal("expected true")
+	}
+	if !P(10, 10).Intersects(poly, nil) {
+		t.Fatal("expected true")
+	}
+}
+func TestRectIntersectsPolygon(t *testing.T) {
+	poly := Polygon{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
+	if !R(0, 0, 5, 5).Intersects(poly, nil) {
+		t.Fatal("expected true")
+	}
+	if R(15, 15, 20, 20).Intersects(poly, nil) {
+		t.Fatal("expected true")
+	}
+}
+
+func TestLineStringIntersectsLineString(t *testing.T) {
+	line1 := Polygon{P(0, 0), P(10, 10), P(20, 0)}
+	line2 := Polygon{P(0, 1), P(10, 11), P(20, 1)}
+	line3 := Polygon{P(0, -1), P(10, 11), P(20, -1)}
+	if line1.LineStringIntersectsLineString(line2) {
+		t.Fatal("expected false")
+	}
+	if !line1.LineStringIntersectsLineString(line3) {
+		t.Fatal("expected true")
+	}
+}
+
+func TestLineStringIntersects(t *testing.T) {
+	poly := Polygon{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
+	line1 := Polygon{P(0, 0), P(10, 10), P(20, 0)}
+
+	if !line1.LineStringIntersects(poly, nil) {
+		t.Fatal("expected true")
+	}
+}
+
+func TestDoesIntersect(t *testing.T) {
+	exterior := Polygon{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
+	holes := []Polygon{{P(2, 2), P(2, 8), P(8, 8), P(8, 2), P(2, 2)}}
+
+	if (Polygon{}).doesIntersects(false, exterior, holes) {
+		t.Fatal("expected false")
+	}
+	if (Polygon{P(5, 5)}).doesIntersects(false, exterior, holes) {
+		t.Fatal("expected false")
+	}
+	if !(Polygon{P(1, 1)}).doesIntersects(false, exterior, holes) {
+		t.Fatal("expected true")
+	}
+	if (Polygon{P(1, 1)}).doesIntersects(false, Polygon{}, nil) {
+		t.Fatal("expected false")
+	}
+	if !(Polygon{P(1, 1)}).doesIntersects(false, Polygon{P(1, 1)}, nil) {
+		t.Fatal("expected true")
+	}
+	if (Polygon{P(1, 1), P(2, 2)}).doesIntersects(false, Polygon{}, nil) {
+		t.Fatal("expected false")
+	}
+	if !exterior.doesIntersects(false, Polygon{P(1, 1)}, nil) {
+		t.Fatal("expected true")
+	}
+
+	inner := Polygon{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)}
+	if inner.doesIntersects(false, exterior, holes) {
+		t.Fatal("expected false")
+	}
+
+	outside := Polygon{P(30, 30), P(60, 30), P(60, 60), P(30, 60), P(30, 30)}
+	if outside.doesIntersects(false, exterior, holes) {
+		t.Fatal("expected false")
+	}
+
+	// triangles
+
+	tri1 := Polygon{P(0, 0), P(10, 0), P(5, 10), P(0, 0)}
+	tri2 := Polygon{P(7, 9), P(17, 9), P(12, 19), P(7, 9)}
+
+	if tri1.doesIntersects(false, tri2, nil) {
+		t.Fatal("expected false")
+	}
+
+	// if !line1.doesIntersect(poly, nil) {
+	// 	t.Fatal("expected true")
+	// }
+}
