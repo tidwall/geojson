@@ -129,8 +129,8 @@ func (g LineString) Intersects(o Object) bool {
 
 // IntersectsCircle detects if the object intersects a circle.
 func (g LineString) IntersectsCircle(center Position, meters float64) bool {
-	for i := 0; i < len(g.Coordinates) - 1 ; i++ {
-		if SegmentIntersectsCircle(g.Coordinates[i], g.Coordinates[i + 1], center, meters) {
+	for i := 0; i < len(g.Coordinates)-1; i++ {
+		if SegmentIntersectsCircle(g.Coordinates[i], g.Coordinates[i+1], center, meters) {
 			return true
 		}
 	}
@@ -152,20 +152,20 @@ func (g LineString) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (g LineString) Clipped(bbox BBox) Object {
-	var new_coordinates [][]Position
+	var newCoordinates [][]Position
 	var clipedStart, clippedEnd Position
 	var rejected bool
 	var line []Position
 
-	for i := 0; i < len(g.Coordinates) - 1 ; i++ {
-		clipedStart, clippedEnd, rejected = ClipSegment(g.Coordinates[i], g.Coordinates[i + 1], bbox)
+	for i := 0; i < len(g.Coordinates)-1; i++ {
+		clipedStart, clippedEnd, rejected = ClipSegment(g.Coordinates[i], g.Coordinates[i+1], bbox)
 		if rejected {
 			continue
 		}
-		if len(line) > 0 && line[len(line) - 1] != clipedStart {
-			new_coordinates = append(new_coordinates, line)
+		if len(line) > 0 && line[len(line)-1] != clipedStart {
+			newCoordinates = append(newCoordinates, line)
 			line = []Position{clipedStart}
 		} else if len(line) == 0 {
 			line = append(line, clipedStart)
@@ -173,9 +173,9 @@ func (g LineString) Clipped(bbox BBox) Object {
 		line = append(line, clippedEnd)
 	}
 	if len(line) > 0 {
-		new_coordinates = append(new_coordinates, line)
+		newCoordinates = append(newCoordinates, line)
 	}
 
-	res, _ := fillMultiLineString(new_coordinates, nil, nil)
+	res, _ := fillMultiLineString(newCoordinates, nil, nil)
 	return res
 }

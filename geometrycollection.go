@@ -247,14 +247,14 @@ func (g GeometryCollection) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object of the same type as this object, clipped by a bbox.
+// Clipped returns the object of the same type as this object, clipped by a bbox.
 func (g GeometryCollection) Clipped(bbox BBox) Object {
-	var new_geometries []Object
+	var newGeometries []Object
 	for _, geometry := range g.Geometries {
-		new_geometries = append(new_geometries, geometry.Clipped(bbox))
+		newGeometries = append(newGeometries, geometry.Clipped(bbox))
 	}
 
-	gc := GeometryCollection{Geometries: new_geometries}
+	gc := GeometryCollection{Geometries: newGeometries}
 	cbbox := gc.CalculatedBBox()
 	gc.BBox = &cbbox
 	return gc

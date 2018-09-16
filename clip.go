@@ -1,5 +1,6 @@
 package geojson
 
+// ClipSegment clips a segment
 // Cohen-Sutherland Line Clipping
 // https://www.cs.helsinki.fi/group/goa/viewing/leikkaus/lineClip.html
 func ClipSegment(start, end Position, bbox BBox) (resStart, resEnd Position, rejected bool) {
@@ -25,9 +26,10 @@ func ClipSegment(start, end Position, bbox BBox) (resStart, resEnd Position, rej
 	return
 }
 
+// ClipRing clips a ring
 // Sutherland-Hodgman Polygon Clipping
 // https://www.cs.helsinki.fi/group/goa/viewing/leikkaus/intro2.html
-func ClipRing(ring[] Position, bbox BBox) (resRing []Position) {
+func ClipRing(ring []Position, bbox BBox) (resRing []Position) {
 
 	if len(ring) < 4 {
 		// under 4 elements this is not a polygon ring!
@@ -38,8 +40,8 @@ func ClipRing(ring[] Position, bbox BBox) (resRing []Position) {
 	var inside, prevInside bool
 	var prev Position
 
-	for edge = 1; edge <= 8; edge *=2 {
-		prev = ring[len(ring) - 2]
+	for edge = 1; edge <= 8; edge *= 2 {
+		prev = ring[len(ring)-2]
 		prevInside = (getCode(bbox, prev) & edge) == 0
 
 		for _, p := range ring {
@@ -56,7 +58,7 @@ func ClipRing(ring[] Position, bbox BBox) (resRing []Position) {
 				// Entering
 				resRing = append(resRing, intersect(bbox, edge, prev, p))
 				resRing = append(resRing, p)
-			} else  {
+			} else {
 				// Staying outside
 			}
 
@@ -73,48 +75,46 @@ func ClipRing(ring[] Position, bbox BBox) (resRing []Position) {
 	return
 }
 
-
 func getCode(bbox BBox, point Position) (code uint8) {
 	code = 0
 
 	if point.X < bbox.Min.X {
-		code |= 1  // left
+		code |= 1 // left
 	} else if point.X > bbox.Max.X {
-		code |= 2  // right
+		code |= 2 // right
 	}
 
 	if point.Y < bbox.Min.Y {
-		code |= 4  // bottom
+		code |= 4 // bottom
 	} else if point.Y > bbox.Max.Y {
-		code |= 8  // top
+		code |= 8 // top
 	}
 
 	return
 }
 
-
 func intersect(bbox BBox, code uint8, start, end Position) (new Position) {
-	if (code & 8) != 0 {  // top
+	if (code & 8) != 0 { // top
 		new = Position{
-			X: start.X + (end.X - start.X) * (bbox.Max.Y - start.Y) / (end.Y - start.Y),
+			X: start.X + (end.X-start.X)*(bbox.Max.Y-start.Y)/(end.Y-start.Y),
 			Y: bbox.Max.Y,
 		}
-	} else if (code & 4) != 0 {  // bottom
+	} else if (code & 4) != 0 { // bottom
 		new = Position{
-			X: start.X + (end.X - start.X) * (bbox.Min.Y - start.Y) / (end.Y - start.Y),
+			X: start.X + (end.X-start.X)*(bbox.Min.Y-start.Y)/(end.Y-start.Y),
 			Y: bbox.Min.Y,
 		}
-	} else if (code & 2) != 0 {  //right
+	} else if (code & 2) != 0 { //right
 		new = Position{
 			X: bbox.Max.X,
-			Y: start.Y + (end.Y - start.Y) * (bbox.Max.X - start.X) / (end.X - start.X),
+			Y: start.Y + (end.Y-start.Y)*(bbox.Max.X-start.X)/(end.X-start.X),
 		}
-	} else if (code & 1) != 0 {  // left
+	} else if (code & 1) != 0 { // left
 		new = Position{
 			X: bbox.Min.X,
-			Y: start.Y + (end.Y - start.Y) * (bbox.Min.X - start.X) / (end.X - start.X),
+			Y: start.Y + (end.Y-start.Y)*(bbox.Min.X-start.X)/(end.X-start.X),
 		}
-	} else {  // should not call intersect with the zero code
+	} else { // should not call intersect with the zero code
 	}
 
 	return

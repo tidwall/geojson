@@ -186,8 +186,8 @@ func (g Polygon) IntersectsCircle(center Position, meters float64) bool {
 		return true
 	}
 	for _, polygon := range g.Coordinates {
-		for i := 0; i < len(polygon) - 1 ; i++ {
-			if SegmentIntersectsCircle(polygon[i], polygon[i + 1], center, meters) {
+		for i := 0; i < len(polygon)-1; i++ {
+			if SegmentIntersectsCircle(polygon[i], polygon[i+1], center, meters) {
 				return true
 			}
 		}
@@ -210,14 +210,14 @@ func (g Polygon) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (g Polygon) Clipped(bbox BBox) Object {
-	var new_coordinates [][]Position
+	var newCoordinates [][]Position
 
 	for _, ring := range g.Coordinates {
-		new_coordinates = append(new_coordinates, ClipRing(ring, bbox))
+		newCoordinates = append(newCoordinates, ClipRing(ring, bbox))
 	}
 
-	res, _ := fillPolygon(new_coordinates, nil, nil)
+	res, _ := fillPolygon(newCoordinates, nil, nil)
 	return res
 }

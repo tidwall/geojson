@@ -4,6 +4,7 @@ import (
 	"github.com/tidwall/tile38/pkg/geojson/geo"
 )
 
+// SegmentIntersectsCircle detects if a segment intersects a circle
 func SegmentIntersectsCircle(start, end, center Position, meters float64) bool {
 	// These are faster checks.  If they succeed there's no need do complicate things.
 	if center.DistanceTo(start) <= meters {
@@ -21,9 +22,9 @@ func SegmentIntersectsCircle(start, end, center Position, meters float64) bool {
 	dy := (end.Y - start.Y) / l
 
 	// Point of the line closest to the center
-	t := dx * (center.X - start.X) + dy * (center.Y - start.Y)
-	px := t * dx + start.X
-	py := t * dy + start.Y
+	t := dx*(center.X-start.X) + dy*(center.Y-start.Y)
+	px := t*dx + start.X
+	py := t*dy + start.Y
 	if px < start.X || px > end.X || py < start.Y || py > end.Y {
 		// closest point is outside the segment
 		return false

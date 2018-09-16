@@ -34,6 +34,8 @@ func (s String) WithinCircle(center Position, meters float64) bool {
 func (s String) Intersects(o Object) bool {
 	return false
 }
+
+// IntersectsCircle detects if the object intersects a circle
 func (s String) IntersectsCircle(center Position, meters float64) bool {
 	return false
 }
@@ -73,7 +75,7 @@ func (s String) IsGeometry() bool {
 	return false
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (s String) Clipped(bbox BBox) Object {
 	return s
 }

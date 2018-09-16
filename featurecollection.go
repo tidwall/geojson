@@ -249,14 +249,14 @@ func (g FeatureCollection) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (g FeatureCollection) Clipped(bbox BBox) Object {
-	var new_features []Object
+	var newFeatures []Object
 	for _, feature := range g.Features {
-		new_features = append(new_features, feature.Clipped(bbox))
+		newFeatures = append(newFeatures, feature.Clipped(bbox))
 	}
 
-	fc := FeatureCollection{Features: new_features}
+	fc := FeatureCollection{Features: newFeatures}
 	cbbox := fc.CalculatedBBox()
 	fc.BBox = &cbbox
 	return fc

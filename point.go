@@ -146,7 +146,7 @@ func (g Point) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (g Point) Clipped(bbox BBox) Object {
 	if g.IntersectsBBox(bbox) {
 		return g

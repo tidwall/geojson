@@ -186,8 +186,8 @@ func (g MultiLineString) Intersects(o Object) bool {
 // IntersectsCircle detects if the object intersects a circle.
 func (g MultiLineString) IntersectsCircle(center Position, meters float64) bool {
 	for _, ls := range g.Coordinates {
-		for i := 0; i < len(ls) - 1 ; i++ {
-			if SegmentIntersectsCircle(ls[i], ls[i + 1], center, meters) {
+		for i := 0; i < len(ls)-1; i++ {
+			if SegmentIntersectsCircle(ls[i], ls[i+1], center, meters) {
 				return true
 			}
 		}
@@ -210,17 +210,17 @@ func (g MultiLineString) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (g MultiLineString) Clipped(bbox BBox) Object {
-	var new_coordinates [][]Position
+	var newCoordinates [][]Position
 
 	for ix := range g.Coordinates {
 		clippedMultiLineString, _ := g.getLineString(ix).Clipped(bbox).(MultiLineString)
 		for _, ls := range clippedMultiLineString.Coordinates {
-			new_coordinates = append(new_coordinates, ls)
+			newCoordinates = append(newCoordinates, ls)
 		}
 	}
 
-	res, _ := fillMultiLineString(new_coordinates, nil, nil)
+	res, _ := fillMultiLineString(newCoordinates, nil, nil)
 	return res
 }

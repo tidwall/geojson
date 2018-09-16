@@ -233,7 +233,7 @@ func (g Feature) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (g Feature) Clipped(bbox BBox) Object {
 	clippedGeometry := g.Geometry.Clipped(bbox)
 

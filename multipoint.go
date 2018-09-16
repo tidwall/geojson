@@ -178,17 +178,17 @@ func (g MultiPoint) IsGeometry() bool {
 	return true
 }
 
-// Clip returns the object obtained by clipping this object by a bbox.
+// Clipped returns the object obtained by clipping this object by a bbox.
 func (g MultiPoint) Clipped(bbox BBox) Object {
-	var new_coordinates []Position
+	var newCoordinates []Position
 
 	for _, position := range g.Coordinates {
 		if poly.Point(position).InsideRect(rectBBox(bbox)) {
-			new_coordinates = append(new_coordinates, position)
+			newCoordinates = append(newCoordinates, position)
 		}
 	}
 
-	res, _ := fillMultiPoint(new_coordinates, nil, nil)
+	res, _ := fillMultiPoint(newCoordinates, nil, nil)
 
 	return res
 }
