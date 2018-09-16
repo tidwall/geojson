@@ -1,8 +1,8 @@
 package geojson
 
 import (
+	"github.com/tidwall/geojson/geohash"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/tile38/pkg/geojson/geohash"
 )
 
 // FeatureCollection is a geojson object with the type "FeatureCollection"
@@ -118,12 +118,14 @@ func (g FeatureCollection) appendJSON(json []byte) []byte {
 	return append(json, '}')
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g FeatureCollection) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g FeatureCollection) String() string {
 	return g.JSON()
 }

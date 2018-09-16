@@ -11,7 +11,8 @@ import (
 	"strings"
 )
 
-// Encode latitude/longitude to geohash, either to specified precision or to automatically evaluated precision.
+// Encode latitude/longitude to geohash, either to specified precision or to
+// automatically evaluated precision.
 func Encode(lat, lon float64, precision int) (string, error) {
 	var idx = 0 // index into base32 map
 	var bit = 0 // each char holds 5 bits

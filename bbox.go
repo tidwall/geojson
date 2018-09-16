@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/tile38/pkg/geojson/poly"
+	"github.com/tidwall/geojson/poly"
 )
 
 // BBox is a bounding box
@@ -16,7 +16,10 @@ type BBox struct {
 
 // New2DBBox creates a new bounding box
 func New2DBBox(minX, minY, maxX, maxY float64) BBox {
-	return BBox{Min: Position{X: minX, Y: minY, Z: 0}, Max: Position{X: maxX, Y: maxY, Z: 0}}
+	return BBox{
+		Min: Position{X: minX, Y: minY, Z: 0},
+		Max: Position{X: maxX, Y: maxY, Z: 0},
+	}
 }
 
 func fillBBox(json string) (*BBox, error) {
@@ -128,7 +131,8 @@ func rectBBox(bbox BBox) poly.Rect {
 	}
 }
 
-// ExternalJSON is the simple json representation of the bounding box used for external applications.
+// ExternalJSON is the simple json representation of the bounding box used for
+// external applications.
 func (b BBox) ExternalJSON() string {
 	sw, ne := b.Min, b.Max
 	sw.Z, ne.Z = 0, 0
@@ -170,7 +174,8 @@ func (b BBox) Sparse(amount byte) []BBox {
 // BBoxesFromCenter calculates the bounding box surrounding a circle.
 func BBoxesFromCenter(lat, lon, meters float64) (outer BBox) {
 
-	outer.Min.Y, outer.Min.X, outer.Max.Y, outer.Max.X = BoundsFromCenter(lat, lon, meters)
+	outer.Min.Y, outer.Min.X, outer.Max.Y, outer.Max.X =
+		BoundsFromCenter(lat, lon, meters)
 	if outer.Min.X == outer.Max.X {
 		switch outer.Min.X {
 		case -180:
@@ -184,11 +189,13 @@ func BBoxesFromCenter(lat, lon, meters float64) (outer BBox) {
 }
 
 // BoundsFromCenter calculates the bounding box surrounding a circle.
-func BoundsFromCenter(lat, lon, meters float64) (latMin, lonMin, latMax, lonMax float64) {
+func BoundsFromCenter(lat, lon, meters float64) (
+	latMin, lonMin, latMax, lonMax float64,
+) {
 
 	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Latitude
-	lat = toRadians(lat)
-	lon = toRadians(lon)
+	lat = lat * radians
+	lon = lon * radians
 
 	r := meters / earthRadius // angular radius
 
@@ -196,7 +203,8 @@ func BoundsFromCenter(lat, lon, meters float64) (latMin, lonMin, latMax, lonMax 
 	latMax = lat + r
 
 	latT := math.Asin(math.Sin(lat) / math.Cos(r))
-	lonΔ := math.Acos((math.Cos(r) - math.Sin(latT)*math.Sin(lat)) / (math.Cos(latT) * math.Cos(lat)))
+	lonΔ := math.Acos((math.Cos(r) - math.Sin(latT)*math.Sin(lat)) /
+		(math.Cos(latT) * math.Cos(lat)))
 
 	lonMin = lon - lonΔ
 	lonMax = lon + lonΔ
@@ -215,46 +223,17 @@ func BoundsFromCenter(lat, lon, meters float64) (latMin, lonMin, latMax, lonMax 
 		lonMax = math.Pi
 	}
 
-	// Adjust for wraparound. Remove this if the commented-out condition below this block is added.
+	// Adjust for wraparound. Remove this if the commented-out condition below
+	// this block is added.
 	if lonMin < -math.Pi || lonMax > math.Pi {
 		lonMin = -math.Pi
 		lonMax = math.Pi
 	}
 
-	/*
-	   	// Consider splitting area into two bboxes, using the below checks, and erasing above block for performance. See http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
-
-	   	// Adjust for wraparound if minimum longitude is less than -180 degrees.
-	   	if lonMin < -math.Pi {
-	   // box 1:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin += 2*math.Pi
-	   		lonMax = math.Pi
-	   // box 2:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin = -math.Pi
-	   		lonMax = lonMax
-	   	}
-
-	   	// Adjust for wraparound if maximum longitude is greater than 180 degrees.
-	   	if lonMax > math.Pi {
-	   // box 1:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin = lonMin
-	   		lonMax = -math.Pi
-	   // box 2:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin = -math.Pi
-	   		lonMax -= 2*math.Pi
-	   	}
-	*/
-
-	lonMin = math.Mod(lonMin+3*math.Pi, 2*math.Pi) - math.Pi // normalise to -180..+180°
+	// normalise to -180..+180°
+	lonMin = math.Mod(lonMin+3*math.Pi, 2*math.Pi) - math.Pi
 	lonMax = math.Mod(lonMax+3*math.Pi, 2*math.Pi) - math.Pi
 
-	return toDegrees(latMin), toDegrees(lonMin), toDegrees(latMax), toDegrees(lonMax)
+	return latMin * degrees, lonMin * degrees,
+		latMax * degrees, lonMax * degrees
 }

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/tidwall/geojson/poly"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/tile38/pkg/geojson/poly"
 )
 
 const (
@@ -78,9 +78,11 @@ type Object interface {
 	CalculatedBBox() BBox
 	// CalculatedPoint is a point representation of the object.
 	CalculatedPoint() Position
-	// JSON is the json representation of the object. This might not be exactly the same as the original.
+	// JSON is the json representation of the object. This might not be exactly
+	// the same as the original.
 	JSON() string
-	// String returns a string representation of the object. This may be JSON or something else.
+	// String returns a string representation of the object. This may be JSON
+	// or something else.
 	String() string
 	// PositionCount return the number of coordinates.
 	PositionCount() int
@@ -92,7 +94,8 @@ type Object interface {
 	Geohash(precision int) (string, error)
 	// IsBBoxDefined returns true if the object has a defined bbox.
 	IsBBoxDefined() bool
-	// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+	// IsGeometry return true if the object is a geojson geometry object. false
+	// if it something else.
 	IsGeometry() bool
 	// Clip returns the object obtained by clipping this object by a bbox.
 	Clipped(bbox BBox) Object
@@ -151,7 +154,8 @@ func objectMap(json string, from int) (Object, error) {
 			switch typ {
 			default:
 				return nil, fmt.Errorf(fmtErrTypeIsUnknown, typ)
-			case "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection":
+			case "Point", "MultiPoint", "LineString", "MultiLineString",
+				"Polygon", "MultiPolygon", "GeometryCollection":
 			}
 		case fcoll:
 			switch typ {
@@ -220,15 +224,22 @@ func withinObjectShared(g Object, o Object, pin func(v Polygon) bool) bool {
 		default:
 			return false
 		case SimplePoint:
-			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).IntersectsLineString(polyPositions(v.Coordinates))
+			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).
+				IntersectsLineString(
+					polyPositions(v.Coordinates),
+				)
 		case Point:
-			return poly.Point(g.Coordinates).IntersectsLineString(polyPositions(v.Coordinates))
+			return poly.Point(g.Coordinates).IntersectsLineString(
+				polyPositions(v.Coordinates),
+			)
 		case MultiPoint:
 			if len(v.Coordinates) == 0 {
 				return false
 			}
 			for _, p := range v.Coordinates {
-				if !poly.Point(p).IntersectsLineString(polyPositions(v.Coordinates)) {
+				if !poly.Point(p).IntersectsLineString(
+					polyPositions(v.Coordinates),
+				) {
 					return false
 				}
 			}
@@ -373,7 +384,8 @@ func CirclePolygon(x, y, meters float64, steps int) Polygon {
 	return p
 }
 
-// The object's calculated bounding box must intersect the radius of the circle to pass.
+// The object's calculated bounding box must intersect the radius of the circle
+// to pass.
 func nearbyObjectShared(g Object, x, y float64, meters float64) bool {
 	if !g.hasPositions() {
 		return false

@@ -3,7 +3,9 @@ package geojson
 // ClipSegment clips a segment
 // Cohen-Sutherland Line Clipping
 // https://www.cs.helsinki.fi/group/goa/viewing/leikkaus/lineClip.html
-func ClipSegment(start, end Position, bbox BBox) (resStart, resEnd Position, rejected bool) {
+func ClipSegment(start, end Position, bbox BBox) (
+	resStart, resEnd Position, rejected bool,
+) {
 	startCode := getCode(bbox, start)
 	endCode := getCode(bbox, end)
 

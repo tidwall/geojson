@@ -1,6 +1,6 @@
 package geojson
 
-import "github.com/tidwall/tile38/pkg/geojson/geohash"
+import "github.com/tidwall/geojson/geohash"
 
 // Polygon is a geojson object with the type "Polygon"
 type Polygon struct {
@@ -9,7 +9,9 @@ type Polygon struct {
 	bboxDefined bool
 }
 
-func fillPolygon(coordinates [][]Position, bbox *BBox, err error) (Polygon, error) {
+func fillPolygon(coordinates [][]Position, bbox *BBox, err error) (
+	Polygon, error,
+) {
 	if err == nil {
 		if len(coordinates) == 0 {
 			err = errMustBeALinearRing
@@ -67,15 +69,19 @@ func (g Polygon) MarshalJSON() ([]byte, error) {
 }
 
 func (g Polygon) appendJSON(json []byte) []byte {
-	return appendLevel3JSON(json, "Polygon", g.Coordinates, g.BBox, g.bboxDefined)
+	return appendLevel3JSON(
+		json, "Polygon", g.Coordinates, g.BBox, g.bboxDefined,
+	)
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g Polygon) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g Polygon) String() string {
 	return g.JSON()
 }
@@ -150,7 +156,9 @@ func (g Polygon) Within(o Object) bool {
 			if len(g.Coordinates) == 0 {
 				return false
 			}
-			return polyPositions(g.Coordinates[0]).Inside(polyExteriorHoles(v.Coordinates))
+			return polyPositions(g.Coordinates[0]).Inside(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
@@ -175,7 +183,9 @@ func (g Polygon) Intersects(o Object) bool {
 			if len(g.Coordinates) == 0 {
 				return false
 			}
-			return polyPositions(g.Coordinates[0]).Intersects(polyExteriorHoles(v.Coordinates))
+			return polyPositions(g.Coordinates[0]).Intersects(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
@@ -187,7 +197,9 @@ func (g Polygon) IntersectsCircle(center Position, meters float64) bool {
 	}
 	for _, polygon := range g.Coordinates {
 		for i := 0; i < len(polygon)-1; i++ {
-			if SegmentIntersectsCircle(polygon[i], polygon[i+1], center, meters) {
+			if SegmentIntersectsCircle(
+				polygon[i], polygon[i+1], center, meters,
+			) {
 				return true
 			}
 		}
@@ -205,7 +217,8 @@ func (g Polygon) IsBBoxDefined() bool {
 	return g.bboxDefined
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g Polygon) IsGeometry() bool {
 	return true
 }

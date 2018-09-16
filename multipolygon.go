@@ -1,7 +1,7 @@
 package geojson
 
 import (
-	"github.com/tidwall/tile38/pkg/geojson/geohash"
+	"github.com/tidwall/geojson/geohash"
 )
 
 // MultiPolygon is a geojson object with the type "MultiPolygon"
@@ -12,7 +12,9 @@ type MultiPolygon struct {
 	polygons    []Polygon
 }
 
-func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (MultiPolygon, error) {
+func fillMultiPolygon(coordinates [][][]Position, bbox *BBox, err error) (
+	MultiPolygon, error,
+) {
 	polygons := make([]Polygon, len(coordinates))
 	if err == nil {
 		for i, ps := range coordinates {
@@ -82,15 +84,19 @@ func (g MultiPolygon) MarshalJSON() ([]byte, error) {
 }
 
 func (g MultiPolygon) appendJSON(json []byte) []byte {
-	return appendLevel4JSON(json, "MultiPolygon", g.Coordinates, g.BBox, g.bboxDefined)
+	return appendLevel4JSON(
+		json, "MultiPolygon", g.Coordinates, g.BBox, g.bboxDefined,
+	)
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g MultiPolygon) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g MultiPolygon) String() string {
 	return g.JSON()
 }
@@ -211,7 +217,8 @@ func (g MultiPolygon) IsBBoxDefined() bool {
 	return g.bboxDefined
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g MultiPolygon) IsGeometry() bool {
 	return true
 }

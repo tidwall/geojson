@@ -6,12 +6,15 @@ import (
 	"strconv"
 	"unsafe"
 
+	"github.com/tidwall/geojson/geo"
+	"github.com/tidwall/geojson/poly"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/tile38/pkg/geojson/geo"
-	"github.com/tidwall/tile38/pkg/geojson/poly"
 )
 
 const sizeofPosition = 24 // (X,Y,Z) * 8
+const earthRadius = 6371e3
+const radians = math.Pi / 180
+const degrees = 180 / math.Pi
 
 // Position is a simple point
 type Position poly.Point
@@ -25,7 +28,9 @@ func polyPositions(positions []Position) poly.Polygon {
 func polyMultiPositions(positions [][]Position) []poly.Polygon {
 	return *(*[]poly.Polygon)(unsafe.Pointer(&positions))
 }
-func polyExteriorHoles(positions [][]Position) (exterior poly.Polygon, holes []poly.Polygon) {
+func polyExteriorHoles(positions [][]Position) (
+	exterior poly.Polygon, holes []poly.Polygon,
+) {
 	switch len(positions) {
 	case 0:
 	case 1:
@@ -47,11 +52,6 @@ func appendPositionJSON(json []byte, p Position, isCordZ bool) []byte {
 	}
 	return json
 }
-
-const earthRadius = 6371e3
-
-func toRadians(deg float64) float64 { return deg * math.Pi / 180 }
-func toDegrees(rad float64) float64 { return rad * 180 / math.Pi }
 
 // DistanceTo calculates the distance to a position
 func (p Position) DistanceTo(position Position) float64 {
@@ -115,10 +115,14 @@ func fillPositionBytes(b []byte, isCordZ bool) (Position, []byte, error) {
 	return p, b, nil
 }
 
-// ExternalJSON is the simple json representation of the position used for external applications.
+// ExternalJSON is the simple json representation of the position used for
+// external applications.
 func (p Position) ExternalJSON() string {
 	if p.Z != 0 {
-		return `{"lat":` + strconv.FormatFloat(p.Y, 'f', -1, 64) + `,"lon":` + strconv.FormatFloat(p.X, 'f', -1, 64) + `,"z":` + strconv.FormatFloat(p.Z, 'f', -1, 64) + `}`
+		return `{"lat":` + strconv.FormatFloat(p.Y, 'f', -1, 64) +
+			`,"lon":` + strconv.FormatFloat(p.X, 'f', -1, 64) +
+			`,"z":` + strconv.FormatFloat(p.Z, 'f', -1, 64) + `}`
 	}
-	return `{"lat":` + strconv.FormatFloat(p.Y, 'f', -1, 64) + `,"lon":` + strconv.FormatFloat(p.X, 'f', -1, 64) + `}`
+	return `{"lat":` + strconv.FormatFloat(p.Y, 'f', -1, 64) +
+		`,"lon":` + strconv.FormatFloat(p.X, 'f', -1, 64) + `}`
 }

@@ -1,8 +1,8 @@
 package geojson
 
 import (
+	"github.com/tidwall/geojson/geohash"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/tile38/pkg/geojson/geohash"
 )
 
 // GeometryCollection is a geojson object with the type "GeometryCollection"
@@ -117,12 +117,14 @@ func (g GeometryCollection) appendJSON(json []byte) []byte {
 	return append(json, '}')
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g GeometryCollection) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g GeometryCollection) String() string {
 	return g.JSON()
 }
@@ -223,7 +225,9 @@ func (g GeometryCollection) Intersects(o Object) bool {
 }
 
 // IntersectsCircle detects if the object intersects a circle.
-func (g GeometryCollection) IntersectsCircle(center Position, meters float64) bool {
+func (g GeometryCollection) IntersectsCircle(
+	center Position, meters float64,
+) bool {
 	for _, geometry := range g.Geometries {
 		if geometry.IntersectsCircle(center, meters) {
 			return true
@@ -242,12 +246,13 @@ func (g GeometryCollection) IsBBoxDefined() bool {
 	return g.bboxDefined
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g GeometryCollection) IsGeometry() bool {
 	return true
 }
 
-// Clipped returns the object of the same type as this object, clipped by a bbox.
+// Clipped returns the object of the same type as this object, clipped by bbox.
 func (g GeometryCollection) Clipped(bbox BBox) Object {
 	var newGeometries []Object
 	for _, geometry := range g.Geometries {

@@ -1,12 +1,13 @@
 package geojson
 
 import (
-	"github.com/tidwall/tile38/pkg/geojson/geo"
+	"github.com/tidwall/geojson/geo"
 )
 
 // SegmentIntersectsCircle detects if a segment intersects a circle
 func SegmentIntersectsCircle(start, end, center Position, meters float64) bool {
-	// These are faster checks.  If they succeed there's no need do complicate things.
+	// These are faster checks. If they succeed there's no need do
+	// complicated things.
 	if center.DistanceTo(start) <= meters {
 		return true
 	}

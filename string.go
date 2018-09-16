@@ -60,17 +60,20 @@ func (s String) appendJSON(json []byte) []byte {
 	return append(json, b...)
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (s String) JSON() string {
 	return string(s.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (s String) String() string {
 	return string(s)
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (s String) IsGeometry() bool {
 	return false
 }

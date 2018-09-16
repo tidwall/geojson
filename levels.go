@@ -67,7 +67,11 @@ func level1Weight(coordinates Position, bbox *BBox) int {
 	return level1PositionCount(coordinates, bbox) * sizeofPosition
 }
 
-func appendLevel1JSON(json []byte, name string, coordinates Position, bbox *BBox, bboxDefined bool) []byte {
+func appendLevel1JSON(
+	json []byte, name string,
+	coordinates Position,
+	bbox *BBox, bboxDefined bool,
+) []byte {
 	if bbox != nil && !bboxDefined {
 		bbox = nil
 	}
@@ -148,7 +152,11 @@ func level2Weight(coordinates []Position, bbox *BBox) int {
 	return level2PositionCount(coordinates, bbox) * sizeofPosition
 }
 
-func appendLevel2JSON(json []byte, name string, coordinates []Position, bbox *BBox, bboxDefined bool) []byte {
+func appendLevel2JSON(
+	json []byte, name string,
+	coordinates []Position,
+	bbox *BBox, bboxDefined bool,
+) []byte {
 	if bbox != nil && !bboxDefined {
 		bbox = nil
 	}
@@ -232,7 +240,9 @@ func fillLevel3Map(json string) (
 	return
 }
 
-func level3CalculatedBBox(coordinates [][]Position, bbox *BBox, isPolygon bool) BBox {
+func level3CalculatedBBox(
+	coordinates [][]Position, bbox *BBox, isPolygon bool,
+) BBox {
 	if bbox != nil {
 		return *bbox
 	}
@@ -262,7 +272,11 @@ func level3PositionCount(coordinates [][]Position, bbox *BBox) int {
 	return res
 }
 
-func appendLevel3JSON(json []byte, name string, coordinates [][]Position, bbox *BBox, bboxDefined bool) []byte {
+func appendLevel3JSON(
+	json []byte, name string,
+	coordinates [][]Position,
+	bbox *BBox, bboxDefined bool,
+) []byte {
 	if bbox != nil && !bboxDefined {
 		bbox = nil
 	}
@@ -380,7 +394,11 @@ func level4PositionCount(coordinates [][][]Position, bbox *BBox) int {
 	return res
 }
 
-func appendLevel4JSON(json []byte, name string, coordinates [][][]Position, bbox *BBox, bboxDefined bool) []byte {
+func appendLevel4JSON(
+	json []byte, name string,
+	coordinates [][][]Position,
+	bbox *BBox, bboxDefined bool,
+) []byte {
 	if bbox != nil && !bboxDefined {
 		bbox = nil
 	}

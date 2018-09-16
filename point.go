@@ -1,9 +1,9 @@
 package geojson
 
 import (
-	"github.com/tidwall/tile38/pkg/geojson/geo"
-	"github.com/tidwall/tile38/pkg/geojson/geohash"
-	"github.com/tidwall/tile38/pkg/geojson/poly"
+	"github.com/tidwall/geojson/geo"
+	"github.com/tidwall/geojson/geohash"
+	"github.com/tidwall/geojson/poly"
 )
 
 // Point is a geojson object with the type "Point"
@@ -13,7 +13,9 @@ type Point struct {
 	bboxDefined bool
 }
 
-func fillSimplePointOrPoint(coordinates Position, bbox *BBox, err error) (Object, error) {
+func fillSimplePointOrPoint(coordinates Position, bbox *BBox, err error) (
+	Object, error,
+) {
 	if coordinates.Z == 0 && bbox == nil {
 		return fillSimplePoint(coordinates, bbox, err)
 	}
@@ -61,12 +63,14 @@ func (g Point) appendJSON(json []byte) []byte {
 	return appendLevel1JSON(json, "Point", g.Coordinates, g.BBox, g.bboxDefined)
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g Point) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g Point) String() string {
 	return g.JSON()
 }
@@ -107,33 +111,43 @@ func (g Point) IntersectsBBox(bbox BBox) bool {
 func (g Point) Within(o Object) bool {
 	return withinObjectShared(g, o,
 		func(v Polygon) bool {
-			return poly.Point(g.Coordinates).Inside(polyExteriorHoles(v.Coordinates))
+			return poly.Point(g.Coordinates).Inside(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
 
 // WithinCircle detects if the object is fully contained inside a circle.
 func (g Point) WithinCircle(center Position, meters float64) bool {
-	return geo.DistanceTo(g.Coordinates.Y, g.Coordinates.X, center.Y, center.X) < meters
+	return geo.DistanceTo(
+		g.Coordinates.Y, g.Coordinates.X, center.Y, center.X,
+	) < meters
 }
 
 // Intersects detects if the object intersects another object.
 func (g Point) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
-			return poly.Point(g.Coordinates).Intersects(polyExteriorHoles(v.Coordinates))
+			return poly.Point(g.Coordinates).Intersects(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
 
 // IntersectsCircle detects if the object intersects a circle.
 func (g Point) IntersectsCircle(center Position, meters float64) bool {
-	return geo.DistanceTo(g.Coordinates.Y, g.Coordinates.X, center.Y, center.X) <= meters
+	return geo.DistanceTo(
+		g.Coordinates.Y, g.Coordinates.X, center.Y, center.X,
+	) <= meters
 }
 
 // Nearby detects if the object is nearby a position.
 func (g Point) Nearby(center Position, meters float64) bool {
-	return geo.DistanceTo(g.Coordinates.Y, g.Coordinates.X, center.Y, center.X) <= meters
+	return geo.DistanceTo(
+		g.Coordinates.Y, g.Coordinates.X, center.Y, center.X,
+	) <= meters
 }
 
 // IsBBoxDefined returns true if the object has a defined bbox.
@@ -141,7 +155,8 @@ func (g Point) IsBBoxDefined() bool {
 	return g.bboxDefined
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g Point) IsGeometry() bool {
 	return true
 }

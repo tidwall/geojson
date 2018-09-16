@@ -3,8 +3,8 @@ package geojson
 import (
 	"encoding/binary"
 
+	"github.com/tidwall/geojson/geohash"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/tile38/pkg/geojson/geohash"
 )
 
 // Feature is a geojson object with the type "Feature"
@@ -150,12 +150,14 @@ func (g Feature) appendJSON(json []byte) []byte {
 	return append(json, '}')
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g Feature) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g Feature) String() string {
 	return g.JSON()
 }
@@ -228,7 +230,8 @@ func (g Feature) IsBBoxDefined() bool {
 	return g.bboxDefined
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g Feature) IsGeometry() bool {
 	return true
 }

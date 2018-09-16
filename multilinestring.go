@@ -1,8 +1,8 @@
 package geojson
 
 import (
-	"github.com/tidwall/tile38/pkg/geojson/geohash"
-	"github.com/tidwall/tile38/pkg/geojson/poly"
+	"github.com/tidwall/geojson/geohash"
+	"github.com/tidwall/geojson/poly"
 )
 
 // MultiLineString is a geojson object with the type "MultiLineString"
@@ -12,7 +12,9 @@ type MultiLineString struct {
 	bboxDefined bool
 }
 
-func fillMultiLineString(coordinates [][]Position, bbox *BBox, err error) (MultiLineString, error) {
+func fillMultiLineString(coordinates [][]Position, bbox *BBox, err error) (
+	MultiLineString, error,
+) {
 	if err == nil {
 		for _, coordinates := range coordinates {
 			if len(coordinates) < 2 {
@@ -69,15 +71,19 @@ func (g MultiLineString) MarshalJSON() ([]byte, error) {
 }
 
 func (g MultiLineString) appendJSON(json []byte) []byte {
-	return appendLevel3JSON(json, "MultiLineString", g.Coordinates, g.BBox, g.bboxDefined)
+	return appendLevel3JSON(
+		json, "MultiLineString", g.Coordinates, g.BBox, g.bboxDefined,
+	)
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g MultiLineString) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g MultiLineString) String() string {
 	return g.JSON()
 }
@@ -174,7 +180,9 @@ func (g MultiLineString) Intersects(o Object) bool {
 				return false
 			}
 			for _, ls := range g.Coordinates {
-				if polyPositions(ls).Intersects(polyExteriorHoles(v.Coordinates)) {
+				if polyPositions(ls).Intersects(
+					polyExteriorHoles(v.Coordinates),
+				) {
 					return true
 				}
 			}
@@ -184,7 +192,9 @@ func (g MultiLineString) Intersects(o Object) bool {
 }
 
 // IntersectsCircle detects if the object intersects a circle.
-func (g MultiLineString) IntersectsCircle(center Position, meters float64) bool {
+func (g MultiLineString) IntersectsCircle(
+	center Position, meters float64,
+) bool {
 	for _, ls := range g.Coordinates {
 		for i := 0; i < len(ls)-1; i++ {
 			if SegmentIntersectsCircle(ls[i], ls[i+1], center, meters) {
@@ -205,7 +215,8 @@ func (g MultiLineString) IsBBoxDefined() bool {
 	return g.bboxDefined
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g MultiLineString) IsGeometry() bool {
 	return true
 }
@@ -215,7 +226,8 @@ func (g MultiLineString) Clipped(bbox BBox) Object {
 	var newCoordinates [][]Position
 
 	for ix := range g.Coordinates {
-		clippedMultiLineString, _ := g.getLineString(ix).Clipped(bbox).(MultiLineString)
+		clippedMultiLineString, _ :=
+			g.getLineString(ix).Clipped(bbox).(MultiLineString)
 		for _, ls := range clippedMultiLineString.Coordinates {
 			newCoordinates = append(newCoordinates, ls)
 		}

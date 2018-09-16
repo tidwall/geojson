@@ -1,12 +1,13 @@
 package geojson
 
 import (
-	"github.com/tidwall/tile38/pkg/geojson/geo"
-	"github.com/tidwall/tile38/pkg/geojson/geohash"
-	"github.com/tidwall/tile38/pkg/geojson/poly"
+	"github.com/tidwall/geojson/geo"
+	"github.com/tidwall/geojson/geohash"
+	"github.com/tidwall/geojson/poly"
 )
 
-// SimplePoint is a geojson object with the type "Point" and where there coordinate is 2D and there is no bbox.
+// SimplePoint is a geojson object with the type "Point" and where there
+// coordinate is 2D and there is no bbox.
 type SimplePoint struct {
 	X, Y float64
 }
@@ -16,7 +17,9 @@ func New2DPoint(x, y float64) SimplePoint {
 	return SimplePoint{x, y}
 }
 
-func fillSimplePoint(coordinates Position, bbox *BBox, err error) (SimplePoint, error) {
+func fillSimplePoint(coordinates Position, bbox *BBox, err error) (
+	SimplePoint, error,
+) {
 	return SimplePoint{X: coordinates.X, Y: coordinates.Y}, err
 }
 
@@ -55,15 +58,19 @@ func (g SimplePoint) MarshalJSON() ([]byte, error) {
 }
 
 func (g SimplePoint) appendJSON(json []byte) []byte {
-	return appendLevel1JSON(json, "Point", Position{X: g.X, Y: g.Y, Z: 0}, nil, false)
+	return appendLevel1JSON(
+		json, "Point", Position{X: g.X, Y: g.Y, Z: 0}, nil, false,
+	)
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g SimplePoint) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g SimplePoint) String() string {
 	return g.JSON()
 }
@@ -89,7 +96,9 @@ func (g SimplePoint) IntersectsBBox(bbox BBox) bool {
 func (g SimplePoint) Within(o Object) bool {
 	return withinObjectShared(g, o,
 		func(v Polygon) bool {
-			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Inside(polyExteriorHoles(v.Coordinates))
+			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Inside(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
@@ -103,7 +112,9 @@ func (g SimplePoint) WithinCircle(center Position, meters float64) bool {
 func (g SimplePoint) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
-			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Intersects(polyExteriorHoles(v.Coordinates))
+			return poly.Point(Position{X: g.X, Y: g.Y, Z: 0}).Intersects(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
@@ -123,7 +134,8 @@ func (g SimplePoint) IsBBoxDefined() bool {
 	return false
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g SimplePoint) IsGeometry() bool {
 	return true
 }

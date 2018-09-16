@@ -1,6 +1,6 @@
 package geojson
 
-import "github.com/tidwall/tile38/pkg/geojson/geohash"
+import "github.com/tidwall/geojson/geohash"
 
 // LineString is a geojson object with the type "LineString"
 type LineString struct {
@@ -9,7 +9,9 @@ type LineString struct {
 	bboxDefined bool
 }
 
-func fillLineString(coordinates []Position, bbox *BBox, err error) (LineString, error) {
+func fillLineString(coordinates []Position, bbox *BBox, err error) (
+	LineString, error,
+) {
 	if err == nil {
 		if len(coordinates) < 2 {
 			err = errLineStringInvalidCoordinates
@@ -54,7 +56,8 @@ func (g LineString) Weight() int {
 }
 
 func (g LineString) appendJSON(json []byte) []byte {
-	return appendLevel2JSON(json, "LineString", g.Coordinates, g.BBox, g.bboxDefined)
+	return appendLevel2JSON(json, "LineString",
+		g.Coordinates, g.BBox, g.bboxDefined)
 }
 
 // MarshalJSON allows the object to be encoded in json.Marshal calls.
@@ -62,12 +65,14 @@ func (g LineString) MarshalJSON() ([]byte, error) {
 	return g.appendJSON(nil), nil
 }
 
-// JSON is the json representation of the object. This might not be exactly the same as the original.
+// JSON is the json representation of the object. This might not be exactly the
+// same as the original.
 func (g LineString) JSON() string {
 	return string(g.appendJSON(nil))
 }
 
-// String returns a string representation of the object. This might be JSON or something else.
+// String returns a string representation of the object. This might be JSON or
+// something else.
 func (g LineString) String() string {
 	return g.JSON()
 }
@@ -100,7 +105,9 @@ func (g LineString) IntersectsBBox(bbox BBox) bool {
 func (g LineString) Within(o Object) bool {
 	return withinObjectShared(g, o,
 		func(v Polygon) bool {
-			return polyPositions(g.Coordinates).Inside(polyExteriorHoles(v.Coordinates))
+			return polyPositions(g.Coordinates).Inside(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
@@ -122,7 +129,9 @@ func (g LineString) WithinCircle(center Position, meters float64) bool {
 func (g LineString) Intersects(o Object) bool {
 	return intersectsObjectShared(g, o,
 		func(v Polygon) bool {
-			return polyPositions(g.Coordinates).LineStringIntersects(polyExteriorHoles(v.Coordinates))
+			return polyPositions(g.Coordinates).LineStringIntersects(
+				polyExteriorHoles(v.Coordinates),
+			)
 		},
 	)
 }
@@ -130,7 +139,10 @@ func (g LineString) Intersects(o Object) bool {
 // IntersectsCircle detects if the object intersects a circle.
 func (g LineString) IntersectsCircle(center Position, meters float64) bool {
 	for i := 0; i < len(g.Coordinates)-1; i++ {
-		if SegmentIntersectsCircle(g.Coordinates[i], g.Coordinates[i+1], center, meters) {
+		if SegmentIntersectsCircle(
+			g.Coordinates[i], g.Coordinates[i+1],
+			center, meters,
+		) {
 			return true
 		}
 	}
@@ -147,7 +159,8 @@ func (g LineString) IsBBoxDefined() bool {
 	return g.bboxDefined
 }
 
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
+// IsGeometry return true if the object is a geojson geometry object. false if
+// it something else.
 func (g LineString) IsGeometry() bool {
 	return true
 }
@@ -160,7 +173,9 @@ func (g LineString) Clipped(bbox BBox) Object {
 	var line []Position
 
 	for i := 0; i < len(g.Coordinates)-1; i++ {
-		clipedStart, clippedEnd, rejected = ClipSegment(g.Coordinates[i], g.Coordinates[i+1], bbox)
+		clipedStart, clippedEnd, rejected = ClipSegment(
+			g.Coordinates[i], g.Coordinates[i+1], bbox,
+		)
 		if rejected {
 			continue
 		}
