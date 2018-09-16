@@ -9,6 +9,14 @@ func fixed(f float64, d int) string {
 	return fmt.Sprintf(fmt.Sprintf("%%0.%df", d), f)
 }
 
+// func TestMakeIt(t *testing.T) {
+// 	for i := 0; i < 256; i++ {
+// 		c := base32R(byte(i))
+// 		print(c)
+// 		print(",")
+// 	}
+// }
+
 func TestABC(t *testing.T) {
 	lat, lon := 33.52345123, -115.512345123
 	hash, err := Encode(lat, lon, 32)
