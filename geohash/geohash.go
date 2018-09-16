@@ -8,6 +8,11 @@ package geohash
 
 import "errors"
 
+var (
+	errInvalidPrecision = errors.New("invalid precision")
+	errEncodingError    = errors.New("encoding error")
+	errInvalidGeohash   = errors.New("invalid geohash")
+)
 var base32R = [...]int8{
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -42,7 +47,7 @@ func Encode(lat, lon float64, precision int) (string, error) {
 	var lonMin = -180.0
 	var lonMax = 180.0
 	if precision < 1 {
-		return "", errors.New("invalid precision")
+		return "", errInvalidPrecision
 	}
 	geohash := make([]byte, 0, precision)
 	for len(geohash) < precision {
@@ -72,9 +77,6 @@ func Encode(lat, lon float64, precision int) (string, error) {
 		bit = bit + 1
 		if bit == 5 {
 			// 5 bits gives us a character: append it and start over
-			if idx >= len(base32F) {
-				return "", errors.New("encoding error")
-			}
 			geohash = append(geohash, base32F[idx])
 			bit = 0
 			idx = 0
@@ -104,7 +106,7 @@ func Bounds(geohash string) (swLat, swLon, neLat, neLon float64, err error) {
 		var chr = geohash[i]
 		var idx = base32R[chr]
 		if idx == -1 {
-			return 0, 0, 0, 0, errors.New("invalid geohash")
+			return 0, 0, 0, 0, errInvalidGeohash
 		}
 		for n := uint(4); ; n-- {
 			var bitN = idx >> n & 1

@@ -59,3 +59,15 @@ func TestNearbyHasCommonPrefix(t *testing.T) {
 		t.Errorf("prefix should be equal %v, %v", pref, pref2)
 	}
 }
+
+func TestErrors(t *testing.T) {
+	_, _, err := Decode("osiufobmxncbaluyoqwe")
+	if err != errInvalidGeohash {
+		t.Fatalf("expected '%v, got '%v'", errInvalidGeohash, err)
+	}
+	_, err = Encode(33.123, -112.456, 0)
+	if err != errInvalidPrecision {
+		t.Fatalf("expected '%v, got '%v'", errInvalidPrecision, err)
+	}
+
+}
