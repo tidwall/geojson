@@ -207,3 +207,21 @@ func TestDoesIntersect(t *testing.T) {
 	// 	t.Fatal("expected true")
 	// }
 }
+
+func TestLineStringIntersectsRect(t *testing.T) {
+	if !(Polygon{P(0, 0), P(30, 30)}).LineStringIntersectsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected true")
+	}
+	if (Polygon{P(100, 100), P(300, 300)}).LineStringIntersectsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected false")
+	}
+}
+
+func TestLineStringIntersectsPoint(t *testing.T) {
+	if !(Polygon{P(0, 0), P(30, 30)}).LineStringIntersectsPoint(P(15, 15)) {
+		t.Fatal("expected true")
+	}
+	if (Polygon{P(0, 0), P(30, 30)}).LineStringIntersectsPoint(P(15, 10)) {
+		t.Fatal("expected false")
+	}
+}
