@@ -2,88 +2,78 @@ package geojson
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
+
+	"github.com/tidwall/pretty"
 )
 
-func P(x, y float64) Position {
-	return Position{x, y, 0}
-}
-
-func P3(x, y, z float64) Position {
-	return Position{x, y, z}
-}
-
-const testPolyHoles = `
-{"type":"Polygon","coordinates":[
-[[0,0],[0,6],[12,-6],[12,0],[0,0]],
-[[1,1],[1,2],[2,2],[2,1],[1,1]],
-[[11,-1],[11,-3],[9,-1],[11,-1]]
-]}`
-
-func tPoint(x, y float64) Point {
-	o, err := ObjectJSON(fmt.Sprintf(`{"type":"Point","coordinates":[%f,%f]}`, x, y))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return testConvertToPoint(o)
-}
-
-func doesJSONMatch(js1, js2 string) bool {
-	var m1, m2 map[string]interface{}
-	json.Unmarshal([]byte(js1), &m1)
-	json.Unmarshal([]byte(js2), &m2)
-	b1, _ := json.Marshal(m1)
-	b2, _ := json.Marshal(m2)
-	return string(b1) == string(b2)
-}
-
-func testJSON(t *testing.T, jstr string) Object {
+func expectJSON(t *testing.T, data string, exp error) Object {
 	t.Helper()
-	o, err := ObjectJSON(jstr)
+	obj, err := Load(data)
+	if err != exp {
+		t.Fatalf("expected '%v', got '%v'", exp, err)
+	}
+	return obj
+}
+
+func cleanJSON(data string) string {
+	var v interface{}
+	if err := json.Unmarshal([]byte(data), &v); err != nil {
+		panic(err)
+	}
+	dst, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	opts := *pretty.DefaultOptions
+	opts.Width = 99999999
+	return string(pretty.PrettyOptions(dst, &opts))
+}
+
+func testGeoJSONFile(t *testing.T, path string) Object {
+	t.Helper()
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !doesJSONMatch(o.JSON(), jstr) {
-		t.Fatalf("expected '%v', got '%v'", o.JSON(), jstr)
+	obj, err := Load(string(data))
+	if err != nil {
+		t.Fatal(err)
 	}
-	return o
+	orgJSON := cleanJSON(string(data))
+	newJSON := cleanJSON(string(obj.AppendJSON(nil)))
+	if orgJSON != newJSON {
+		var ln int
+		var col int
+		for i := 0; i < len(orgJSON) && i < len(newJSON); i++ {
+			if orgJSON[i] != newJSON[i] {
+				break
+			}
+			if orgJSON[i] == '\n' {
+				ln++
+				col = 0
+			} else {
+				col++
+			}
+		}
+		tpath1 := "/tmp/org.json"
+		tpath2 := "/tmp/new.json"
+		ioutil.WriteFile(tpath1, []byte(orgJSON), 0666)
+		ioutil.WriteFile(tpath2, []byte(newJSON), 0666)
+		t.Fatalf("%v (ln: %d, col: %d)\nfile://%s\nfile://%s",
+			filepath.Base(path), ln, col, tpath1, tpath2)
+	}
+	return obj
 }
 
-func testInvalidJSON(t *testing.T, js string, expecting error) {
-	t.Helper()
-	_, err := ObjectJSON(js)
-	if err == nil {
-		t.Fatalf("expecting an error for json '%s'", js)
+func TestGeoJSON(t *testing.T) {
+	fis, err := ioutil.ReadDir("test_files")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if err.Error() != expecting.Error() {
-		t.Fatalf("\nInvalid error for json:\n'%s'\ngot '%s'\nexpected '%s'", js, err.Error(), expecting.Error())
+	for _, fi := range fis {
+		testGeoJSONFile(t, filepath.Join("test_files", fi.Name()))
 	}
-}
-
-func TestInvalidJSON(t *testing.T) {
-	testInvalidJSON(t, `{}`, errInvalidTypeMember)
-	testInvalidJSON(t, `{"type":"Poin"}`, fmt.Errorf(fmtErrTypeIsUnknown, "Poin"))
-	testInvalidJSON(t, `{"type":"Point"}`, errCoordinatesRequired)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[]}`, errInvalidNumberOfPositionValues)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[1]}`, errInvalidNumberOfPositionValues)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,"asd"]}`, errInvalidPositionValue)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[[1,2]]}`, errInvalidPositionValue)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[[1,2],[1,3]]}`, errInvalidPositionValue)
-	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[1,2]}`, errInvalidCoordinates)
-	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[[]]}`, errInvalidNumberOfPositionValues)
-	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[[1]]}`, errInvalidNumberOfPositionValues)
-	testInvalidJSON(t, `{"type":"MultiPoint","coordinates":[[1,2,"asd"]]}`, errInvalidPositionValue)
-	testInvalidJSON(t, `{"type":"LineString","coordinates":[]}`, errLineStringInvalidCoordinates)
-	testInvalidJSON(t, `{"type":"MultiLineString","coordinates":[[]]}`, errLineStringInvalidCoordinates)
-	testInvalidJSON(t, `{"type":"MultiLineString","coordinates":[[[]]]}`, errInvalidNumberOfPositionValues)
-	testInvalidJSON(t, `{"type":"MultiLineString","coordinates":[[[]]]}`, errInvalidNumberOfPositionValues)
-	testInvalidJSON(t, `{"type":"Polygon","coordinates":[[1,1],[2,2],[3,3],[4,4]]}`, errInvalidCoordinates)
-	testInvalidJSON(t, `{"type":"Polygon","coordinates":[[[1,1],[2,2],[3,3],[4,4]]]}`, errMustBeALinearRing)
-	testInvalidJSON(t, `{"type":"Polygon","coordinates":[[[1,1],[2,2],[3,3],[1,1]],[[1,1],[2,2],[3,3],[4,4]]]}`, errMustBeALinearRing)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":123}`, errBBoxInvalidType)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[]}`, errBBoxInvalidNumberOfValues)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3]}`, errBBoxInvalidNumberOfValues)
-	testInvalidJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,"a"]}`, errBBoxInvalidValue)
 }

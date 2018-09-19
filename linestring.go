@@ -1,196 +1,130 @@
 package geojson
 
-import "github.com/tidwall/geojson/geohash"
+import "github.com/tidwall/gjson"
 
-// LineString is a geojson object with the type "LineString"
 type LineString struct {
 	Coordinates []Position
-	BBox        *BBox
-	bboxDefined bool
+	BBox        BBox
+	Extra       *Extra
 }
 
-func fillLineString(coordinates []Position, bbox *BBox, err error) (
-	LineString, error,
-) {
-	if err == nil {
-		if len(coordinates) < 2 {
-			err = errLineStringInvalidCoordinates
+func (g LineString) Rect() Rect {
+	if g.BBox != nil {
+		return g.BBox.Rect()
+	}
+	var rect Rect
+	for i := 0; i < len(g.Coordinates); i++ {
+		if i == 0 {
+			rect.Min = g.Coordinates[i]
+			rect.Max = g.Coordinates[i]
+		} else {
+			rect = rect.Expand(g.Coordinates[i])
 		}
 	}
-	bboxDefined := bbox != nil
-	if !bboxDefined {
-		cbbox := level2CalculatedBBox(coordinates, nil)
-		bbox = &cbbox
+	return rect
+}
+
+func (g LineString) Center() Position {
+	return g.Rect().Center()
+}
+
+func (g LineString) AppendJSON(dst []byte) []byte {
+	dst = append(dst, `{"type":"LineString","coordinates":[`...)
+	for i, p := range g.Coordinates {
+		if i > 0 {
+			dst = append(dst, ',')
+		}
+		dst = appendJSONPosition(dst, p, g.Extra, i)
 	}
-	return LineString{
-		Coordinates: coordinates,
-		BBox:        bbox,
-		bboxDefined: bboxDefined,
-	}, err
-}
-
-// CalculatedBBox is exterior bbox containing the object.
-func (g LineString) CalculatedBBox() BBox {
-	return level2CalculatedBBox(g.Coordinates, g.BBox)
-}
-
-// CalculatedPoint is a point representation of the object.
-func (g LineString) CalculatedPoint() Position {
-	return g.CalculatedBBox().center()
-}
-
-// Geohash converts the object to a geohash value.
-func (g LineString) Geohash(precision int) (string, error) {
-	p := g.CalculatedPoint()
-	return geohash.Encode(p.Y, p.X, precision)
-}
-
-// PositionCount return the number of coordinates.
-func (g LineString) PositionCount() int {
-	return level2PositionCount(g.Coordinates, g.BBox)
-}
-
-// Weight returns the in-memory size of the object.
-func (g LineString) Weight() int {
-	return level2Weight(g.Coordinates, g.BBox)
-}
-
-func (g LineString) appendJSON(json []byte) []byte {
-	return appendLevel2JSON(json, "LineString",
-		g.Coordinates, g.BBox, g.bboxDefined)
-}
-
-// MarshalJSON allows the object to be encoded in json.Marshal calls.
-func (g LineString) MarshalJSON() ([]byte, error) {
-	return g.appendJSON(nil), nil
-}
-
-// JSON is the json representation of the object. This might not be exactly the
-// same as the original.
-func (g LineString) JSON() string {
-	return string(g.appendJSON(nil))
-}
-
-// String returns a string representation of the object. This might be JSON or
-// something else.
-func (g LineString) String() string {
-	return g.JSON()
-}
-
-func (g LineString) bboxPtr() *BBox {
-	return g.BBox
-}
-
-func (g LineString) hasPositions() bool {
-	return g.bboxDefined || len(g.Coordinates) > 0
-}
-
-// WithinBBox detects if the object is fully contained inside a bbox.
-func (g LineString) WithinBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
+	dst = append(dst, ']')
+	if g.BBox != nil && g.BBox.Defined() {
+		dst = append(dst, `,"bbox":`...)
+		dst = g.BBox.AppendJSON(dst)
 	}
-	return polyPositions(g.Coordinates).InsideRect(rectBBox(bbox))
+	dst = append(dst, '}')
+	return dst
 }
 
-// IntersectsBBox detects if the object intersects a bbox.
-func (g LineString) IntersectsBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
+func loadJSONLineString(data string) (Object, error) {
+	var g LineString
+	var err error
+	g.Coordinates, g.Extra, err = loadJSONLineStringCoords(data, gjson.Result{})
+	if err != nil {
+		return nil, err
 	}
-	return polyPositions(g.Coordinates).IntersectsRect(rectBBox(bbox))
-}
-
-// Within detects if the object is fully contained inside another object.
-func (g LineString) Within(o Object) bool {
-	return withinObjectShared(g, o,
-		func(v Polygon) bool {
-			return polyPositions(g.Coordinates).Inside(
-				polyExteriorHoles(v.Coordinates),
-			)
-		},
-	)
-}
-
-// WithinCircle detects if the object is fully contained inside a circle.
-func (g LineString) WithinCircle(center Position, meters float64) bool {
-	if len(g.Coordinates) == 0 {
-		return false
+	g.BBox, err = loadBBox(data)
+	if err != nil {
+		return nil, err
 	}
-	for _, position := range g.Coordinates {
-		if center.DistanceTo(position) >= meters {
+	if g.BBox == nil {
+		g.BBox = bboxRect{g.Rect()}
+	}
+	return g, nil
+}
+
+func loadJSONLineStringCoords(data string, rcoords gjson.Result) (
+	[]Position, *Extra, error,
+) {
+	var err error
+	var coords []Position
+	var ex *Extra
+	var dims int
+	if !rcoords.Exists() {
+		rcoords = gjson.Get(data, "coordinates")
+		if !rcoords.Exists() {
+			return nil, nil, errCoordinatesMissing
+		}
+		if !rcoords.IsArray() {
+			return nil, nil, errCoordinatesInvalid
+		}
+	}
+	rcoords.ForEach(func(key, value gjson.Result) bool {
+		if !value.IsArray() {
+			err = errCoordinatesInvalid
 			return false
 		}
-	}
-	return true
-}
-
-// Intersects detects if the object intersects another object.
-func (g LineString) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o,
-		func(v Polygon) bool {
-			return polyPositions(g.Coordinates).LineStringIntersects(
-				polyExteriorHoles(v.Coordinates),
-			)
-		},
-	)
-}
-
-// IntersectsCircle detects if the object intersects a circle.
-func (g LineString) IntersectsCircle(center Position, meters float64) bool {
-	for i := 0; i < len(g.Coordinates)-1; i++ {
-		if SegmentIntersectsCircle(
-			g.Coordinates[i], g.Coordinates[i+1],
-			center, meters,
-		) {
+		var count int
+		var nums [4]float64
+		value.ForEach(func(key, value gjson.Result) bool {
+			if count == 4 {
+				return false
+			}
+			if value.Type != gjson.Number {
+				err = errCoordinatesInvalid
+				return false
+			}
+			nums[count] = value.Float()
+			count++
 			return true
+		})
+		if err != nil {
+			return false
 		}
-	}
-	return false
-}
-
-// Nearby detects if the object is nearby a position.
-func (g LineString) Nearby(center Position, meters float64) bool {
-	return nearbyObjectShared(g, center.X, center.Y, meters)
-}
-
-// IsBBoxDefined returns true if the object has a defined bbox.
-func (g LineString) IsBBoxDefined() bool {
-	return g.bboxDefined
-}
-
-// IsGeometry return true if the object is a geojson geometry object. false if
-// it something else.
-func (g LineString) IsGeometry() bool {
-	return true
-}
-
-// Clipped returns the object obtained by clipping this object by a bbox.
-func (g LineString) Clipped(bbox BBox) Object {
-	var newCoordinates [][]Position
-	var clipedStart, clippedEnd Position
-	var rejected bool
-	var line []Position
-
-	for i := 0; i < len(g.Coordinates)-1; i++ {
-		clipedStart, clippedEnd, rejected = ClipSegment(
-			g.Coordinates[i], g.Coordinates[i+1], bbox,
-		)
-		if rejected {
-			continue
+		if count < 2 {
+			err = errCoordinatesInvalid
+			return false
 		}
-		if len(line) > 0 && line[len(line)-1] != clipedStart {
-			newCoordinates = append(newCoordinates, line)
-			line = []Position{clipedStart}
-		} else if len(line) == 0 {
-			line = append(line, clipedStart)
+		coords = append(coords, Position{X: nums[0], Y: nums[1]})
+		if ex == nil {
+			if count > 2 {
+				ex = new(Extra)
+				if count > 3 {
+					ex.Dims = DimsZM
+				} else {
+					ex.Dims = DimsZ
+				}
+				dims = int(ex.Dims)
+			}
 		}
-		line = append(line, clippedEnd)
+		if ex != nil {
+			for i := 0; i < dims; i++ {
+				ex.Positions = append(ex.Positions, nums[2+i])
+			}
+		}
+		return true
+	})
+	if err != nil {
+		return nil, nil, err
 	}
-	if len(line) > 0 {
-		newCoordinates = append(newCoordinates, line)
-	}
-
-	res, _ := fillMultiLineString(newCoordinates, nil, nil)
-	return res
+	return coords, ex, err
 }

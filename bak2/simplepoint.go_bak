@@ -1,0 +1,67 @@
+package geojson
+
+import (
+	"strconv"
+
+	"github.com/tidwall/geojson/poly"
+)
+
+// SimplePoint is a bare minimum 2D point
+type SimplePoint struct {
+	Coordinates Position
+}
+
+// Rect returns a rectangle that contains the entire object
+func (g SimplePoint) Rect() Rect {
+	return Rect{
+		Min: g.Coordinates,
+		Max: g.Coordinates,
+	}
+}
+
+// Center is the center-most point of the object
+func (g SimplePoint) Center() Position {
+	return g.Coordinates
+}
+
+// AppendJSON appends a json representation to destination
+func (g SimplePoint) AppendJSON(dst []byte) []byte {
+	dst = append(dst, `{"type":"Point","coordinates":[`...)
+	dst = strconv.AppendFloat(dst, g.Coordinates.X, 'f', -1, 64)
+	dst = append(dst, ',')
+	dst = strconv.AppendFloat(dst, g.Coordinates.Y, 'f', -1, 64)
+	dst = append(dst, ']', '}')
+	return dst
+}
+
+// JSON returns a json representation of the object
+func (g SimplePoint) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
+// String returns a string representation of the object
+func (g SimplePoint) String() string {
+	return g.JSON()
+}
+
+// Stats of the object
+func (g SimplePoint) Stats() Stats {
+	return Stats{Weight: 16, PositionCount: 1}
+}
+
+// Contains another object
+func (g SimplePoint) Contains(o Object) bool {
+	r := o.Rect()
+	return r.Min == g.Coordinates && r.Max == g.Coordinates
+}
+
+// Intersects another object
+func (g SimplePoint) Intersects(o Object) bool {
+	r := o.Rect()
+	return r.Min == g.Coordinates && r.Max == g.Coordinates
+}
+
+// IntersectsPolyLine test if object intersect a polyline
+func (g SimplePoint) IntersectsPolyLine(line []Position) bool {
+	return poly.Point(g.Coordinates).IntersectsLineString(polyLine(line))
+}

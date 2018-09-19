@@ -1,238 +1,80 @@
 package geojson
 
-import (
-	"github.com/tidwall/geojson/geohash"
-	"github.com/tidwall/geojson/poly"
-)
+import "github.com/tidwall/gjson"
 
-// MultiLineString is a geojson object with the type "MultiLineString"
 type MultiLineString struct {
-	Coordinates [][]Position
-	BBox        *BBox
-	bboxDefined bool
+	LineStrings []LineString
+	BBox        BBox
 }
 
-func fillMultiLineString(coordinates [][]Position, bbox *BBox, err error) (
-	MultiLineString, error,
-) {
-	if err == nil {
-		for _, coordinates := range coordinates {
-			if len(coordinates) < 2 {
-				err = errLineStringInvalidCoordinates
-				break
-			}
+func (g MultiLineString) Rect() Rect {
+	if g.BBox != nil {
+		return g.BBox.Rect()
+	}
+	var rect Rect
+	for i := 0; i < len(g.LineStrings); i++ {
+		if i == 0 {
+			rect = g.LineStrings[i].Rect()
+		} else {
+			rect = rect.Union(g.LineStrings[i].Rect())
 		}
 	}
-	bboxDefined := bbox != nil
-	if !bboxDefined {
-		cbbox := level3CalculatedBBox(coordinates, nil, false)
-		bbox = &cbbox
+	return rect
+}
+
+func (g MultiLineString) Center() Position {
+	return g.Rect().Center()
+}
+
+func (g MultiLineString) AppendJSON(dst []byte) []byte {
+	dst = append(dst, `{"type":"MultiLineString","coordinates":[`...)
+	for i, g := range g.LineStrings {
+		if i > 0 {
+			dst = append(dst, ',')
+		}
+		dst = append(dst,
+			gjson.GetBytes(g.AppendJSON(nil), "coordinates").String()...)
 	}
-	return MultiLineString{
-		Coordinates: coordinates,
-		BBox:        bbox,
-		bboxDefined: bboxDefined,
-	}, err
+	dst = append(dst, ']')
+	if g.BBox != nil && g.BBox.Defined() {
+		dst = append(dst, `,"bbox":`...)
+		dst = g.BBox.AppendJSON(dst)
+	}
+	dst = append(dst, '}')
+	return dst
 }
 
-func (g MultiLineString) getLineString(index int) LineString {
-	return LineString{Coordinates: g.Coordinates[index]}
-}
-
-// CalculatedBBox is exterior bbox containing the object.
-func (g MultiLineString) CalculatedBBox() BBox {
-	return level3CalculatedBBox(g.Coordinates, g.BBox, false)
-}
-
-// CalculatedPoint is a point representation of the object.
-func (g MultiLineString) CalculatedPoint() Position {
-	return g.CalculatedBBox().center()
-}
-
-// Geohash converts the object to a geohash value.
-func (g MultiLineString) Geohash(precision int) (string, error) {
-	p := g.CalculatedPoint()
-	return geohash.Encode(p.Y, p.X, precision)
-}
-
-// PositionCount return the number of coordinates.
-func (g MultiLineString) PositionCount() int {
-	return level3PositionCount(g.Coordinates, g.BBox)
-}
-
-// Weight returns the in-memory size of the object.
-func (g MultiLineString) Weight() int {
-	return level3Weight(g.Coordinates, g.BBox)
-}
-
-// MarshalJSON allows the object to be encoded in json.Marshal calls.
-func (g MultiLineString) MarshalJSON() ([]byte, error) {
-	return g.appendJSON(nil), nil
-}
-
-func (g MultiLineString) appendJSON(json []byte) []byte {
-	return appendLevel3JSON(
-		json, "MultiLineString", g.Coordinates, g.BBox, g.bboxDefined,
-	)
-}
-
-// JSON is the json representation of the object. This might not be exactly the
-// same as the original.
-func (g MultiLineString) JSON() string {
-	return string(g.appendJSON(nil))
-}
-
-// String returns a string representation of the object. This might be JSON or
-// something else.
-func (g MultiLineString) String() string {
-	return g.JSON()
-}
-
-func (g MultiLineString) bboxPtr() *BBox {
-	return g.BBox
-}
-func (g MultiLineString) hasPositions() bool {
-	if g.bboxDefined {
+func loadJSONMultiLineString(data string) (Object, error) {
+	var g MultiLineString
+	var err error
+	rcoords := gjson.Get(data, "coordinates")
+	if !rcoords.Exists() {
+		return nil, errCoordinatesMissing
+	}
+	if !rcoords.IsArray() {
+		return nil, errCoordinatesInvalid
+	}
+	var coords []Position
+	var ex *Extra
+	rcoords.ForEach(func(_, value gjson.Result) bool {
+		coords, ex, err = loadJSONLineStringCoords("", value)
+		if err != nil {
+			return false
+		}
+		g.LineStrings = append(g.LineStrings,
+			LineString{Coordinates: coords, Extra: ex},
+		)
 		return true
+	})
+	if err != nil {
+		return nil, err
 	}
-	for _, c := range g.Coordinates {
-		if len(c) > 0 {
-			return true
-		}
+	g.BBox, err = loadBBox(data)
+	if err != nil {
+		return nil, err
 	}
-	return false
-}
-
-// WithinBBox detects if the object is fully contained inside a bbox.
-func (g MultiLineString) WithinBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
+	if g.BBox == nil {
+		g.BBox = bboxRect{g.Rect()}
 	}
-	if len(g.Coordinates) == 0 {
-		return false
-	}
-	for _, ls := range g.Coordinates {
-		if len(ls) == 0 {
-			return false
-		}
-		for _, p := range ls {
-			if !poly.Point(p).InsideRect(rectBBox(bbox)) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-// IntersectsBBox detects if the object intersects a bbox.
-func (g MultiLineString) IntersectsBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
-	}
-	for _, ls := range g.Coordinates {
-		if polyPositions(ls).IntersectsRect(rectBBox(bbox)) {
-			return true
-		}
-	}
-	return false
-}
-
-// Within detects if the object is fully contained inside another object.
-func (g MultiLineString) Within(o Object) bool {
-	return withinObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, ls := range g.Coordinates {
-				if !polyPositions(ls).Inside(polyExteriorHoles(v.Coordinates)) {
-					return false
-				}
-			}
-			return true
-		},
-	)
-}
-
-// WithinCircle detects if the object is fully contained inside a circle.
-func (g MultiLineString) WithinCircle(center Position, meters float64) bool {
-	if len(g.Coordinates) == 0 {
-		return false
-	}
-	for _, ls := range g.Coordinates {
-		if len(ls) == 0 {
-			return false
-		}
-		for _, position := range ls {
-			if center.DistanceTo(position) >= meters {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-// Intersects detects if the object intersects another object.
-func (g MultiLineString) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Coordinates) == 0 {
-				return false
-			}
-			for _, ls := range g.Coordinates {
-				if polyPositions(ls).Intersects(
-					polyExteriorHoles(v.Coordinates),
-				) {
-					return true
-				}
-			}
-			return false
-		},
-	)
-}
-
-// IntersectsCircle detects if the object intersects a circle.
-func (g MultiLineString) IntersectsCircle(
-	center Position, meters float64,
-) bool {
-	for _, ls := range g.Coordinates {
-		for i := 0; i < len(ls)-1; i++ {
-			if SegmentIntersectsCircle(ls[i], ls[i+1], center, meters) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// Nearby detects if the object is nearby a position.
-func (g MultiLineString) Nearby(center Position, meters float64) bool {
-	return nearbyObjectShared(g, center.X, center.Y, meters)
-}
-
-// IsBBoxDefined returns true if the object has a defined bbox.
-func (g MultiLineString) IsBBoxDefined() bool {
-	return g.bboxDefined
-}
-
-// IsGeometry return true if the object is a geojson geometry object. false if
-// it something else.
-func (g MultiLineString) IsGeometry() bool {
-	return true
-}
-
-// Clipped returns the object obtained by clipping this object by a bbox.
-func (g MultiLineString) Clipped(bbox BBox) Object {
-	var newCoordinates [][]Position
-
-	for ix := range g.Coordinates {
-		clippedMultiLineString, _ :=
-			g.getLineString(ix).Clipped(bbox).(MultiLineString)
-		for _, ls := range clippedMultiLineString.Coordinates {
-			newCoordinates = append(newCoordinates, ls)
-		}
-	}
-
-	res, _ := fillMultiLineString(newCoordinates, nil, nil)
-	return res
+	return g, nil
 }

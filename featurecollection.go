@@ -1,265 +1,73 @@
 package geojson
 
-import (
-	"github.com/tidwall/geojson/geohash"
-	"github.com/tidwall/gjson"
-)
+import "github.com/tidwall/gjson"
 
-// FeatureCollection is a geojson object with the type "FeatureCollection"
+// FeatureCollection is a GeoJSON FeatureCollection
 type FeatureCollection struct {
-	Features    []Object
-	BBox        *BBox
-	bboxDefined bool
+	Features []Object
+	BBox     BBox
 }
 
-func fillFeatureCollectionMap(json string) (FeatureCollection, error) {
+// Rect returns a rectangle that contains the entire object
+func (g FeatureCollection) Rect() Rect {
+	if g.BBox != nil {
+		return g.BBox.Rect()
+	}
+	return calcRectFromObjects(g.Features)
+}
+
+// Center is the center-most point of the object
+func (g FeatureCollection) Center() Position {
+	return g.Rect().Center()
+}
+
+// AppendJSON appends a json representation to destination
+func (g FeatureCollection) AppendJSON(dst []byte) []byte {
+	dst = append(dst, `{"type":"FeatureCollection","features":[`...)
+	for i := 0; i < len(g.Features); i++ {
+		if i > 0 {
+			dst = append(dst, ',')
+		}
+		dst = g.Features[i].AppendJSON(dst)
+	}
+	dst = append(dst, ']')
+	if g.BBox != nil && g.BBox.Defined() {
+		dst = append(dst, `,"bbox":`...)
+		dst = g.BBox.AppendJSON(dst)
+	}
+	dst = append(dst, '}')
+	return dst
+}
+
+// loadJSONFeatureCollection will return a valid GeoJSON object.
+func loadJSONFeatureCollection(data string) (Object, error) {
 	var g FeatureCollection
-	res := gjson.Get(json, "features")
-	switch res.Type {
-	default:
-		return g, errInvalidFeaturesMember
-	case gjson.Null:
-		return g, errFeaturesMemberRequired
-	case gjson.JSON:
-		if !resIsArray(res) {
-			return g, errInvalidFeaturesMember
-		}
-		v := res.Array()
-		g.Features = make([]Object, len(v))
-		for i, res := range v {
-			if res.Type != gjson.JSON {
-				return g, errInvalidFeature
-			}
-			o, err := objectMap(res.Raw, fcoll)
-			if err != nil {
-				return g, err
-			}
-			g.Features[i] = o
-		}
+	rFeatures := gjson.Get(data, "features")
+	if !rFeatures.Exists() {
+		return nil, errFeaturesMissing
+	}
+	if !rFeatures.IsArray() {
+		return nil, errFeaturesInvalid
 	}
 	var err error
-	g.BBox, err = fillBBox(json)
-	if err != nil {
-		return g, err
-	}
-	g.bboxDefined = g.BBox != nil
-	if !g.bboxDefined {
-		cbbox := g.CalculatedBBox()
-		g.BBox = &cbbox
-	}
-	return g, err
-}
-
-// Geohash converts the object to a geohash value.
-func (g FeatureCollection) Geohash(precision int) (string, error) {
-	p := g.CalculatedPoint()
-	return geohash.Encode(p.Y, p.X, precision)
-}
-
-// CalculatedPoint is a point representation of the object.
-func (g FeatureCollection) CalculatedPoint() Position {
-	return g.CalculatedBBox().center()
-}
-
-// CalculatedBBox is exterior bbox containing the object.
-func (g FeatureCollection) CalculatedBBox() BBox {
-	if g.BBox != nil {
-		return *g.BBox
-	}
-	var bbox BBox
-	for i, g := range g.Features {
-		if i == 0 {
-			bbox = g.CalculatedBBox()
-		} else {
-			bbox = bbox.union(g.CalculatedBBox())
+	rFeatures.ForEach(func(key, value gjson.Result) bool {
+		var f Object
+		f, err = Load(value.Raw)
+		if err != nil {
+			return false
 		}
-	}
-	return bbox
-}
-
-// PositionCount return the number of coordinates.
-func (g FeatureCollection) PositionCount() int {
-	var res int
-	for _, g := range g.Features {
-		res += g.PositionCount()
-	}
-	if g.BBox != nil {
-		return 2 + res
-	}
-	return res
-}
-
-// Weight returns the in-memory size of the object.
-func (g FeatureCollection) Weight() int {
-	var res int
-	for _, g := range g.Features {
-		res += g.Weight()
-	}
-	return res
-}
-
-// MarshalJSON allows the object to be encoded in json.Marshal calls.
-func (g FeatureCollection) MarshalJSON() ([]byte, error) {
-	return g.appendJSON(nil), nil
-}
-
-func (g FeatureCollection) appendJSON(json []byte) []byte {
-	json = append(json, `{"type":"FeatureCollection","features":[`...)
-	for i, g := range g.Features {
-		if i != 0 {
-			json = append(json, ',')
-		}
-		json = append(json, g.JSON()...)
-	}
-	json = append(json, ']')
-	if g.bboxDefined {
-		json = appendBBoxJSON(json, g.BBox)
-	}
-	return append(json, '}')
-}
-
-// JSON is the json representation of the object. This might not be exactly the
-// same as the original.
-func (g FeatureCollection) JSON() string {
-	return string(g.appendJSON(nil))
-}
-
-// String returns a string representation of the object. This might be JSON or
-// something else.
-func (g FeatureCollection) String() string {
-	return g.JSON()
-}
-
-// Bytes is the bytes representation of the object.
-func (g FeatureCollection) Bytes() []byte {
-	return []byte(g.JSON())
-}
-func (g FeatureCollection) bboxPtr() *BBox {
-	return g.BBox
-}
-func (g FeatureCollection) hasPositions() bool {
-	if g.BBox != nil {
+		g.Features = append(g.Features, f)
 		return true
+	})
+	if err != nil {
+		return nil, err
 	}
-	for _, g := range g.Features {
-		if g.hasPositions() {
-			return true
-		}
+	g.BBox, err = loadBBox(data)
+	if err != nil {
+		return nil, err
 	}
-	return false
-}
-
-// WithinBBox detects if the object is fully contained inside a bbox.
-func (g FeatureCollection) WithinBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
+	if g.BBox == nil {
+		g.BBox = bboxRect{g.Rect()}
 	}
-	if len(g.Features) == 0 {
-		return false
-	}
-	for _, g := range g.Features {
-		if !g.WithinBBox(bbox) {
-			return false
-		}
-	}
-	return true
-}
-
-// IntersectsBBox detects if the object intersects a bbox.
-func (g FeatureCollection) IntersectsBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
-	}
-	for _, g := range g.Features {
-		if g.IntersectsBBox(bbox) {
-			return true
-		}
-	}
-	return false
-}
-
-// Within detects if the object is fully contained inside another object.
-func (g FeatureCollection) Within(o Object) bool {
-	return withinObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Features) == 0 {
-				return false
-			}
-			for _, f := range g.Features {
-				if !f.Within(o) {
-					return false
-				}
-			}
-			return true
-		},
-	)
-}
-
-// WithinCircle detects if the object is fully contained inside a circle.
-func (g FeatureCollection) WithinCircle(center Position, meters float64) bool {
-	if len(g.Features) == 0 {
-		return false
-	}
-	for _, feature := range g.Features {
-		if !feature.WithinCircle(center, meters) {
-			return false
-		}
-	}
-	return true
-}
-
-// Intersects detects if the object intersects another object.
-func (g FeatureCollection) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o,
-		func(v Polygon) bool {
-			if len(g.Features) == 0 {
-				return false
-			}
-			for _, f := range g.Features {
-
-				if f.Intersects(o) {
-					return true
-				}
-			}
-			return false
-		},
-	)
-}
-
-// IntersectsCircle detects if the object intersects a circle.
-func (g FeatureCollection) IntersectsCircle(center Position, meters float64) bool {
-	for _, feature := range g.Features {
-		if feature.IntersectsCircle(center, meters) {
-			return true
-		}
-	}
-	return false
-}
-
-// Nearby detects if the object is nearby a position.
-func (g FeatureCollection) Nearby(center Position, meters float64) bool {
-	return nearbyObjectShared(g, center.X, center.Y, meters)
-}
-
-// IsBBoxDefined returns true if the object has a defined bbox.
-func (g FeatureCollection) IsBBoxDefined() bool {
-	return g.bboxDefined
-}
-
-// IsGeometry return true if the object is a geojson geometry object. false if it something else.
-func (g FeatureCollection) IsGeometry() bool {
-	return true
-}
-
-// Clipped returns the object obtained by clipping this object by a bbox.
-func (g FeatureCollection) Clipped(bbox BBox) Object {
-	var newFeatures []Object
-	for _, feature := range g.Features {
-		newFeatures = append(newFeatures, feature.Clipped(bbox))
-	}
-
-	fc := FeatureCollection{Features: newFeatures}
-	cbbox := fc.CalculatedBBox()
-	fc.BBox = &cbbox
-	return fc
+	return g, nil
 }

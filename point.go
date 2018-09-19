@@ -1,172 +1,100 @@
 package geojson
 
 import (
-	"github.com/tidwall/geojson/geo"
-	"github.com/tidwall/geojson/geohash"
-	"github.com/tidwall/geojson/poly"
+	"github.com/tidwall/gjson"
 )
 
-// Point is a geojson object with the type "Point"
 type Point struct {
 	Coordinates Position
-	BBox        *BBox
-	bboxDefined bool
+	BBox        BBox
+	Extra       *Extra
 }
 
-func fillSimplePointOrPoint(coordinates Position, bbox *BBox, err error) (
-	Object, error,
+func (g Point) Rect() Rect {
+	if g.BBox != nil {
+		return g.BBox.Rect()
+	}
+	return Rect{Min: g.Coordinates, Max: g.Coordinates}
+}
+func (g Point) Center() Position {
+	return g.Rect().Center()
+}
+
+func (g Point) AppendJSON(dst []byte) []byte {
+	dst = append(dst, `{"type":"Point","coordinates":`...)
+	dst = appendJSONPosition(dst, g.Coordinates, g.Extra, 0)
+	if g.BBox != nil && g.BBox.Defined() {
+		dst = append(dst, `,"bbox":`...)
+		dst = g.BBox.AppendJSON(dst)
+	}
+	dst = append(dst, '}')
+	return dst
+}
+
+func loadJSONPoint(data string) (Object, error) {
+	var g Point
+	var err error
+	g.Coordinates, g.Extra, err = loadJSONPointCoords(data, gjson.Result{})
+	if err != nil {
+		return nil, err
+	}
+	g.BBox, err = loadBBox(data)
+	if err != nil {
+		return nil, err
+	}
+	if g.BBox == nil && g.Extra == nil {
+		return g.Coordinates, nil
+	}
+	return g, nil
+}
+
+func loadJSONPointCoords(data string, rcoords gjson.Result) (
+	Position, *Extra, error,
 ) {
-	if coordinates.Z == 0 && bbox == nil {
-		return fillSimplePoint(coordinates, bbox, err)
+	var coords Position
+	var ex *Extra
+	if !rcoords.Exists() {
+		rcoords = gjson.Get(data, "coordinates")
+		if !rcoords.Exists() {
+			return coords, nil, errCoordinatesMissing
+		}
+		if !rcoords.IsArray() {
+			return coords, nil, errCoordinatesInvalid
+		}
 	}
-	return fillPoint(coordinates, bbox, err)
-}
-
-func fillPoint(coordinates Position, bbox *BBox, err error) (Point, error) {
-	bboxDefined := bbox != nil
-	if !bboxDefined {
-		cbbox := level1CalculatedBBox(coordinates, nil)
-		bbox = &cbbox
+	var err error
+	var count int
+	var nums [4]float64
+	rcoords.ForEach(func(key, value gjson.Result) bool {
+		if count == 4 {
+			return false
+		}
+		if value.Type != gjson.Number {
+			err = errCoordinatesInvalid
+			return false
+		}
+		nums[count] = value.Float()
+		count++
+		return true
+	})
+	if err != nil {
+		return coords, nil, err
 	}
-	return Point{
-		Coordinates: coordinates,
-		BBox:        bbox,
-		bboxDefined: bboxDefined,
-	}, err
-}
-
-// CalculatedBBox is exterior bbox containing the object.
-func (g Point) CalculatedBBox() BBox {
-	return level1CalculatedBBox(g.Coordinates, g.BBox)
-}
-
-// CalculatedPoint is a point representation of the object.
-func (g Point) CalculatedPoint() Position {
-	if g.BBox == nil {
-		return g.Coordinates
+	if count < 2 {
+		return coords, nil, errCoordinatesInvalid
 	}
-	return g.CalculatedBBox().center()
-}
-
-// Geohash converts the object to a geohash value.
-func (g Point) Geohash(precision int) (string, error) {
-	p := g.CalculatedPoint()
-	return geohash.Encode(p.Y, p.X, precision)
-}
-
-// MarshalJSON allows the object to be encoded in json.Marshal calls.
-func (g Point) MarshalJSON() ([]byte, error) {
-	return g.appendJSON(nil), nil
-}
-
-func (g Point) appendJSON(json []byte) []byte {
-	return appendLevel1JSON(json, "Point", g.Coordinates, g.BBox, g.bboxDefined)
-}
-
-// JSON is the json representation of the object. This might not be exactly the
-// same as the original.
-func (g Point) JSON() string {
-	return string(g.appendJSON(nil))
-}
-
-// String returns a string representation of the object. This might be JSON or
-// something else.
-func (g Point) String() string {
-	return g.JSON()
-}
-
-// PositionCount return the number of coordinates.
-func (g Point) PositionCount() int {
-	return level1PositionCount(g.Coordinates, g.BBox)
-}
-
-// Weight returns the in-memory size of the object.
-func (g Point) Weight() int {
-	return level1Weight(g.Coordinates, g.BBox)
-}
-func (g Point) bboxPtr() *BBox {
-	return g.BBox
-}
-func (g Point) hasPositions() bool {
-	return true
-}
-
-// WithinBBox detects if the object is fully contained inside a bbox.
-func (g Point) WithinBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).InsideRect(rectBBox(bbox))
+	coords = Position{X: nums[0], Y: nums[1]}
+	if count > 2 {
+		ex = new(Extra)
+		if count > 3 {
+			ex.Dims = DimsZM
+		} else {
+			ex.Dims = DimsZ
+		}
+		ex.Positions = make([]float64, count-2)
+		for i := 2; i < count; i++ {
+			ex.Positions[i-2] = nums[i]
+		}
 	}
-	return poly.Point(g.Coordinates).InsideRect(rectBBox(bbox))
-}
-
-// IntersectsBBox detects if the object intersects a bbox.
-func (g Point) IntersectsBBox(bbox BBox) bool {
-	if g.bboxDefined {
-		return rectBBox(g.CalculatedBBox()).IntersectsRect(rectBBox(bbox))
-	}
-	return poly.Point(g.Coordinates).InsideRect(rectBBox(bbox))
-}
-
-// Within detects if the object is fully contained inside another object.
-func (g Point) Within(o Object) bool {
-	return withinObjectShared(g, o,
-		func(v Polygon) bool {
-			return poly.Point(g.Coordinates).Inside(
-				polyExteriorHoles(v.Coordinates),
-			)
-		},
-	)
-}
-
-// WithinCircle detects if the object is fully contained inside a circle.
-func (g Point) WithinCircle(center Position, meters float64) bool {
-	return geo.DistanceTo(
-		g.Coordinates.Y, g.Coordinates.X, center.Y, center.X,
-	) < meters
-}
-
-// Intersects detects if the object intersects another object.
-func (g Point) Intersects(o Object) bool {
-	return intersectsObjectShared(g, o,
-		func(v Polygon) bool {
-			return poly.Point(g.Coordinates).Intersects(
-				polyExteriorHoles(v.Coordinates),
-			)
-		},
-	)
-}
-
-// IntersectsCircle detects if the object intersects a circle.
-func (g Point) IntersectsCircle(center Position, meters float64) bool {
-	return geo.DistanceTo(
-		g.Coordinates.Y, g.Coordinates.X, center.Y, center.X,
-	) <= meters
-}
-
-// Nearby detects if the object is nearby a position.
-func (g Point) Nearby(center Position, meters float64) bool {
-	return geo.DistanceTo(
-		g.Coordinates.Y, g.Coordinates.X, center.Y, center.X,
-	) <= meters
-}
-
-// IsBBoxDefined returns true if the object has a defined bbox.
-func (g Point) IsBBoxDefined() bool {
-	return g.bboxDefined
-}
-
-// IsGeometry return true if the object is a geojson geometry object. false if
-// it something else.
-func (g Point) IsGeometry() bool {
-	return true
-}
-
-// Clipped returns the object obtained by clipping this object by a bbox.
-func (g Point) Clipped(bbox BBox) Object {
-	if g.IntersectsBBox(bbox) {
-		return g
-	}
-
-	res, _ := fillMultiPoint([]Position{}, nil, nil)
-	return res
+	return coords, ex, nil
 }
