@@ -10,6 +10,10 @@ type Point struct {
 	Extra       *Extra
 }
 
+func (g Point) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
+}
+
 func (g Point) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -29,6 +33,14 @@ func (g Point) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, '}')
 	return dst
+}
+func (g Point) ForEach(func(child Object) bool) {}
+
+func (g Point) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g Point) Intersects(other Object) bool {
+	panic("unsupported")
 }
 
 func loadJSONPoint(data string) (Object, error) {

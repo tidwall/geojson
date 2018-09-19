@@ -8,6 +8,10 @@ type Polygon struct {
 	Extra       *Extra
 }
 
+func (g Polygon) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
+}
+
 func (g Polygon) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -54,6 +58,14 @@ func (g Polygon) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, '}')
 	return dst
+}
+func (g Polygon) ForEach(func(child Object) bool) {}
+
+func (g Polygon) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g Polygon) Intersects(other Object) bool {
+	panic("unsupported")
 }
 
 func loadJSONPolygon(data string) (Object, error) {

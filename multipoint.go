@@ -7,6 +7,10 @@ type MultiPoint struct {
 	BBox   BBox
 }
 
+func (g MultiPoint) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
+}
+
 func (g MultiPoint) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -42,6 +46,21 @@ func (g MultiPoint) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, '}')
 	return dst
+}
+
+func (g MultiPoint) ForEach(iter func(child Object) bool) {
+	for _, child := range g.Points {
+		if !iter(child) {
+			return
+		}
+	}
+}
+
+func (g MultiPoint) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g MultiPoint) Intersects(other Object) bool {
+	panic("unsupported")
 }
 
 func loadJSONMultiPoint(data string) (Object, error) {

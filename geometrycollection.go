@@ -2,13 +2,15 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
-// GeometryCollection is a GeoJSON GeometryCollection
 type GeometryCollection struct {
 	Geometries []Object
 	BBox       BBox
 }
 
-// Rect returns a rectangle that contains the entire object
+func (g GeometryCollection) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
+}
+
 func (g GeometryCollection) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -16,12 +18,10 @@ func (g GeometryCollection) Rect() Rect {
 	return calcRectFromObjects(g.Geometries)
 }
 
-// Center is the center-most point of the object
 func (g GeometryCollection) Center() Position {
 	return g.Rect().Center()
 }
 
-// AppendJSON appends a json representation to destination
 func (g GeometryCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"GeometryCollection","geometries":[`...)
 	for i := 0; i < len(g.Geometries); i++ {
@@ -38,8 +38,21 @@ func (g GeometryCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
+func (g GeometryCollection) ForEach(iter func(child Object) bool) {
+	for _, child := range g.Geometries {
+		if !iter(child) {
+			return
+		}
+	}
+}
 
-// loadJSONGeometryCollection will return a valid GeoJSON object.
+func (g GeometryCollection) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g GeometryCollection) Intersects(other Object) bool {
+	panic("unsupported")
+}
+
 func loadJSONGeometryCollection(data string) (Object, error) {
 	var g GeometryCollection
 	rgeometries := gjson.Get(data, "geometries")

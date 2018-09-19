@@ -8,6 +8,12 @@ type LineString struct {
 	Extra       *Extra
 }
 
+func (g LineString) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
+}
+func (g LineString) Empty() bool {
+	return len(g.Coordinates) == 0
+}
 func (g LineString) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -43,6 +49,14 @@ func (g LineString) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, '}')
 	return dst
+}
+func (g LineString) ForEach(func(child Object) bool) {}
+
+func (g LineString) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g LineString) Intersects(other Object) bool {
+	panic("unsupported")
 }
 
 func loadJSONLineString(data string) (Object, error) {

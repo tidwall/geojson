@@ -38,5 +38,35 @@ func TestRect(t *testing.T) {
 	if json != exp {
 		t.Fatalf("expected '%v', got '%v'", exp, json)
 	}
+	if !R(10, 10, 20, 20).ContainsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected true")
+	}
+	if R(11, 10, 20, 20).ContainsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected false")
+	}
+	if R(10, 11, 20, 20).ContainsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected false")
+	}
+	if R(10, 10, 19, 20).ContainsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected false")
+	}
+	if R(10, 10, 20, 19).ContainsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected false")
+	}
+	if !R(10, 10, 20, 20).IntersectsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected true")
+	}
+	if !R(0, 0, 20, 20).IntersectsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected true")
+	}
+	if !R(0, 0, 10, 10).IntersectsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected true")
+	}
+	if R(0, 0, 9, 9).IntersectsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected true")
+	}
+	if R(20, 21, 29, 29).IntersectsRect(R(10, 10, 20, 20)) {
+		t.Fatal("expected true")
+	}
 
 }

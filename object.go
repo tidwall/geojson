@@ -3,7 +3,9 @@ package geojson
 import (
 	"errors"
 	"fmt"
+	"unsafe"
 
+	"github.com/tidwall/geojson/poly"
 	"github.com/tidwall/gjson"
 )
 
@@ -25,11 +27,13 @@ var (
 )
 
 type Object interface {
+	HasBBox() bool
 	Rect() Rect
 	Center() Position
 	AppendJSON(dst []byte) []byte
-	// Contains(other Object) bool
-	// Overlaps(other Object) bool
+	ForEach(func(child Object) bool)
+	// Within(other Object) bool
+	// Intersects(other Object) bool
 }
 
 var _ = []Object{
@@ -100,4 +104,25 @@ func loadJSON(data string) (Object, error) {
 	case "FeatureCollection":
 		return loadJSONFeatureCollection(data)
 	}
+}
+
+func polyPoint(posn Position) poly.Point {
+	return *(*poly.Point)(unsafe.Pointer(&posn))
+}
+func polyRect(rect Rect) poly.Rect {
+	return *(*poly.Rect)(unsafe.Pointer(&rect))
+}
+func polyLine(line []Position) poly.Polygon {
+	return *(*poly.Polygon)(unsafe.Pointer(&line))
+}
+func polyPolygon(polygon [][]Position) (
+	exterior poly.Polygon, holes []poly.Polygon,
+) {
+	if len(polygon) > 0 {
+		exterior = *(*poly.Polygon)(unsafe.Pointer(&polygon[0]))
+		if len(polygon) > 1 {
+			holes = (*(*[]poly.Polygon)(unsafe.Pointer(&polygon)))[1:]
+		}
+	}
+	return
 }

@@ -7,6 +7,10 @@ type MultiLineString struct {
 	BBox        BBox
 }
 
+func (g MultiLineString) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
+}
+
 func (g MultiLineString) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -42,6 +46,21 @@ func (g MultiLineString) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, '}')
 	return dst
+}
+
+func (g MultiLineString) ForEach(iter func(child Object) bool) {
+	for _, child := range g.LineStrings {
+		if !iter(child) {
+			return
+		}
+	}
+}
+
+func (g MultiLineString) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g MultiLineString) Intersects(other Object) bool {
+	panic("unsupported")
 }
 
 func loadJSONMultiLineString(data string) (Object, error) {

@@ -2,13 +2,15 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
-// FeatureCollection is a GeoJSON FeatureCollection
 type FeatureCollection struct {
 	Features []Object
 	BBox     BBox
 }
 
-// Rect returns a rectangle that contains the entire object
+func (g FeatureCollection) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
+}
+
 func (g FeatureCollection) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -16,12 +18,10 @@ func (g FeatureCollection) Rect() Rect {
 	return calcRectFromObjects(g.Features)
 }
 
-// Center is the center-most point of the object
 func (g FeatureCollection) Center() Position {
 	return g.Rect().Center()
 }
 
-// AppendJSON appends a json representation to destination
 func (g FeatureCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"FeatureCollection","features":[`...)
 	for i := 0; i < len(g.Features); i++ {
@@ -38,8 +38,21 @@ func (g FeatureCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
+func (g FeatureCollection) ForEach(iter func(child Object) bool) {
+	for _, child := range g.Features {
+		if !iter(child) {
+			return
+		}
+	}
+}
 
-// loadJSONFeatureCollection will return a valid GeoJSON object.
+func (g FeatureCollection) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g FeatureCollection) Intersects(other Object) bool {
+	panic("unsupported")
+}
+
 func loadJSONFeatureCollection(data string) (Object, error) {
 	var g FeatureCollection
 	rFeatures := gjson.Get(data, "features")

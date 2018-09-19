@@ -4,6 +4,10 @@ type Rect struct {
 	Min, Max Position
 }
 
+func (rect Rect) HasBBox() bool {
+	return false
+}
+
 func (rect Rect) Rect() Rect {
 	return rect
 }
@@ -27,6 +31,9 @@ func (rect Rect) AppendJSON(dst []byte) []byte {
 		Position{rect.Min.X, rect.Max.Y},
 		rect.Min,
 	}}}).AppendJSON(dst)
+}
+func (rect Rect) ForEach(func(child Object) bool) {
+
 }
 
 func (rect Rect) Expand(posn Position) Rect {
@@ -55,6 +62,77 @@ func (rect Rect) Union(rect2 Rect) Rect {
 		rect.Max.Y = rect2.Max.Y
 	}
 	return rect
+}
+
+func (rect Rect) ContainsRect(other Rect) bool {
+	if other.Min.X < rect.Min.X || other.Max.X > rect.Max.X {
+		return false
+	}
+	if other.Min.Y < rect.Min.Y || other.Max.Y > rect.Max.Y {
+		return false
+	}
+	return true
+}
+
+func (rect Rect) IntersectsRect(other Rect) bool {
+	if other.Min.X > rect.Max.X || other.Max.X < rect.Min.X {
+		return false
+	}
+	if other.Min.Y > rect.Max.Y || other.Max.Y < rect.Min.Y {
+		return false
+	}
+	return true
+}
+
+func (rect Rect) ContainsPosition(posn Position) bool {
+	return posn.X >= rect.Min.X && posn.X <= rect.Max.X &&
+		posn.Y >= rect.Min.Y && posn.Y <= rect.Max.Y
+}
+
+func (rect Rect) Contains(other Object) bool {
+	// entire inner bounds must be fully contained inside of rect.
+	return rect.ContainsRect(other.Rect())
+}
+
+func (rect Rect) Intersects(other Object) bool {
+	// basic types
+	switch other := other.(type) {
+	case Position:
+		return rect.ContainsPosition(other)
+	case Rect:
+		return rect.IntersectsRect(other)
+	}
+	// bbox types
+	if !rect.IntersectsRect(other.Rect()) {
+		// no intersection
+		return false
+	}
+	// yes they intersect
+	if other.HasBBox() {
+		// nothing more to check
+		return true
+	}
+	// geometry types
+	switch other := other.(type) {
+	case Point:
+		// already detect above
+		return true
+	case LineString:
+		return polyLine(other.Coordinates).IntersectsRect(polyRect(rect))
+	case Polygon:
+		exterior, holes := polyPolygon(other.Coordinates)
+		return polyRect(rect).Intersects(exterior, holes)
+	}
+	// check parent types
+	var intersects bool
+	other.ForEach(func(child Object) bool {
+		if rect.Intersects(child) {
+			intersects = true
+			return false
+		}
+		return true
+	})
+	return intersects
 }
 
 func calcRectFromObjects(objs []Object) Rect {

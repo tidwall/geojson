@@ -3,10 +3,14 @@ package geojson
 import "github.com/tidwall/gjson"
 
 type Feature struct {
-	Geometry   Object
 	BBox       BBox
+	Geometry   Object
 	ID         gjson.Result
 	Properties gjson.Result
+}
+
+func (g Feature) HasBBox() bool {
+	return g.BBox != nil && g.BBox.Defined()
 }
 
 func (g Feature) Rect() Rect {
@@ -36,6 +40,15 @@ func (g Feature) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, '}')
 	return dst
+}
+func (g Feature) ForEach(iter func(child Object) bool) {
+	iter(g.Geometry)
+}
+func (g Feature) Within(other Object) bool {
+	panic("unsupported")
+}
+func (g Feature) Intersects(other Object) bool {
+	panic("unsupported")
 }
 
 // loadJSONFeature will return a valid GeoJSON object.
