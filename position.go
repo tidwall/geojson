@@ -21,10 +21,47 @@ func (posn Position) Center() Position {
 func (posn Position) AppendJSON(dst []byte) []byte {
 	return Point{Coordinates: posn}.AppendJSON(dst)
 }
-func (posn Position) Within(other Object) bool {
-	panic("unsupported")
+func (posn Position) Contains(other Object) bool {
+	rect := other.Rect()
+	return rect.Min == rect.Max && rect.Min == posn
 }
 func (posn Position) Intersects(other Object) bool {
+	switch other := other.(type) {
+	case Position:
+		return posn == other
+	case Rect:
+		return other.ContainsPosition(posn)
+	}
+	// bbox types
+	if !other.Rect().ContainsPosition(posn) {
+		// no intersection
+		return false
+	}
+	// yes they intersect
+	if other.HasBBox() {
+		// nothing more to check
+		return true
+	}
+	// geometry types
+	switch other := other.(type) {
+	case Point:
+		return polyPoint(other.Coordinates) == polyPoint(posn)
+	case LineString:
+		return polyLine(other.Coordinates).LineStringIntersects()
+	case Polygon:
+		return polyRect(rect).Intersects(polyPolygon(other.Coordinates))
+	}
+	// check types with children
+	var intersects bool
+	other.ForEach(func(child Object) bool {
+		if rect.Intersects(child) {
+			intersects = true
+			return false
+		}
+		return true
+	})
+	return intersects
+
 	panic("unsupported")
 }
 

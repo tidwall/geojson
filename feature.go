@@ -5,8 +5,8 @@ import "github.com/tidwall/gjson"
 type Feature struct {
 	BBox       BBox
 	Geometry   Object
-	ID         gjson.Result
-	Properties gjson.Result
+	ID         string
+	Properties string
 }
 
 func (g Feature) HasBBox() bool {
@@ -30,13 +30,13 @@ func (g Feature) AppendJSON(dst []byte) []byte {
 		dst = append(dst, `,"bbox":`...)
 		dst = g.BBox.AppendJSON(dst)
 	}
-	if g.ID.Exists() {
+	if g.ID != "" {
 		dst = append(dst, `,"id":`...)
-		dst = append(dst, g.ID.Raw...)
+		dst = append(dst, g.ID...)
 	}
-	if g.Properties.Exists() {
+	if g.Properties != "" {
 		dst = append(dst, `,"properties":`...)
-		dst = append(dst, g.Properties.Raw...)
+		dst = append(dst, g.Properties...)
 	}
 	dst = append(dst, '}')
 	return dst
@@ -67,21 +67,22 @@ func loadJSONFeature(data string) (Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	g.ID = resultCopy(gjson.Get(data, "id"))
-	g.Properties = resultCopy(gjson.Get(data, "properties"))
+	id := gjson.Get(data, "id").Raw
+	properties := gjson.Get(data, "properties").Raw
+	if len(id) > 0 || len(properties) > 0 {
+		combined := id + " " + properties
+		g.ID = combined[:len(id)]
+		g.Properties = combined[len(id)+1:]
+	}
 	if g.BBox == nil {
 		g.BBox = bboxRect{g.Rect()}
 	}
 	return g, nil
 }
 
-func resultCopy(res gjson.Result) gjson.Result {
-	if res.Exists() {
-		if res.Type == gjson.String {
-			res = gjson.Parse(string([]byte(res.Raw)))
-		} else {
-			res.Raw = string([]byte(res.Raw))
-		}
+func resultCopy(res gjson.Result) string {
+	if len(res.Raw) > 0 {
+		return string([]byte(res.Raw))
 	}
-	return res
+	return ""
 }

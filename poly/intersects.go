@@ -41,6 +41,25 @@ func (shape Polygon) LineStringIntersectsLineString(exterior Polygon) bool {
 	return false
 }
 
+// LineStringIntersectsPoint detects if a linestring intersects a point. The
+// point will need to be exactly on a segment of the linestring
+func (shape Polygon) LineStringIntersectsPoint(point Point) bool {
+	for i := 0; i < len(shape)-1; i++ {
+		if lineintersects(
+			shape[i], shape[i+1],
+			point, point,
+		) {
+			return true
+		}
+	}
+	return false
+}
+
+// LineStringIntersectsRect detects if a linestring intersects a rect
+func (shape Polygon) LineStringIntersectsRect(rect Rect) bool {
+	return shape.LineStringIntersects(rect.Polygon(), nil)
+}
+
 // LineStringIntersects detects if a polygon intersects a linestring
 // assume shape is a linestring
 func (shape Polygon) LineStringIntersects(

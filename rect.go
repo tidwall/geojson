@@ -90,12 +90,19 @@ func (rect Rect) ContainsPosition(posn Position) bool {
 }
 
 func (rect Rect) Contains(other Object) bool {
+	// basic types
+	switch other := other.(type) {
+	case Position:
+		return rect.ContainsPosition(other)
+	case Rect:
+		return rect.ContainsRect(other)
+	}
 	// entire inner bounds must be fully contained inside of rect.
 	return rect.ContainsRect(other.Rect())
 }
 
 func (rect Rect) Intersects(other Object) bool {
-	// basic types
+	// simple types
 	switch other := other.(type) {
 	case Position:
 		return rect.ContainsPosition(other)
@@ -115,15 +122,15 @@ func (rect Rect) Intersects(other Object) bool {
 	// geometry types
 	switch other := other.(type) {
 	case Point:
-		// already detect above
-		return true
+		return polyPoint(other.Coordinates).InsideRect(polyRect(rect))
 	case LineString:
-		return polyLine(other.Coordinates).IntersectsRect(polyRect(rect))
+		return polyLine(other.Coordinates).LineStringIntersects(
+			polyRect(rect).Polygon(), nil,
+		)
 	case Polygon:
-		exterior, holes := polyPolygon(other.Coordinates)
-		return polyRect(rect).Intersects(exterior, holes)
+		return polyRect(rect).Intersects(polyPolygon(other.Coordinates))
 	}
-	// check parent types
+	// check types with children
 	var intersects bool
 	other.ForEach(func(child Object) bool {
 		if rect.Intersects(child) {

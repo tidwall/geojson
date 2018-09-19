@@ -27,10 +27,17 @@ var (
 )
 
 type Object interface {
+	// HasBBox return true if there is the GeoJSON "bbox" member is defined
 	HasBBox() bool
+	// Rect returns the outer minimum bounding rectangle
 	Rect() Rect
+	// Center returns the center position of the object
 	Center() Position
+	// AppendJSON appends the GeoJSON reprensentation to dst
 	AppendJSON(dst []byte) []byte
+	// ForEach iterates over child objects. Used for GeoJSON types:
+	//   MultiPoint, MultiLineString, MultiPolygon, Feature, FeatureCollection,
+	//   and GeometryCollection
 	ForEach(func(child Object) bool)
 	// Within(other Object) bool
 	// Intersects(other Object) bool
