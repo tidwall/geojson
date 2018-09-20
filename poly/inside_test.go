@@ -42,25 +42,25 @@ func TestRayInside2(t *testing.T) {
 	testRayInside(t, P(2, 1), normal, true)
 }
 
-var texterior = Polygon{
+var texterior = Ring{
 	P(0, 0),
 	P(0, 6),
 	P(12, -6),
 	P(12, 0),
 	P(0, 0),
 }
-var tholeA = Polygon{
+var tholeA = Ring{
 	P(1, 1),
 	P(1, 2),
 	P(2, 2),
 	P(2, 1),
 }
-var tholeB = Polygon{
+var tholeB = Ring{
 	P(11, -1),
 	P(11, -3),
 	P(9, -1),
 }
-var tholes = []Polygon{tholeA, tholeB}
+var tholes = []Ring{tholeA, tholeB}
 
 func TestRayExteriorHoles(t *testing.T) {
 
@@ -158,7 +158,7 @@ func TestPolygonInsideRect(t *testing.T) {
 	if r1.Polygon().InsideRect(r3) {
 		t.Fatalf("expected false")
 	}
-	if (Polygon{}).InsideRect(r3) {
+	if (Ring{}).InsideRect(r3) {
 		t.Fatalf("expected false")
 	}
 }
@@ -173,7 +173,7 @@ func TestPolygonIntersectsRect(t *testing.T) {
 	if r1.Polygon().IntersectsRect(r3) {
 		t.Fatalf("expected false")
 	}
-	if (Polygon{}).IntersectsRect(r3) {
+	if (Ring{}).IntersectsRect(r3) {
 		t.Fatalf("expected false")
 	}
 }
@@ -187,7 +187,7 @@ func TestPolygonString(t *testing.T) {
 }
 
 func TestPolygonRect(t *testing.T) {
-	p := Polygon{
+	p := Ring{
 		P(10, 10), P(20, 10), P(30, 20), P(40, 0),
 		P(50, 50), P(40, 30), P(30, 20), P(0, 0),
 		P(10, 10),
