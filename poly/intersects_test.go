@@ -89,24 +89,24 @@ func TestIntersectsShapes(t *testing.T) {
 		true)
 }
 
-func TestPointIntersectsLineString(t *testing.T) {
-	poly := Ring{P(0, 0), P(10, 10), P(20, 0)}
-	if !P(0, 0).IntersectsLineString(poly) {
+func TestPointIntersectsLine(t *testing.T) {
+	poly := Line{P(0, 0), P(10, 10), P(20, 0)}
+	if !P(0, 0).IntersectsLine(poly) {
 		t.Fatal("expected true")
 	}
-	if !P(10, 10).IntersectsLineString(poly) {
+	if !P(10, 10).IntersectsLine(poly) {
 		t.Fatal("expected true")
 	}
-	if !P(20, 0).IntersectsLineString(poly) {
+	if !P(20, 0).IntersectsLine(poly) {
 		t.Fatal("expected true")
 	}
-	if !P(5, 5).IntersectsLineString(poly) {
+	if !P(5, 5).IntersectsLine(poly) {
 		t.Fatal("expected true")
 	}
-	if !P(15, 5).IntersectsLineString(poly) {
+	if !P(15, 5).IntersectsLine(poly) {
 		t.Fatal("expected true")
 	}
-	if P(20, 5).IntersectsLineString(poly) {
+	if P(20, 5).IntersectsLine(poly) {
 		t.Fatal("expected false")
 	}
 }
@@ -137,23 +137,23 @@ func TestRectIntersectsPolygon(t *testing.T) {
 	}
 }
 
-func TestLineStringIntersectsLineString(t *testing.T) {
-	line1 := Ring{P(0, 0), P(10, 10), P(20, 0)}
-	line2 := Ring{P(0, 1), P(10, 11), P(20, 1)}
-	line3 := Ring{P(0, -1), P(10, 11), P(20, -1)}
-	if line1.LineStringIntersectsLineString(line2) {
+func TestLineIntersectsLine(t *testing.T) {
+	line1 := Line{P(0, 0), P(10, 10), P(20, 0)}
+	line2 := Line{P(0, 1), P(10, 11), P(20, 1)}
+	line3 := Line{P(0, -1), P(10, 11), P(20, -1)}
+	if line1.IntersectsLine(line2) {
 		t.Fatal("expected false")
 	}
-	if !line1.LineStringIntersectsLineString(line3) {
+	if !line1.IntersectsLine(line3) {
 		t.Fatal("expected true")
 	}
 }
 
-func TestLineStringIntersects(t *testing.T) {
+func TestLineIntersects(t *testing.T) {
 	poly := Ring{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
-	line1 := Ring{P(0, 0), P(10, 10), P(20, 0)}
+	line1 := Line{P(0, 0), P(10, 10), P(20, 0)}
 
-	if !line1.LineStringIntersectsPolygon(Polygon{poly, nil}) {
+	if !line1.IntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
 }
@@ -162,35 +162,35 @@ func TestDoesIntersect(t *testing.T) {
 	exterior := Ring{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
 	holes := []Ring{{P(2, 2), P(2, 8), P(8, 8), P(8, 2), P(2, 2)}}
 
-	if (Ring{}).doesIntersects(false, exterior, holes) {
+	if doesIntersects(nil, false, exterior, holes) {
 		t.Fatal("expected false")
 	}
-	if (Ring{P(5, 5)}).doesIntersects(false, exterior, holes) {
+	if doesIntersects(Ring{P(5, 5)}, false, exterior, holes) {
 		t.Fatal("expected false")
 	}
-	if !(Ring{P(1, 1)}).doesIntersects(false, exterior, holes) {
+	if !doesIntersects(Ring{P(1, 1)}, false, exterior, holes) {
 		t.Fatal("expected true")
 	}
-	if (Ring{P(1, 1)}).doesIntersects(false, Ring{}, nil) {
+	if doesIntersects(Ring{P(1, 1)}, false, Ring{}, nil) {
 		t.Fatal("expected false")
 	}
-	if !(Ring{P(1, 1)}).doesIntersects(false, Ring{P(1, 1)}, nil) {
+	if !doesIntersects(Ring{P(1, 1)}, false, Ring{P(1, 1)}, nil) {
 		t.Fatal("expected true")
 	}
-	if (Ring{P(1, 1), P(2, 2)}).doesIntersects(false, Ring{}, nil) {
+	if doesIntersects(Ring{P(1, 1), P(2, 2)}, false, Ring{}, nil) {
 		t.Fatal("expected false")
 	}
-	if !exterior.doesIntersects(false, Ring{P(1, 1)}, nil) {
+	if !doesIntersects(exterior, false, Ring{P(1, 1)}, nil) {
 		t.Fatal("expected true")
 	}
 
 	inner := Ring{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)}
-	if inner.doesIntersects(false, exterior, holes) {
+	if doesIntersects(inner, false, exterior, holes) {
 		t.Fatal("expected false")
 	}
 
 	outside := Ring{P(30, 30), P(60, 30), P(60, 60), P(30, 60), P(30, 30)}
-	if outside.doesIntersects(false, exterior, holes) {
+	if doesIntersects(outside, false, exterior, holes) {
 		t.Fatal("expected false")
 	}
 
@@ -199,7 +199,7 @@ func TestDoesIntersect(t *testing.T) {
 	tri1 := Ring{P(0, 0), P(10, 0), P(5, 10), P(0, 0)}
 	tri2 := Ring{P(7, 9), P(17, 9), P(12, 19), P(7, 9)}
 
-	if tri1.doesIntersects(false, tri2, nil) {
+	if doesIntersects(tri1, false, tri2, nil) {
 		t.Fatal("expected false")
 	}
 
@@ -208,20 +208,20 @@ func TestDoesIntersect(t *testing.T) {
 	// }
 }
 
-func TestLineStringIntersectsRect(t *testing.T) {
-	if !(Ring{P(0, 0), P(30, 30)}).LineStringIntersectsRect(R(10, 10, 20, 20)) {
+func TestLineIntersectsRect(t *testing.T) {
+	if !(Line{P(0, 0), P(30, 30)}).IntersectsRect(R(10, 10, 20, 20)) {
 		t.Fatal("expected true")
 	}
-	if (Ring{P(100, 100), P(300, 300)}).LineStringIntersectsRect(R(10, 10, 20, 20)) {
+	if (Line{P(100, 100), P(300, 300)}).IntersectsRect(R(10, 10, 20, 20)) {
 		t.Fatal("expected false")
 	}
 }
 
-func TestLineStringIntersectsPoint(t *testing.T) {
-	if !(Ring{P(0, 0), P(30, 30)}).LineStringIntersectsPoint(P(15, 15)) {
+func TestLineIntersectsPoint(t *testing.T) {
+	if !(Line{P(0, 0), P(30, 30)}).IntersectsPoint(P(15, 15)) {
 		t.Fatal("expected true")
 	}
-	if (Ring{P(0, 0), P(30, 30)}).LineStringIntersectsPoint(P(15, 10)) {
+	if (Line{P(0, 0), P(30, 30)}).IntersectsPoint(P(15, 10)) {
 		t.Fatal("expected false")
 	}
 }

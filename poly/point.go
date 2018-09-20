@@ -35,10 +35,10 @@ func (p Point) InsidePolygon(polygon Polygon) bool {
 	return true
 }
 
-// IntersectsLineString detect if a point intersects a linestring
-func (p Point) IntersectsLineString(exterior Ring) bool {
-	for j := 0; j < len(exterior); j++ {
-		if raycast(p, exterior[j], exterior[(j+1)%len(exterior)]).on {
+// IntersectsLine detect if a point intersects a linestring
+func (p Point) IntersectsLine(line Line) bool {
+	for j := 0; j < len(line); j++ {
+		if raycast(p, line[j], line[(j+1)%len(line)]).on {
 			return true
 		}
 	}
