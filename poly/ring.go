@@ -23,7 +23,7 @@ func (ring Ring) IntersectsRect(rect Rect) bool {
 	if len(ring) == 0 {
 		return false
 	}
-	return ring.Intersects(rect.Polygon(), nil)
+	return ring.IntersectsPolygon(rect.Polygon())
 }
 
 // String returns a string representation of the polygon.
@@ -67,27 +67,27 @@ func (ring Ring) Rect() Rect {
 	return bbox
 }
 
-// Inside returns true if shape is inside of exterior and not in a hole.
-func (ring Ring) Inside(exterior Ring, holes []Ring) bool {
+// InsidePolygon returns true if shape is inside of exterior and not in a hole.
+func (ring Ring) InsidePolygon(polygon Polygon) bool {
 	var ok bool
 	for _, p := range ring {
-		ok = p.Inside(exterior, holes)
+		ok = p.InsidePolygon(polygon)
 		if !ok {
 			return false
 		}
 	}
 	ok = true
-	for _, hole := range holes {
-		if hole.Inside(ring, nil) {
+	for _, hole := range polygon.Holes {
+		if hole.InsidePolygon(Polygon{ring, nil}) {
 			return false
 		}
 	}
 	return ok
 }
 
-// Intersects detects if a polygon intersects another polygon
-func (ring Ring) Intersects(exterior Ring, holes []Ring) bool {
-	return ring.doesIntersects(false, exterior, holes)
+// IntersectsPolygon detects if a polygon intersects another polygon
+func (ring Ring) IntersectsPolygon(polygon Polygon) bool {
+	return ring.doesIntersects(false, polygon.Exterior, polygon.Holes)
 }
 
 // LineStringIntersectsLineString detects if a linestring intersects a
@@ -114,16 +114,15 @@ func (ring Ring) LineStringIntersectsPoint(point Point) bool {
 
 // LineStringIntersectsRect detects if a linestring intersects a rect
 func (ring Ring) LineStringIntersectsRect(rect Rect) bool {
-	return ring.LineStringIntersects(rect.Polygon(), nil)
+	return ring.LineStringIntersectsPolygon(rect.Polygon())
 }
 
-// LineStringIntersects detects if a polygon intersects a linestring
+// LineStringIntersectsPolygon detects if a polygon intersects a linestring
 // assume shape is a linestring
-func (ring Ring) LineStringIntersects(
-	exterior Ring, holes []Ring,
-) bool {
-	return ring.doesIntersects(true, exterior, holes)
+func (ring Ring) LineStringIntersectsPolygon(polygon Polygon) bool {
+	return ring.doesIntersects(true, polygon.Exterior, polygon.Holes)
 }
+
 func (ring Ring) doesIntersects(
 	isLineString bool, exterior Ring, holes []Ring,
 ) bool {
@@ -137,14 +136,14 @@ func (ring Ring) doesIntersects(
 		case 1:
 			return ring[0].X == exterior[0].X && ring[0].Y == ring[0].Y
 		default:
-			return ring[0].Inside(exterior, holes)
+			return ring[0].InsidePolygon(Polygon{exterior, holes})
 		}
 	default:
 		switch len(exterior) {
 		case 0:
 			return false
 		case 1:
-			return exterior[0].Inside(ring, holes)
+			return exterior[0].InsidePolygon(Polygon{ring, holes})
 		}
 	}
 	if !ring.Rect().IntersectsRect(exterior.Rect()) {
@@ -161,15 +160,15 @@ func (ring Ring) doesIntersects(
 		}
 	}
 	for _, hole := range holes {
-		if ring.Inside(hole, nil) {
+		if ring.InsidePolygon(Polygon{hole, nil}) {
 			return false
 		}
 	}
-	if ring.Inside(exterior, nil) {
+	if ring.InsidePolygon(Polygon{exterior, nil}) {
 		return true
 	}
 	if !isLineString {
-		if exterior.Inside(ring, nil) {
+		if exterior.InsidePolygon(Polygon{ring, nil}) {
 			return true
 		}
 	}

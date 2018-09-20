@@ -99,7 +99,7 @@ func TestRayExteriorHoles(t *testing.T) {
 	}
 
 	for i := 0; i < len(points); i++ {
-		ok := points[i].p.Inside(texterior, tholes)
+		ok := points[i].p.InsidePolygon(Polygon{texterior, tholes})
 		if ok != points[i].ok {
 			t.Fatalf("{%v,%v} = %t, expect %t", points[i].p.X, points[i].p.Y, ok, points[i].ok)
 		}
@@ -107,19 +107,19 @@ func TestRayExteriorHoles(t *testing.T) {
 }
 
 func TestInsideShapes(t *testing.T) {
-	if texterior.Inside(texterior, nil) == false {
+	if texterior.InsidePolygon(Polygon{texterior, nil}) == false {
 		t.Fatalf("expect true, got false")
 	}
-	if texterior.Inside(texterior, tholes) == true {
+	if texterior.InsidePolygon(Polygon{texterior, tholes}) == true {
 		t.Fatalf("expect false, got true")
 	}
-	if tholeA.Inside(texterior, nil) == false {
+	if tholeA.InsidePolygon(Polygon{texterior, nil}) == false {
 		t.Fatalf("expect true, got false")
 	}
-	if tholeB.Inside(texterior, nil) == false {
+	if tholeB.InsidePolygon(Polygon{texterior, nil}) == false {
 		t.Fatalf("expect true, got false")
 	}
-	if tholeA.Inside(tholeB, nil) == true {
+	if tholeA.InsidePolygon(Polygon{tholeB, nil}) == true {
 		t.Fatalf("expect false, got true")
 	}
 }
@@ -127,11 +127,11 @@ func TestInsideShapes(t *testing.T) {
 func TestRectInsidePolygon(t *testing.T) {
 	r1 := R(10, 10, 20, 20)
 	r2 := R(0, 0, 30, 30)
-	if !r1.Inside(r2.Polygon(), nil) {
+	if !r1.InsidePolygon(r2.Polygon()) {
 		t.Fatalf("expected 'true'")
 	}
 	r3 := R(40, 40, 50, 50)
-	if r1.Inside(r3.Polygon(), nil) {
+	if r1.InsidePolygon(r3.Polygon()) {
 		t.Fatalf("expected 'false'")
 	}
 }
@@ -151,11 +151,11 @@ func TestPointInsideRect(t *testing.T) {
 func TestPolygonInsideRect(t *testing.T) {
 	r1 := R(10, 10, 20, 20)
 	r2 := R(0, 0, 30, 30)
-	if !r1.Polygon().InsideRect(r2) {
+	if !r1.Ring().InsideRect(r2) {
 		t.Fatalf("expected true")
 	}
 	r3 := R(40, 40, 50, 50)
-	if r1.Polygon().InsideRect(r3) {
+	if r1.Ring().InsideRect(r3) {
 		t.Fatalf("expected false")
 	}
 	if (Ring{}).InsideRect(r3) {
@@ -166,11 +166,11 @@ func TestPolygonInsideRect(t *testing.T) {
 func TestPolygonIntersectsRect(t *testing.T) {
 	r1 := R(10, 10, 20, 20)
 	r2 := R(0, 0, 30, 30)
-	if !r1.Polygon().IntersectsRect(r2) {
+	if !r1.Ring().IntersectsRect(r2) {
 		t.Fatalf("expected true")
 	}
 	r3 := R(40, 40, 50, 50)
-	if r1.Polygon().IntersectsRect(r3) {
+	if r1.Ring().IntersectsRect(r3) {
 		t.Fatalf("expected false")
 	}
 	if (Ring{}).IntersectsRect(r3) {
@@ -179,7 +179,7 @@ func TestPolygonIntersectsRect(t *testing.T) {
 }
 
 func TestPolygonString(t *testing.T) {
-	str := R(10, 10, 20, 20).Polygon().String()
+	str := R(10, 10, 20, 20).Ring().String()
 	exp := "[[10,10],[20,10],[20,20],[10,20],[10,10]]"
 	if str != exp {
 		t.Fatalf("expected '%v', got '%v'", exp, str)

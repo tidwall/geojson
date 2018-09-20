@@ -5,8 +5,8 @@ type Rect struct {
 	Min, Max Point
 }
 
-// Polygon returns a polygon for the rect
-func (rect Rect) Polygon() Ring {
+// Ring returns an exterior ring
+func (rect Rect) Ring() Ring {
 	return Ring{
 		rect.Min,
 		{rect.Max.X, rect.Min.Y},
@@ -14,6 +14,11 @@ func (rect Rect) Polygon() Ring {
 		{rect.Min.X, rect.Max.Y},
 		rect.Min,
 	}
+}
+
+// Polygon returns a polygon for the rect
+func (rect Rect) Polygon() Polygon {
+	return Polygon{rect.Ring(), nil}
 }
 
 // IntersectsRect detects if two bboxes intersect.
@@ -38,12 +43,12 @@ func (rect Rect) InsideRect(other Rect) bool {
 	return true
 }
 
-// Inside detects if a rect intersects another polygon
-func (rect Rect) Inside(exterior Ring, holes []Ring) bool {
-	return rect.Polygon().Inside(exterior, holes)
+// InsidePolygon detects if a rect intersects another polygon
+func (rect Rect) InsidePolygon(polygon Polygon) bool {
+	return rect.Polygon().Exterior.InsidePolygon(polygon)
 }
 
-// Intersects detects if a rect intersects another polygon
-func (rect Rect) Intersects(exterior Ring, holes []Ring) bool {
-	return rect.Polygon().Intersects(exterior, holes)
+// IntersectsPolygon detects if a rect intersects another polygon
+func (rect Rect) IntersectsPolygon(polygon Polygon) bool {
+	return rect.Polygon().Exterior.IntersectsPolygon(polygon)
 }

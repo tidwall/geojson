@@ -46,11 +46,11 @@ func TestIntersectsLines(t *testing.T) {
 }
 
 func testIntersectsShapes(t *testing.T, exterior Ring, holes []Ring, shape Ring, expect bool) {
-	got := shape.Intersects(exterior, holes)
+	got := shape.IntersectsPolygon(Polygon{exterior, holes})
 	if got != expect {
 		t.Fatalf("%v intersects %v = %v, expect %v", shape, exterior, got, expect)
 	}
-	got = exterior.Intersects(shape, nil)
+	got = exterior.IntersectsPolygon(Polygon{shape, nil})
 	if got != expect {
 		t.Fatalf("%v intersects %v = %v, expect %v", exterior, shape, got, expect)
 	}
@@ -114,25 +114,25 @@ func TestPointIntersectsLineString(t *testing.T) {
 func TestPointIntersects(t *testing.T) {
 	poly := Ring{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
 
-	if !P(0, 0).Intersects(poly, nil) {
+	if !P(0, 0).IntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
-	if !P(10, 0).Intersects(poly, nil) {
+	if !P(10, 0).IntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
-	if !P(0, 10).Intersects(poly, nil) {
+	if !P(0, 10).IntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
-	if !P(10, 10).Intersects(poly, nil) {
+	if !P(10, 10).IntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
 }
 func TestRectIntersectsPolygon(t *testing.T) {
 	poly := Ring{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
-	if !R(0, 0, 5, 5).Intersects(poly, nil) {
+	if !R(0, 0, 5, 5).IntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
-	if R(15, 15, 20, 20).Intersects(poly, nil) {
+	if R(15, 15, 20, 20).IntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
 }
@@ -153,7 +153,7 @@ func TestLineStringIntersects(t *testing.T) {
 	poly := Ring{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)}
 	line1 := Ring{P(0, 0), P(10, 10), P(20, 0)}
 
-	if !line1.LineStringIntersects(poly, nil) {
+	if !line1.LineStringIntersectsPolygon(Polygon{poly, nil}) {
 		t.Fatal("expected true")
 	}
 }

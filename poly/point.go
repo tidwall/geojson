@@ -17,18 +17,18 @@ func (p Point) InsideRect(rect Rect) bool {
 	return true
 }
 
-// Inside returns true if point is inside of exterior and not in a hole.
+// InsidePolygon returns true if point is inside of exterior and not in a hole.
 // The validity of the exterior and holes must be done elsewhere and are
 // assumed valid.
 //   A valid exterior is a near-linear ring.
 //   A valid hole is one that is full contained inside the exterior.
 //   A valid hole may not share the same segment line as the exterior.
-func (p Point) Inside(exterior Ring, holes []Ring) bool {
-	if !insideshpext(p, exterior, true) {
+func (p Point) InsidePolygon(polygon Polygon) bool {
+	if !insideshpext(p, polygon.Exterior, true) {
 		return false
 	}
-	for i := 0; i < len(holes); i++ {
-		if insideshpext(p, holes[i], false) {
+	for _, hole := range polygon.Holes {
+		if insideshpext(p, hole, false) {
 			return false
 		}
 	}
@@ -45,7 +45,7 @@ func (p Point) IntersectsLineString(exterior Ring) bool {
 	return false
 }
 
-// Intersects detects if a point intersects another polygon
-func (p Point) Intersects(exterior Ring, holes []Ring) bool {
-	return p.Inside(exterior, holes)
+// IntersectsPolygon detects if a point intersects another polygon
+func (p Point) IntersectsPolygon(polygon Polygon) bool {
+	return p.InsidePolygon(polygon)
 }
