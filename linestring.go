@@ -52,11 +52,61 @@ func (g LineString) AppendJSON(dst []byte) []byte {
 }
 func (g LineString) ForEach(func(child Object) bool) {}
 
-func (g LineString) Within(other Object) bool {
-	panic("unsupported")
+func (g LineString) Contains(other Object) bool {
+	if g.HasBBox() {
+		return g.Rect().Contains(other)
+	}
+	otherRect := other.Rect()
+	if otherRect.Min != otherRect.Max {
+		return false
+	}
+	return polyLine(g.Coordinates).LineStringIntersectsPoint(
+		polyPoint(otherRect.Min),
+	)
 }
+
 func (g LineString) Intersects(other Object) bool {
-	panic("unsupported")
+	if g.HasBBox() {
+		return g.Rect().Intersects(other)
+	} else if other.HasBBox() {
+		return other.Rect().Intersects(g)
+	}
+	if !g.Rect().IntersectsRect(other.Rect()) {
+		return false
+	}
+	switch other := other.(type) {
+	case Position:
+		return polyLine(g.Coordinates).LineStringIntersectsPoint(
+			polyPoint(other),
+		)
+	case Rect:
+		return polyLine(g.Coordinates).LineStringIntersectsRect(
+			polyRect(other),
+		)
+	case Point:
+		return polyLine(g.Coordinates).LineStringIntersectsPoint(
+			polyPoint(other.Coordinates),
+		)
+	case LineString:
+		return polyLine(g.Coordinates).LineStringIntersectsLineString(
+			polyLine(other.Coordinates),
+		)
+	case Polygon:
+		return polyLine(g.Coordinates).LineStringIntersects(
+			polyPolygon(other.Coordinates),
+		)
+	}
+	// check types with children
+	var intersects bool
+	other.ForEach(func(child Object) bool {
+		if g.Intersects(child) {
+			intersects = true
+			return false
+		}
+		return true
+	})
+	return intersects
+
 }
 
 func loadJSONLineString(data string) (Object, error) {

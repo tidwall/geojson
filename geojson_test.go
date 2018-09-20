@@ -68,6 +68,13 @@ func testGeoJSONFile(t *testing.T, path string) Object {
 	return obj
 }
 
+func expect(t *testing.T, v bool) {
+	t.Helper()
+	if !v {
+		t.Fatal("invalid expectation")
+	}
+}
+
 func TestGeoJSON(t *testing.T) {
 	fis, err := ioutil.ReadDir("test_files")
 	if err != nil {

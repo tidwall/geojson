@@ -56,11 +56,12 @@ func (g MultiPolygon) ForEach(iter func(child Object) bool) {
 	}
 }
 
-func (g MultiPolygon) Within(other Object) bool {
-	panic("unsupported")
+func (g MultiPolygon) Contains(other Object) bool {
+	return collectionObjectContains(g, other)
 }
+
 func (g MultiPolygon) Intersects(other Object) bool {
-	panic("unsupported")
+	return collectionObjectIntersects(g, other)
 }
 
 func loadJSONMultiPolygon(data string) (Object, error) {

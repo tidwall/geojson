@@ -68,5 +68,60 @@ func TestRect(t *testing.T) {
 	if R(20, 21, 29, 29).IntersectsRect(R(10, 10, 20, 20)) {
 		t.Fatal("expected true")
 	}
+}
+
+func TestRectPoly(t *testing.T) {
+	r := R(10, 10, 20, 20)
+	if r.HasBBox() {
+		t.Fatal("expected false")
+	}
+	r.ForEach(func(Object) bool { panic("should not be reached") })
+	expect(t, r.ContainsPosition(P(15, 15)))
+	expect(t, r.ContainsPosition(P(10, 10)))
+	expect(t, r.ContainsPosition(P(20, 20)))
+	expect(t, !r.ContainsPosition(P(21, 20)))
+	expect(t, !r.ContainsPosition(P(20, 21)))
+	expect(t, !r.ContainsPosition(P(10, 9)))
+	expect(t, !r.ContainsPosition(P(9, 10)))
+	expect(t, r.Contains(R(10, 10, 20, 20)))
+	expect(t, r.Contains(R(11, 11, 19, 19)))
+	expect(t, !r.Contains(R(9, 10, 20, 20)))
+	expect(t, r.Contains(P(15, 15)))
+	expect(t, !r.Contains(P(21, 20)))
+	expect(t, r.Contains(
+		expectJSON(t, `{"type":"Point","coordinates":[15,15,10]}`, nil),
+	))
+	expect(t, r.Contains(
+		expectJSON(t, `{"type":"Point","coordinates":[5,5],"bbox":[11,11,19,19]}`, nil),
+	))
+	expect(t, r.Intersects(R(10, 10, 20, 20)))
+	expect(t, r.Intersects(R(11, 11, 19, 19)))
+	expect(t, r.Intersects(R(9, 10, 20, 20)))
+	expect(t, !r.Intersects(R(2, 10, 9, 20)))
+	expect(t, r.Intersects(P(15, 15)))
+	expect(t, !r.Intersects(P(21, 20)))
+	expect(t, r.Intersects(
+		expectJSON(t, `{"type":"Point","coordinates":[15,15,10]}`, nil),
+	))
+	expect(t, !r.Intersects(
+		expectJSON(t, `{"type":"Point","coordinates":[5,15,10]}`, nil),
+	))
+	expect(t, r.Intersects(
+		expectJSON(t, `{"type":"Point","coordinates":[5,5],"bbox":[11,11,19,19]}`, nil),
+	))
+	expect(t, r.Intersects(
+		expectJSON(t, `{"type":"LineString","coordinates":[[5,5],[25,25]]}`, nil),
+	))
+	expect(t, !r.Intersects(
+		expectJSON(t, `{"type":"LineString","coordinates":[
+			[9,9],[9,21],[21,21],[21,9]
+		]}`, nil),
+	))
+	expect(t, !r.Intersects(
+		expectJSON(t, `{"type":"Polygon","coordinates":[
+			[[9,9],[9,21],[21,21],[21,9],[9,9]],
+			[[9.5,9.5],[9.5,20.5],[20.5,20.5],[20.5,9.5],[9.5,9.5]]
+		]}`, nil),
+	))
 
 }

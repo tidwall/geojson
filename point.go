@@ -36,11 +36,17 @@ func (g Point) AppendJSON(dst []byte) []byte {
 }
 func (g Point) ForEach(func(child Object) bool) {}
 
-func (g Point) Within(other Object) bool {
-	panic("unsupported")
+func (g Point) Contains(other Object) bool {
+	if g.HasBBox() {
+		return g.Rect().Contains(other)
+	}
+	return g.Coordinates.Contains(other)
 }
 func (g Point) Intersects(other Object) bool {
-	panic("unsupported")
+	if g.HasBBox() {
+		return g.Rect().Intersects(other)
+	}
+	return g.Coordinates.Intersects(other)
 }
 
 func loadJSONPoint(data string) (Object, error) {

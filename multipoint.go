@@ -56,11 +56,12 @@ func (g MultiPoint) ForEach(iter func(child Object) bool) {
 	}
 }
 
-func (g MultiPoint) Within(other Object) bool {
-	panic("unsupported")
+func (g MultiPoint) Contains(other Object) bool {
+	return collectionObjectContains(g, other)
 }
+
 func (g MultiPoint) Intersects(other Object) bool {
-	panic("unsupported")
+	return collectionObjectIntersects(g, other)
 }
 
 func loadJSONMultiPoint(data string) (Object, error) {

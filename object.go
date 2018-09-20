@@ -39,8 +39,8 @@ type Object interface {
 	//   MultiPoint, MultiLineString, MultiPolygon, Feature, FeatureCollection,
 	//   and GeometryCollection
 	ForEach(func(child Object) bool)
-	// Within(other Object) bool
-	// Intersects(other Object) bool
+	Contains(other Object) bool
+	Intersects(other Object) bool
 }
 
 var _ = []Object{
@@ -132,4 +132,34 @@ func polyPolygon(polygon [][]Position) (
 		}
 	}
 	return
+}
+
+func collectionObjectContains(g, other Object) bool {
+	if g.HasBBox() {
+		return g.Rect().Contains(other)
+	}
+	var contains bool
+	g.ForEach(func(child Object) bool {
+		if child.Contains(other) {
+			contains = true
+			return false
+		}
+		return true
+	})
+	return contains
+}
+
+func collectionObjectIntersects(g, other Object) bool {
+	if g.HasBBox() {
+		return g.Rect().Intersects(other)
+	}
+	var intersects bool
+	g.ForEach(func(child Object) bool {
+		if child.Intersects(other) {
+			intersects = true
+			return false
+		}
+		return true
+	})
+	return intersects
 }

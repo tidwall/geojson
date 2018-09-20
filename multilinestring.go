@@ -56,11 +56,12 @@ func (g MultiLineString) ForEach(iter func(child Object) bool) {
 	}
 }
 
-func (g MultiLineString) Within(other Object) bool {
-	panic("unsupported")
+func (g MultiLineString) Contains(other Object) bool {
+	return collectionObjectContains(g, other)
 }
+
 func (g MultiLineString) Intersects(other Object) bool {
-	panic("unsupported")
+	return collectionObjectIntersects(g, other)
 }
 
 func loadJSONMultiLineString(data string) (Object, error) {

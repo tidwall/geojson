@@ -61,8 +61,41 @@ func (g Polygon) AppendJSON(dst []byte) []byte {
 }
 func (g Polygon) ForEach(func(child Object) bool) {}
 
-func (g Polygon) Within(other Object) bool {
-	panic("unsupported")
+func (g Polygon) Contains(other Object) bool {
+	if !g.Rect().Contains(other) {
+		return false
+	}
+	if g.HasBBox() {
+		return true
+	}
+	if other.HasBBox() {
+		other = other.Rect()
+	}
+	switch other := other.(type) {
+	case Position:
+		return polyPoint(other).Inside(polyPolygon(g.Coordinates))
+	case Rect:
+		return polyRect(other).Inside(polyPolygon(g.Coordinates))
+	case Point:
+		return polyPoint(other.Coordinates).Inside(polyPolygon(g.Coordinates))
+	case LineString:
+		return polyLine(other.Coordinates).Inside(polyPolygon(g.Coordinates))
+	case Polygon:
+		exterior, _ := polyPolygon(other.Coordinates)
+		return exterior.Inside(polyPolygon(g.Coordinates))
+	}
+	// check types with children
+	var count int
+	contains := true
+	other.ForEach(func(child Object) bool {
+		if !g.Contains(child) {
+			contains = false
+			return false
+		}
+		count++
+		return true
+	})
+	return contains && count > 0
 }
 func (g Polygon) Intersects(other Object) bool {
 	panic("unsupported")

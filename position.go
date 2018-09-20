@@ -47,22 +47,22 @@ func (posn Position) Intersects(other Object) bool {
 	case Point:
 		return polyPoint(other.Coordinates) == polyPoint(posn)
 	case LineString:
-		return polyLine(other.Coordinates).LineStringIntersects()
+		return polyLine(other.Coordinates).LineStringIntersectsPoint(
+			polyPoint(posn),
+		)
 	case Polygon:
-		return polyRect(rect).Intersects(polyPolygon(other.Coordinates))
+		return polyPoint(posn).Intersects(polyPolygon(other.Coordinates))
 	}
 	// check types with children
 	var intersects bool
 	other.ForEach(func(child Object) bool {
-		if rect.Intersects(child) {
+		if posn.Intersects(child) {
 			intersects = true
 			return false
 		}
 		return true
 	})
 	return intersects
-
-	panic("unsupported")
 }
 
 func (posn Position) ForEach(func(child Object) bool) {}

@@ -41,14 +41,17 @@ func (g Feature) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
+
 func (g Feature) ForEach(iter func(child Object) bool) {
 	iter(g.Geometry)
 }
-func (g Feature) Within(other Object) bool {
-	panic("unsupported")
+
+func (g Feature) Contains(other Object) bool {
+	return collectionObjectContains(g, other)
 }
+
 func (g Feature) Intersects(other Object) bool {
-	panic("unsupported")
+	return collectionObjectIntersects(g, other)
 }
 
 // loadJSONFeature will return a valid GeoJSON object.

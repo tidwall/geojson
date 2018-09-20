@@ -46,11 +46,12 @@ func (g FeatureCollection) ForEach(iter func(child Object) bool) {
 	}
 }
 
-func (g FeatureCollection) Within(other Object) bool {
-	panic("unsupported")
+func (g FeatureCollection) Contains(other Object) bool {
+	return collectionObjectContains(g, other)
 }
+
 func (g FeatureCollection) Intersects(other Object) bool {
-	panic("unsupported")
+	return collectionObjectIntersects(g, other)
 }
 
 func loadJSONFeatureCollection(data string) (Object, error) {
