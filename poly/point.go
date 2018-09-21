@@ -6,15 +6,24 @@ type Point struct {
 	X, Y float64
 }
 
-// InsideRect detects point is inside of another rect
-func (p Point) InsideRect(rect Rect) bool {
-	if p.X < rect.Min.X || p.X > rect.Max.X {
-		return false
-	}
-	if p.Y < rect.Min.Y || p.Y > rect.Max.Y {
-		return false
-	}
-	return true
+// InsidePoint tests if point is inside of another point
+func (point Point) InsidePoint(other Point) bool {
+	return point == other
+}
+
+// InsideRect tests if point is inside of a rect
+func (point Point) InsideRect(rect Rect) bool {
+	return pointInRect(point, rect)
+}
+
+// InsideLine tests if point is inside of a linestring
+func (point Point) InsideLine(line Line) bool {
+	return pointOnLine(point, line)
+}
+
+// InsideRing tests if point is inside of a ring
+func (point Point) InsideRing(ring Ring) bool {
+	return pointInPolygon(point, Polygon{ring, nil})
 }
 
 // InsidePolygon returns true if point is inside of exterior and not in a hole.
@@ -23,29 +32,31 @@ func (p Point) InsideRect(rect Rect) bool {
 //   A valid exterior is a near-linear ring.
 //   A valid hole is one that is full contained inside the exterior.
 //   A valid hole may not share the same segment line as the exterior.
-func (p Point) InsidePolygon(polygon Polygon) bool {
-	if !insideshpext(p, polygon.Exterior, true) {
-		return false
-	}
-	for _, hole := range polygon.Holes {
-		if insideshpext(p, hole, false) {
-			return false
-		}
-	}
-	return true
+func (point Point) InsidePolygon(polygon Polygon) bool {
+	return pointInPolygon(point, polygon)
 }
 
-// IntersectsLine detect if a point intersects a linestring
-func (p Point) IntersectsLine(line Line) bool {
-	for j := 0; j < len(line); j++ {
-		if raycast(p, line[j], line[(j+1)%len(line)]).on {
-			return true
-		}
-	}
-	return false
+// IntersectsPoint tests if if a point intersects another point
+func (point Point) IntersectsPoint(other Point) bool {
+	return point.InsidePoint(other)
 }
 
-// IntersectsPolygon detects if a point intersects another polygon
-func (p Point) IntersectsPolygon(polygon Polygon) bool {
-	return p.InsidePolygon(polygon)
+// IntersectsRect tests if if a point intersects a rect
+func (point Point) IntersectsRect(rect Rect) bool {
+	return point.InsideRect(rect)
+}
+
+// IntersectsLine tests if if a point intersects a linestring
+func (point Point) IntersectsLine(line Line) bool {
+	return point.InsideLine(line)
+}
+
+// IntersectsRing tests if if a point intersects a ring
+func (point Point) IntersectsRing(ring Ring) bool {
+	return point.InsideRing(ring)
+}
+
+// IntersectsPolygon tests if if a point intersects a polygon
+func (point Point) IntersectsPolygon(polygon Polygon) bool {
+	return point.InsidePolygon(polygon)
 }

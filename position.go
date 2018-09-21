@@ -1,6 +1,8 @@
 package geojson
 
-import "strconv"
+import (
+	"strconv"
+)
 
 type Position struct {
 	X, Y float64
@@ -51,7 +53,7 @@ func (posn Position) Intersects(other Object) bool {
 			polyPoint(posn),
 		)
 	case Polygon:
-		return polyPoint(posn).Intersects(polyPolygon(other.Coordinates))
+		return polyPoint(posn).IntersectsPolygon(polyPolygon(other.Coordinates))
 	}
 	// check types with children
 	var intersects bool

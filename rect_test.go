@@ -72,9 +72,7 @@ func TestRect(t *testing.T) {
 
 func TestRectPoly(t *testing.T) {
 	r := R(10, 10, 20, 20)
-	if r.HasBBox() {
-		t.Fatal("expected false")
-	}
+	expect(t, !r.HasBBox())
 	r.ForEach(func(Object) bool { panic("should not be reached") })
 	expect(t, r.ContainsPosition(P(15, 15)))
 	expect(t, r.ContainsPosition(P(10, 10)))
@@ -122,6 +120,20 @@ func TestRectPoly(t *testing.T) {
 			[[9,9],[9,21],[21,21],[21,9],[9,9]],
 			[[9.5,9.5],[9.5,20.5],[20.5,20.5],[20.5,9.5],[9.5,9.5]]
 		]}`, nil),
+	))
+
+	expect(t, r.Intersects(
+		expectJSON(t, `{"type":"Feature","geometry":
+			{"type":"Point","coordinates":[15,15,10]}
+		}`, nil),
+	))
+	expect(t, !r.Intersects(
+		expectJSON(t, `{"type":"Feature","geometry":
+			{"type":"Polygon","coordinates":[
+				[[9,9],[9,21],[21,21],[21,9],[9,9]],
+				[[9.5,9.5],[9.5,20.5],[20.5,20.5],[20.5,9.5],[9.5,9.5]]
+			]}
+		}`, nil),
 	))
 
 }

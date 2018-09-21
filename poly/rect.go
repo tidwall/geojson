@@ -8,11 +8,11 @@ type Rect struct {
 // Ring returns an exterior ring
 func (rect Rect) Ring() Ring {
 	return Ring{
-		rect.Min,
+		{rect.Min.X, rect.Min.Y},
 		{rect.Max.X, rect.Min.Y},
-		rect.Max,
+		{rect.Max.X, rect.Max.Y},
 		{rect.Min.X, rect.Max.Y},
-		rect.Min,
+		{rect.Min.X, rect.Min.Y},
 	}
 }
 
@@ -21,34 +21,92 @@ func (rect Rect) Polygon() Polygon {
 	return Polygon{rect.Ring(), nil}
 }
 
-// IntersectsRect detects if two bboxes intersect.
-func (rect Rect) IntersectsRect(other Rect) bool {
-	if rect.Min.Y > other.Max.Y || rect.Max.Y < other.Min.Y {
-		return false
-	}
-	if rect.Min.X > other.Max.X || rect.Max.X < other.Min.X {
-		return false
-	}
-	return true
+// InsidePoint tests if rect is inside of a point
+func (rect Rect) InsidePoint(point Point) bool {
+	return rect.Min == point && rect.Max == point
 }
 
-// InsideRect detects rect is inside of another rect
+// InsideRect tests if rect is inside of another rect
 func (rect Rect) InsideRect(other Rect) bool {
-	if rect.Min.X < other.Min.X || rect.Max.X > other.Max.X {
-		return false
-	}
-	if rect.Min.Y < other.Min.Y || rect.Max.Y > other.Max.Y {
-		return false
-	}
-	return true
+	return rectInRect(rect, other)
 }
 
-// InsidePolygon detects if a rect intersects another polygon
+// InsideLine tests if a rect is inside of a line
+func (rect Rect) InsideLine(line Line) bool {
+	if rect.Min == rect.Max {
+		return rect.Min.InsideLine(line)
+	}
+	if rect.Min.X == rect.Max.X || rect.Min.Y == rect.Max.Y {
+		for i := 0; i < len(line)-1; i++ {
+			if segmentOnSegment(rect.Min, rect.Max, line[i], line[i+1]) {
+				return true
+			}
+		}
+		return false
+	}
+	return false
+}
+
+// InsideRing tests if a rect is inside of a ring
+func (rect Rect) InsideRing(ring Ring) bool {
+	// all four points should be inside the ring
+	return (Point{rect.Min.X, rect.Min.Y}).InsideRing(ring) &&
+		(Point{rect.Max.X, rect.Min.Y}).InsideRing(ring) &&
+		(Point{rect.Max.X, rect.Max.Y}).InsideRing(ring) &&
+		(Point{rect.Min.X, rect.Max.Y}).InsideRing(ring)
+}
+
+// InsidePolygon tests if a rect is inside a polygon
 func (rect Rect) InsidePolygon(polygon Polygon) bool {
-	return rect.Polygon().Exterior.InsidePolygon(polygon)
+	// all four points should be inside the polygon
+	return (Point{rect.Min.X, rect.Min.Y}).InsidePolygon(polygon) &&
+		(Point{rect.Max.X, rect.Min.Y}).InsidePolygon(polygon) &&
+		(Point{rect.Max.X, rect.Max.Y}).InsidePolygon(polygon) &&
+		(Point{rect.Min.X, rect.Max.Y}).InsidePolygon(polygon)
 }
 
-// IntersectsPolygon detects if a rect intersects another polygon
+// IntersectsPoint tests if a rects intersects a point
+func (rect Rect) IntersectsPoint(point Point) bool {
+	return point.IntersectsRect(rect)
+}
+
+// IntersectsRect tests if a rect intersects another rect
+func (rect Rect) IntersectsRect(other Rect) bool {
+	return rectIntersectsRect(rect, other)
+}
+
+// IntersectsLine tests if a rect intersects a line
+func (rect Rect) IntersectsLine(line Line) bool {
+	ring := Ring{
+		{rect.Min.X, rect.Min.Y},
+		{rect.Max.X, rect.Min.Y},
+		{rect.Max.X, rect.Max.Y},
+		{rect.Min.X, rect.Max.Y},
+		{rect.Min.X, rect.Min.Y},
+	}
+	return doesIntersect(line, true, Polygon{ring, nil})
+}
+
+// IntersectsRing tests if a rect intersects a ring
+func (rect Rect) IntersectsRing(ring Ring) bool {
+	other := Ring{
+		{rect.Min.X, rect.Min.Y},
+		{rect.Max.X, rect.Min.Y},
+		{rect.Max.X, rect.Max.Y},
+		{rect.Min.X, rect.Max.Y},
+		{rect.Min.X, rect.Min.Y},
+	}
+	return doesIntersect(ring, false, Polygon{other, nil})
+}
+
+// IntersectsPolygon tests if a rect intersects another polygon
 func (rect Rect) IntersectsPolygon(polygon Polygon) bool {
-	return rect.Polygon().Exterior.IntersectsPolygon(polygon)
+	ring := Ring{
+		{rect.Min.X, rect.Min.Y},
+		{rect.Max.X, rect.Min.Y},
+		{rect.Max.X, rect.Max.Y},
+		{rect.Min.X, rect.Max.Y},
+		{rect.Min.X, rect.Min.Y},
+	}
+	return doesIntersect(ring, false, polygon)
 }

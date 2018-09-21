@@ -11,9 +11,6 @@ type LineString struct {
 func (g LineString) HasBBox() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
-func (g LineString) Empty() bool {
-	return len(g.Coordinates) == 0
-}
 func (g LineString) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -53,16 +50,60 @@ func (g LineString) AppendJSON(dst []byte) []byte {
 func (g LineString) ForEach(func(child Object) bool) {}
 
 func (g LineString) Contains(other Object) bool {
-	if g.HasBBox() {
-		return g.Rect().Contains(other)
-	}
-	otherRect := other.Rect()
-	if otherRect.Min != otherRect.Max {
-		return false
-	}
-	return polyLine(g.Coordinates).LineStringIntersectsPoint(
-		polyPoint(otherRect.Min),
-	)
+	panic("asdf")
+	// if !g.Rect().Contains(other) {
+	// 	return false
+	// }
+	// if g.HasBBox() {
+	// 	return true
+	// }
+	// if other.HasBBox() {
+	// 	other = other.Rect()
+	// }
+	// line := polyLine(g.Coordinates)
+	// switch other := other.(type) {
+	// case Position:
+	// 	return line.LineStringIntersectsPoint(polyPoint(other))
+	// case Rect:
+	// 	return line.LineStringIntersectsRect(polyRect(other))
+	// case Point:
+	// 	return polyLine(g.Coordinates).LineStringIntersectsPoint(
+	// 		polyPoint(other.Coordinates),
+	// 	)
+	// case LineString:
+	// 	return polyLine(other.Coordinates).Inside(polyRing(g.Coordinates))
+	// case Polygon:
+	// 	exterior, _ := polyPolygon(other.Coordinates)
+	// 	return exterior.Inside(polyPolygon(g.Coordinates))
+	// }
+	// // check types with children
+	// var count int
+	// contains := true
+	// other.ForEach(func(child Object) bool {
+	// 	if !g.Contains(child) {
+	// 		contains = false
+	// 		return false
+	// 	}
+	// 	count++
+	// 	return true
+	// })
+	// return contains && count > 0
+
+	// if g.HasBBox() {
+	// 	return g.Rect().Contains(other)
+	// }
+	// switch other := other.(type) {
+	// case LineString:
+
+	// }
+
+	// otherRect := other.Rect()
+	// if otherRect.Min != otherRect.Max {
+	// 	return false
+	// }
+	// return polyLine(g.Coordinates).LineStringIntersectsPoint(
+	// 	polyPoint(otherRect.Min),
+	// )
 }
 
 func (g LineString) Intersects(other Object) bool {
@@ -92,7 +133,7 @@ func (g LineString) Intersects(other Object) bool {
 			polyLine(other.Coordinates),
 		)
 	case Polygon:
-		return polyLine(g.Coordinates).LineStringIntersects(
+		return polyLine(g.Coordinates).LineStringIntersectsPolygon(
 			polyPolygon(other.Coordinates),
 		)
 	}

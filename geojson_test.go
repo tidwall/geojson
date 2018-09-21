@@ -2,6 +2,7 @@ package geojson
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -10,10 +11,16 @@ import (
 )
 
 func expectJSON(t *testing.T, data string, exp error) Object {
-	t.Helper()
+	if t != nil {
+		t.Helper()
+	}
 	obj, err := Load(data)
 	if err != exp {
-		t.Fatalf("expected '%v', got '%v'", exp, err)
+		if t == nil {
+			panic(fmt.Sprintf("expected '%v', got '%v'", exp, err))
+		} else {
+			t.Fatalf("expected '%v', got '%v'", exp, err)
+		}
 	}
 	return obj
 }

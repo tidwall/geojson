@@ -26,6 +26,7 @@ var (
 	errMustBeALinearRing  = errors.New("invalid polygon")
 )
 
+// Object is a geo object
 type Object interface {
 	// HasBBox return true if there is the GeoJSON "bbox" member is defined
 	HasBBox() bool
@@ -39,7 +40,9 @@ type Object interface {
 	//   MultiPoint, MultiLineString, MultiPolygon, Feature, FeatureCollection,
 	//   and GeometryCollection
 	ForEach(func(child Object) bool)
+	// Contains returns true if object contains other object
 	Contains(other Object) bool
+	// Contains returns true if object intersects with other object
 	Intersects(other Object) bool
 }
 
@@ -119,16 +122,16 @@ func polyPoint(posn Position) poly.Point {
 func polyRect(rect Rect) poly.Rect {
 	return *(*poly.Rect)(unsafe.Pointer(&rect))
 }
-func polyLine(line []Position) poly.Polygon {
-	return *(*poly.Polygon)(unsafe.Pointer(&line))
+func polyLine(line []Position) poly.Ring {
+	return *(*poly.Ring)(unsafe.Pointer(&line))
 }
 func polyPolygon(polygon [][]Position) (
-	exterior poly.Polygon, holes []poly.Polygon,
+	exterior poly.Ring, holes []poly.Ring,
 ) {
 	if len(polygon) > 0 {
-		exterior = *(*poly.Polygon)(unsafe.Pointer(&polygon[0]))
+		exterior = *(*poly.Ring)(unsafe.Pointer(&polygon[0]))
 		if len(polygon) > 1 {
-			holes = (*(*[]poly.Polygon)(unsafe.Pointer(&polygon)))[1:]
+			holes = (*(*[]poly.Ring)(unsafe.Pointer(&polygon)))[1:]
 		}
 	}
 	return
