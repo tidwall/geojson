@@ -49,7 +49,7 @@ func (posn Position) Intersects(other Object) bool {
 	case Point:
 		return polyPoint(other.Coordinates) == polyPoint(posn)
 	case LineString:
-		return polyLine(other.Coordinates).LineStringIntersectsPoint(
+		return polyLine(other.Coordinates).IntersectsPoint(
 			polyPoint(posn),
 		)
 	case Polygon:

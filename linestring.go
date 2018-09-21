@@ -117,23 +117,19 @@ func (g LineString) Intersects(other Object) bool {
 	}
 	switch other := other.(type) {
 	case Position:
-		return polyLine(g.Coordinates).LineStringIntersectsPoint(
-			polyPoint(other),
-		)
+		return polyLine(g.Coordinates).IntersectsPoint(polyPoint(other))
 	case Rect:
-		return polyLine(g.Coordinates).LineStringIntersectsRect(
-			polyRect(other),
-		)
+		return polyLine(g.Coordinates).IntersectsRect(polyRect(other))
 	case Point:
-		return polyLine(g.Coordinates).LineStringIntersectsPoint(
+		return polyLine(g.Coordinates).IntersectsPoint(
 			polyPoint(other.Coordinates),
 		)
 	case LineString:
-		return polyLine(g.Coordinates).LineStringIntersectsLineString(
+		return polyLine(g.Coordinates).IntersectsLine(
 			polyLine(other.Coordinates),
 		)
 	case Polygon:
-		return polyLine(g.Coordinates).LineStringIntersectsPolygon(
+		return polyLine(g.Coordinates).IntersectsPolygon(
 			polyPolygon(other.Coordinates),
 		)
 	}

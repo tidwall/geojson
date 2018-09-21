@@ -77,12 +77,17 @@ func (g Polygon) Contains(other Object) bool {
 	case Rect:
 		return polyRect(other).InsidePolygon(polyPolygon(g.Coordinates))
 	case Point:
-		return polyPoint(other.Coordinates).InsidePolygon(polyPolygon(g.Coordinates))
+		return polyPoint(other.Coordinates).InsidePolygon(
+			polyPolygon(g.Coordinates),
+		)
 	case LineString:
-		return polyLine(other.Coordinates).InsidePolygon(polyPolygon(g.Coordinates))
+		return polyLine(other.Coordinates).InsidePolygon(
+			polyPolygon(g.Coordinates),
+		)
 	case Polygon:
-		exterior, _ := polyPolygon(other.Coordinates)
-		return exterior.InsidePolygon(polyPolygon(g.Coordinates))
+		return polyPolygon(other.Coordinates).InsidePolygon(
+			polyPolygon(g.Coordinates),
+		)
 	}
 	// check types with children
 	var count int

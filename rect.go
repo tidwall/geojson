@@ -124,8 +124,8 @@ func (rect Rect) Intersects(other Object) bool {
 	case Point:
 		return polyPoint(other.Coordinates).InsideRect(polyRect(rect))
 	case LineString:
-		return polyLine(other.Coordinates).LineStringIntersectsPolygon(
-			polyRect(rect).Polygon(), nil,
+		return polyLine(other.Coordinates).IntersectsPolygon(
+			polyRect(rect).Polygon(),
 		)
 	case Polygon:
 		return polyRect(rect).IntersectsPolygon(polyPolygon(other.Coordinates))
