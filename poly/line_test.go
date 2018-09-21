@@ -80,4 +80,22 @@ func TestLine(t *testing.T) {
 		t.Fatal("expected false")
 	}
 
+	exterior := R(10, 10, 20, 20).Ring()
+	holes := []Ring{R(13, 13, 17, 17).Ring()}
+	if (Line{P(10, 10), P(20, 20)}).InsidePolygon(Polygon{exterior, holes}) {
+		t.Fatal("expected false")
+	}
+	if (Line{P(9, 9), P(20, 20)}).InsidePolygon(Polygon{exterior, nil}) {
+		t.Fatal("expected false")
+	}
+	if !(Line{P(10, 10), P(20, 20)}).InsidePolygon(Polygon{exterior, nil}) {
+		t.Fatal("expected true")
+	}
+	if !(Line{P(10, 10), P(20, 20)}).IntersectsRing(exterior) {
+		t.Fatal("expected true")
+	}
+	if !(Line{P(9, 9), P(20, 20)}).IntersectsRing(exterior) {
+		t.Fatal("expected true")
+	}
+
 }
