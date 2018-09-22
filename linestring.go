@@ -50,100 +50,43 @@ func (g LineString) AppendJSON(dst []byte) []byte {
 func (g LineString) ForEach(func(child Object) bool) {}
 
 func (g LineString) Contains(other Object) bool {
-	panic("asdf")
-	// if !g.Rect().Contains(other) {
-	// 	return false
-	// }
-	// if g.HasBBox() {
-	// 	return true
-	// }
-	// if other.HasBBox() {
-	// 	other = other.Rect()
-	// }
-	// line := polyLine(g.Coordinates)
-	// switch other := other.(type) {
-	// case Position:
-	// 	return line.LineStringIntersectsPoint(polyPoint(other))
-	// case Rect:
-	// 	return line.LineStringIntersectsRect(polyRect(other))
-	// case Point:
-	// 	return polyLine(g.Coordinates).LineStringIntersectsPoint(
-	// 		polyPoint(other.Coordinates),
-	// 	)
-	// case LineString:
-	// 	return polyLine(other.Coordinates).Inside(polyRing(g.Coordinates))
-	// case Polygon:
-	// 	exterior, _ := polyPolygon(other.Coordinates)
-	// 	return exterior.Inside(polyPolygon(g.Coordinates))
-	// }
-	// // check types with children
-	// var count int
-	// contains := true
-	// other.ForEach(func(child Object) bool {
-	// 	if !g.Contains(child) {
-	// 		contains = false
-	// 		return false
-	// 	}
-	// 	count++
-	// 	return true
-	// })
-	// return contains && count > 0
-
-	// if g.HasBBox() {
-	// 	return g.Rect().Contains(other)
-	// }
-	// switch other := other.(type) {
-	// case LineString:
-
-	// }
-
-	// otherRect := other.Rect()
-	// if otherRect.Min != otherRect.Max {
-	// 	return false
-	// }
-	// return polyLine(g.Coordinates).LineStringIntersectsPoint(
-	// 	polyPoint(otherRect.Min),
-	// )
+	return objectContains(g, other)
+}
+func (g LineString) Intersects(other Object) bool {
+	return objectIntersects(g, other)
 }
 
-func (g LineString) Intersects(other Object) bool {
-	if g.BBoxDefined() {
-		return g.Rect().Intersects(other)
-	} else if other.BBoxDefined() {
-		return other.Rect().Intersects(g)
-	}
-	if !g.Rect().IntersectsRect(other.Rect()) {
-		return false
-	}
+func (g LineString) primativeContains(other Object) bool {
+	pline := polyLine(g.Coordinates)
 	switch other := other.(type) {
 	case Position:
-		return polyLine(g.Coordinates).IntersectsPoint(polyPoint(other))
+		return polyPoint(other).InsideLine(pline)
 	case Rect:
-		return polyLine(g.Coordinates).IntersectsRect(polyRect(other))
+		return polyRect(other).InsideLine(pline)
 	case Point:
-		return polyLine(g.Coordinates).IntersectsPoint(
-			polyPoint(other.Coordinates),
-		)
+		return polyPoint(other.Coordinates).InsideLine(pline)
 	case LineString:
-		return polyLine(g.Coordinates).IntersectsLine(
-			polyLine(other.Coordinates),
-		)
+		return polyLine(other.Coordinates).InsideLine(pline)
 	case Polygon:
-		return polyLine(g.Coordinates).IntersectsPolygon(
-			polyPolygon(other.Coordinates),
-		)
+		return polyPolygon(other.Coordinates).InsideLine(pline)
 	}
-	// check types with children
-	var intersects bool
-	other.ForEach(func(child Object) bool {
-		if g.Intersects(child) {
-			intersects = true
-			return false
-		}
-		return true
-	})
-	return intersects
-
+	return false
+}
+func (g LineString) primativeIntersects(other Object) bool {
+	pline := polyLine(g.Coordinates)
+	switch other := other.(type) {
+	case Position:
+		return pline.IntersectsPoint(polyPoint(other))
+	case Rect:
+		return pline.IntersectsRect(polyRect(other))
+	case Point:
+		return pline.IntersectsPoint(polyPoint(other.Coordinates))
+	case LineString:
+		return pline.IntersectsLine(polyLine(other.Coordinates))
+	case Polygon:
+		return pline.IntersectsPolygon(polyPolygon(other.Coordinates))
+	}
+	return false
 }
 
 func loadJSONLineString(data string) (Object, error) {

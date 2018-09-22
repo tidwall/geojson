@@ -79,3 +79,13 @@ func TestPositionPoly(t *testing.T) {
 		}`, nil),
 	))
 }
+
+func BenchmarkPosition(t *testing.B) {
+	var r Object = R(0, 0, 20, 20)
+	var p Object = P(10, 10)
+	for i := 0; i < t.N; i++ {
+		if !r.Contains(p) {
+			t.Fatal("bad")
+		}
+	}
+}

@@ -136,12 +136,50 @@ func polyPolygon(polygon [][]Position) poly.Polygon {
 	return newPoly
 }
 
-func collectionContains(g, other Object, testBounds bool) bool {
-	if testBounds && g.BBoxDefined() {
+type primativeObject interface {
+	Object
+	primativeIntersects(other Object) bool
+	primativeContains(other Object) bool
+}
+
+func objectIntersects(g primativeObject, other Object) bool {
+	if g.BBoxDefined() {
+		return g.Rect().Intersects(other)
+	}
+	if other.BBoxDefined() {
+		return other.Rect().Intersects(g)
+	}
+	if !g.Rect().IntersectsRect(other.Rect()) {
+		return false
+	}
+	if other, ok := other.(primativeObject); ok {
+		return g.primativeIntersects(other)
+	}
+	return collectionIntersects(other, g, false)
+}
+
+func objectContains(g primativeObject, other Object) bool {
+	if g.BBoxDefined() {
 		return g.Rect().Contains(other)
 	}
+	if other.BBoxDefined() {
+		other = other.Rect()
+	}
+	if !g.Rect().ContainsRect(other.Rect()) {
+		return false
+	}
+	if other, ok := other.(primativeObject); ok {
+		return g.primativeContains(other)
+	}
+	return collectionContains(other, g, false)
+}
+
+func collectionContains(col, other Object, testBounds bool) bool {
+	if testBounds && col.BBoxDefined() {
+		return col.Rect().Contains(other)
+	}
 	var contains bool
-	g.ForEach(func(child Object) bool {
+	col.ForEach(func(child Object) bool {
 		if child.Contains(other) {
 			contains = true
 			return false
@@ -151,12 +189,12 @@ func collectionContains(g, other Object, testBounds bool) bool {
 	return contains
 }
 
-func collectionIntersects(g, other Object, testBounds bool) bool {
-	if testBounds && g.BBoxDefined() {
-		return g.Rect().Intersects(other)
+func collectionIntersects(col, other Object, testBounds bool) bool {
+	if testBounds && col.BBoxDefined() {
+		return col.Rect().Intersects(other)
 	}
 	var intersects bool
-	g.ForEach(func(child Object) bool {
+	col.ForEach(func(child Object) bool {
 		if child.Intersects(other) {
 			intersects = true
 			return false

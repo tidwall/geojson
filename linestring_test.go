@@ -18,7 +18,6 @@ func TestLineString(t *testing.T) {
 }
 
 func TestLineStringPoly(t *testing.T) {
-	return
 	ls := expectJSON(t, `{"type":"LineString","coordinates":[
 		[10,10],[20,20],[20,10]
 	]}`, nil)

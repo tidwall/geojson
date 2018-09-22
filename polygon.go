@@ -62,48 +62,43 @@ func (g Polygon) AppendJSON(dst []byte) []byte {
 func (g Polygon) ForEach(func(child Object) bool) {}
 
 func (g Polygon) Contains(other Object) bool {
-	if !g.Rect().Contains(other) {
-		return false
-	}
-	if g.BBoxDefined() {
-		return true
-	}
-	if other.BBoxDefined() {
-		other = other.Rect()
-	}
-	switch other := other.(type) {
-	case Position:
-		return polyPoint(other).InsidePolygon(polyPolygon(g.Coordinates))
-	case Rect:
-		return polyRect(other).InsidePolygon(polyPolygon(g.Coordinates))
-	case Point:
-		return polyPoint(other.Coordinates).InsidePolygon(
-			polyPolygon(g.Coordinates),
-		)
-	case LineString:
-		return polyLine(other.Coordinates).InsidePolygon(
-			polyPolygon(g.Coordinates),
-		)
-	case Polygon:
-		return polyPolygon(other.Coordinates).InsidePolygon(
-			polyPolygon(g.Coordinates),
-		)
-	}
-	// check types with children
-	var count int
-	contains := true
-	other.ForEach(func(child Object) bool {
-		if !g.Contains(child) {
-			contains = false
-			return false
-		}
-		count++
-		return true
-	})
-	return contains && count > 0
+	return objectContains(g, other)
 }
 func (g Polygon) Intersects(other Object) bool {
-	panic("unsupported")
+	return objectIntersects(g, other)
+}
+
+func (g Polygon) primativeContains(other Object) bool {
+	ppoly := polyPolygon(g.Coordinates)
+	switch other := other.(type) {
+	case Position:
+		return polyPoint(other).InsidePolygon(ppoly)
+	case Rect:
+		return polyRect(other).InsidePolygon(ppoly)
+	case Point:
+		return polyPoint(other.Coordinates).InsidePolygon(ppoly)
+	case LineString:
+		return polyLine(other.Coordinates).InsidePolygon(ppoly)
+	case Polygon:
+		return polyPolygon(other.Coordinates).InsidePolygon(ppoly)
+	}
+	return false
+}
+func (g Polygon) primativeIntersects(other Object) bool {
+	ppoly := polyPolygon(g.Coordinates)
+	switch other := other.(type) {
+	case Position:
+		return ppoly.IntersectsPoint(polyPoint(other))
+	case Rect:
+		return ppoly.IntersectsRect(polyRect(other))
+	case Point:
+		return ppoly.IntersectsPoint(polyPoint(other.Coordinates))
+	case LineString:
+		return ppoly.IntersectsLine(polyLine(other.Coordinates))
+	case Polygon:
+		return ppoly.IntersectsPolygon(polyPolygon(other.Coordinates))
+	}
+	return false
 }
 
 func loadJSONPolygon(data string) (Object, error) {

@@ -37,16 +37,43 @@ func (g Point) AppendJSON(dst []byte) []byte {
 func (g Point) ForEach(func(child Object) bool) {}
 
 func (g Point) Contains(other Object) bool {
-	if g.BBoxDefined() {
-		return g.Rect().Contains(other)
-	}
-	return g.Coordinates.Contains(other)
+	return objectContains(g, other)
 }
 func (g Point) Intersects(other Object) bool {
-	if g.BBoxDefined() {
-		return g.Rect().Intersects(other)
+	return objectIntersects(g, other)
+}
+
+func (g Point) primativeContains(other Object) bool {
+	ppoint := polyPoint(g.Coordinates)
+	switch other := other.(type) {
+	case Position:
+		return polyPoint(other).InsidePoint(ppoint)
+	case Rect:
+		return polyRect(other).InsidePoint(ppoint)
+	case Point:
+		return polyPoint(other.Coordinates).InsidePoint(ppoint)
+	case LineString:
+		return polyLine(other.Coordinates).InsidePoint(ppoint)
+	case Polygon:
+		return polyPolygon(other.Coordinates).InsidePoint(ppoint)
 	}
-	return g.Coordinates.Intersects(other)
+	return false
+}
+func (g Point) primativeIntersects(other Object) bool {
+	ppoint := polyPoint(g.Coordinates)
+	switch other := other.(type) {
+	case Position:
+		return ppoint.IntersectsPoint(polyPoint(other))
+	case Rect:
+		return ppoint.IntersectsRect(polyRect(other))
+	case Point:
+		return ppoint.IntersectsPoint(polyPoint(other.Coordinates))
+	case LineString:
+		return ppoint.IntersectsLine(polyLine(other.Coordinates))
+	case Polygon:
+		return ppoint.IntersectsPolygon(polyPolygon(other.Coordinates))
+	}
+	return false
 }
 
 func loadJSONPoint(data string) (Object, error) {

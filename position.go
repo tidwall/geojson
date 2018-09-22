@@ -19,46 +19,47 @@ func (posn Position) Rect() Rect {
 func (posn Position) Center() Position {
 	return posn
 }
-
 func (posn Position) AppendJSON(dst []byte) []byte {
 	return Point{Coordinates: posn}.AppendJSON(dst)
 }
 func (posn Position) Contains(other Object) bool {
-	rect := other.Rect()
-	return rect.Min == rect.Max && rect.Min == posn
+	return objectContains(posn, other)
 }
 func (posn Position) Intersects(other Object) bool {
+	return objectIntersects(posn, other)
+}
+
+func (posn Position) primativeContains(other Object) bool {
+	ppoint := polyPoint(posn)
 	switch other := other.(type) {
 	case Position:
-		return posn == other
+		return polyPoint(other).InsidePoint(ppoint)
 	case Rect:
-		return other.ContainsPosition(posn)
-	}
-	if !other.Rect().ContainsPosition(posn) {
-		return false
-	}
-	if other.BBoxDefined() {
-		return true
-	}
-	// geometry types
-	switch other := other.(type) {
+		return polyRect(other).InsidePoint(ppoint)
 	case Point:
-		return polyPoint(other.Coordinates) == polyPoint(posn)
+		return polyPoint(other.Coordinates).InsidePoint(ppoint)
 	case LineString:
-		return polyPoint(posn).IntersectsLine(polyLine(other.Coordinates))
+		return polyLine(other.Coordinates).InsidePoint(ppoint)
 	case Polygon:
-		return polyPoint(posn).IntersectsPolygon(polyPolygon(other.Coordinates))
+		return polyPolygon(other.Coordinates).InsidePoint(ppoint)
 	}
-	// check types with children
-	var intersects bool
-	other.ForEach(func(child Object) bool {
-		if posn.Intersects(child) {
-			intersects = true
-			return false
-		}
-		return true
-	})
-	return intersects
+	return false
+}
+func (posn Position) primativeIntersects(other Object) bool {
+	ppoint := polyPoint(posn)
+	switch other := other.(type) {
+	case Position:
+		return ppoint.IntersectsPoint(polyPoint(other))
+	case Rect:
+		return ppoint.IntersectsRect(polyRect(other))
+	case Point:
+		return ppoint.IntersectsPoint(polyPoint(other.Coordinates))
+	case LineString:
+		return ppoint.IntersectsLine(polyLine(other.Coordinates))
+	case Polygon:
+		return ppoint.IntersectsPolygon(polyPolygon(other.Coordinates))
+	}
+	return false
 }
 
 func (posn Position) ForEach(func(child Object) bool) {}

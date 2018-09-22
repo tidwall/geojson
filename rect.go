@@ -90,56 +90,44 @@ func (rect Rect) ContainsPosition(posn Position) bool {
 }
 
 func (rect Rect) Contains(other Object) bool {
-	// basic types
-	switch other := other.(type) {
-	case Position:
-		return rect.ContainsPosition(other)
-	case Rect:
-		return rect.ContainsRect(other)
-	}
-	// entire inner bounds must be fully contained inside of rect.
-	return rect.ContainsRect(other.Rect())
+	return objectContains(rect, other)
 }
 
 func (rect Rect) Intersects(other Object) bool {
-	// simple types
+	return objectIntersects(rect, other)
+}
+
+func (rect Rect) primativeContains(other Object) bool {
+	prect := polyRect(rect)
 	switch other := other.(type) {
 	case Position:
-		return rect.ContainsPosition(other)
+		return polyPoint(other).InsideRect(prect)
 	case Rect:
-		return rect.IntersectsRect(other)
-	}
-	// bbox types
-	if !rect.IntersectsRect(other.Rect()) {
-		// no intersection
-		return false
-	}
-	// yes they intersect
-	if other.BBoxDefined() {
-		// nothing more to check
-		return true
-	}
-	// geometry types
-	switch other := other.(type) {
+		return polyRect(other).InsideRect(prect)
 	case Point:
-		return polyPoint(other.Coordinates).InsideRect(polyRect(rect))
+		return polyPoint(other.Coordinates).InsideRect(prect)
 	case LineString:
-		return polyLine(other.Coordinates).IntersectsPolygon(
-			polyRect(rect).Polygon(),
-		)
+		return polyLine(other.Coordinates).InsideRect(prect)
 	case Polygon:
-		return polyRect(rect).IntersectsPolygon(polyPolygon(other.Coordinates))
+		return polyPolygon(other.Coordinates).InsideRect(prect)
 	}
-	// check types with children
-	var intersects bool
-	other.ForEach(func(child Object) bool {
-		if rect.Intersects(child) {
-			intersects = true
-			return false
-		}
-		return true
-	})
-	return intersects
+	return false
+}
+func (rect Rect) primativeIntersects(other Object) bool {
+	prect := polyRect(rect)
+	switch other := other.(type) {
+	case Position:
+		return prect.IntersectsPoint(polyPoint(other))
+	case Rect:
+		return prect.IntersectsRect(polyRect(other))
+	case Point:
+		return prect.IntersectsPoint(polyPoint(other.Coordinates))
+	case LineString:
+		return prect.IntersectsLine(polyLine(other.Coordinates))
+	case Polygon:
+		return prect.IntersectsPolygon(polyPolygon(other.Coordinates))
+	}
+	return false
 }
 
 func calcRectFromObjects(objs []Object) Rect {
