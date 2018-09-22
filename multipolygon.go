@@ -57,11 +57,11 @@ func (g MultiPolygon) ForEach(iter func(child Object) bool) {
 }
 
 func (g MultiPolygon) Contains(other Object) bool {
-	return collectionObjectContains(g, other)
+	return collectionContains(g, other, true)
 }
 
 func (g MultiPolygon) Intersects(other Object) bool {
-	return collectionObjectIntersects(g, other)
+	return collectionIntersects(g, other, true)
 }
 
 func loadJSONMultiPolygon(data string) (Object, error) {

@@ -34,14 +34,10 @@ func (posn Position) Intersects(other Object) bool {
 	case Rect:
 		return other.ContainsPosition(posn)
 	}
-	// bbox types
 	if !other.Rect().ContainsPosition(posn) {
-		// no intersection
 		return false
 	}
-	// yes they intersect
 	if other.BBoxDefined() {
-		// nothing more to check
 		return true
 	}
 	// geometry types
@@ -49,9 +45,7 @@ func (posn Position) Intersects(other Object) bool {
 	case Point:
 		return polyPoint(other.Coordinates) == polyPoint(posn)
 	case LineString:
-		return polyLine(other.Coordinates).IntersectsPoint(
-			polyPoint(posn),
-		)
+		return polyPoint(posn).IntersectsLine(polyLine(other.Coordinates))
 	case Polygon:
 		return polyPoint(posn).IntersectsPolygon(polyPolygon(other.Coordinates))
 	}

@@ -136,8 +136,8 @@ func polyPolygon(polygon [][]Position) poly.Polygon {
 	return newPoly
 }
 
-func collectionObjectContains(g, other Object) bool {
-	if g.BBoxDefined() {
+func collectionContains(g, other Object, testBounds bool) bool {
+	if testBounds && g.BBoxDefined() {
 		return g.Rect().Contains(other)
 	}
 	var contains bool
@@ -151,8 +151,8 @@ func collectionObjectContains(g, other Object) bool {
 	return contains
 }
 
-func collectionObjectIntersects(g, other Object) bool {
-	if g.BBoxDefined() {
+func collectionIntersects(g, other Object, testBounds bool) bool {
+	if testBounds && g.BBoxDefined() {
 		return g.Rect().Intersects(other)
 	}
 	var intersects bool

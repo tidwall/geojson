@@ -6,6 +6,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// BBox is a GeoJSON bbox member
 type BBox interface {
 	Defined() bool
 	Rect() Rect

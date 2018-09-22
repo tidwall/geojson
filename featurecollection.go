@@ -47,11 +47,11 @@ func (g FeatureCollection) ForEach(iter func(child Object) bool) {
 }
 
 func (g FeatureCollection) Contains(other Object) bool {
-	return collectionObjectContains(g, other)
+	return collectionContains(g, other, true)
 }
 
 func (g FeatureCollection) Intersects(other Object) bool {
-	return collectionObjectIntersects(g, other)
+	return collectionIntersects(g, other, true)
 }
 
 func loadJSONFeatureCollection(data string) (Object, error) {
