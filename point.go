@@ -10,7 +10,7 @@ type Point struct {
 	Extra       *Extra
 }
 
-func (g Point) HasBBox() bool {
+func (g Point) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
@@ -37,13 +37,13 @@ func (g Point) AppendJSON(dst []byte) []byte {
 func (g Point) ForEach(func(child Object) bool) {}
 
 func (g Point) Contains(other Object) bool {
-	if g.HasBBox() {
+	if g.BBoxDefined() {
 		return g.Rect().Contains(other)
 	}
 	return g.Coordinates.Contains(other)
 }
 func (g Point) Intersects(other Object) bool {
-	if g.HasBBox() {
+	if g.BBoxDefined() {
 		return g.Rect().Intersects(other)
 	}
 	return g.Coordinates.Intersects(other)

@@ -7,7 +7,7 @@ type MultiPolygon struct {
 	BBox     BBox
 }
 
-func (g MultiPolygon) HasBBox() bool {
+func (g MultiPolygon) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 

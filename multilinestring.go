@@ -7,7 +7,7 @@ type MultiLineString struct {
 	BBox        BBox
 }
 
-func (g MultiLineString) HasBBox() bool {
+func (g MultiLineString) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 

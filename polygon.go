@@ -8,7 +8,7 @@ type Polygon struct {
 	Extra       *Extra
 }
 
-func (g Polygon) HasBBox() bool {
+func (g Polygon) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
@@ -65,10 +65,10 @@ func (g Polygon) Contains(other Object) bool {
 	if !g.Rect().Contains(other) {
 		return false
 	}
-	if g.HasBBox() {
+	if g.BBoxDefined() {
 		return true
 	}
-	if other.HasBBox() {
+	if other.BBoxDefined() {
 		other = other.Rect()
 	}
 	switch other := other.(type) {

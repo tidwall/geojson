@@ -28,8 +28,8 @@ var (
 
 // Object is a geo object
 type Object interface {
-	// HasBBox return true if there is the GeoJSON "bbox" member is defined
-	HasBBox() bool
+	// BBoxDefined return true if there is a defined GeoJSON "bbox" member
+	BBoxDefined() bool
 	// Rect returns the outer minimum bounding rectangle
 	Rect() Rect
 	// Center returns the center position of the object
@@ -137,7 +137,7 @@ func polyPolygon(polygon [][]Position) poly.Polygon {
 }
 
 func collectionObjectContains(g, other Object) bool {
-	if g.HasBBox() {
+	if g.BBoxDefined() {
 		return g.Rect().Contains(other)
 	}
 	var contains bool
@@ -152,7 +152,7 @@ func collectionObjectContains(g, other Object) bool {
 }
 
 func collectionObjectIntersects(g, other Object) bool {
-	if g.HasBBox() {
+	if g.BBoxDefined() {
 		return g.Rect().Intersects(other)
 	}
 	var intersects bool

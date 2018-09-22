@@ -7,7 +7,7 @@ type FeatureCollection struct {
 	BBox     BBox
 }
 
-func (g FeatureCollection) HasBBox() bool {
+func (g FeatureCollection) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 

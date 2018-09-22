@@ -4,7 +4,7 @@ type Rect struct {
 	Min, Max Position
 }
 
-func (rect Rect) HasBBox() bool {
+func (rect Rect) BBoxDefined() bool {
 	return false
 }
 
@@ -115,7 +115,7 @@ func (rect Rect) Intersects(other Object) bool {
 		return false
 	}
 	// yes they intersect
-	if other.HasBBox() {
+	if other.BBoxDefined() {
 		// nothing more to check
 		return true
 	}

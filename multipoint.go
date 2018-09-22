@@ -7,7 +7,7 @@ type MultiPoint struct {
 	BBox   BBox
 }
 
-func (g MultiPoint) HasBBox() bool {
+func (g MultiPoint) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 

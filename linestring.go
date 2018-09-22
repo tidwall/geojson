@@ -8,7 +8,7 @@ type LineString struct {
 	Extra       *Extra
 }
 
-func (g LineString) HasBBox() bool {
+func (g LineString) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 func (g LineString) Rect() Rect {
@@ -107,9 +107,9 @@ func (g LineString) Contains(other Object) bool {
 }
 
 func (g LineString) Intersects(other Object) bool {
-	if g.HasBBox() {
+	if g.BBoxDefined() {
 		return g.Rect().Intersects(other)
-	} else if other.HasBBox() {
+	} else if other.BBoxDefined() {
 		return other.Rect().Intersects(g)
 	}
 	if !g.Rect().IntersectsRect(other.Rect()) {

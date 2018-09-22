@@ -8,7 +8,7 @@ type Position struct {
 	X, Y float64
 }
 
-func (posn Position) HasBBox() bool {
+func (posn Position) BBoxDefined() bool {
 	return false
 }
 
@@ -40,7 +40,7 @@ func (posn Position) Intersects(other Object) bool {
 		return false
 	}
 	// yes they intersect
-	if other.HasBBox() {
+	if other.BBoxDefined() {
 		// nothing more to check
 		return true
 	}

@@ -19,7 +19,7 @@ func TestPosition(t *testing.T) {
 
 func TestPositionPoly(t *testing.T) {
 	p := P(15, 15)
-	expect(t, !p.HasBBox())
+	expect(t, !p.BBoxDefined())
 	p.ForEach(func(Object) bool { panic("should not be reached") })
 	expect(t, p.Contains(P(15, 15)))
 	expect(t, p.Contains(R(15, 15, 15, 15)))

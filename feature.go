@@ -9,7 +9,7 @@ type Feature struct {
 	Properties string
 }
 
-func (g Feature) HasBBox() bool {
+func (g Feature) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 

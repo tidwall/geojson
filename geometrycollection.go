@@ -7,7 +7,7 @@ type GeometryCollection struct {
 	BBox       BBox
 }
 
-func (g GeometryCollection) HasBBox() bool {
+func (g GeometryCollection) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
