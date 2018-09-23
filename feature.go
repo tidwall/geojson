@@ -78,7 +78,13 @@ func loadJSONFeature(data string) (Object, error) {
 		g.Properties = combined[len(id)+1:]
 	}
 	if g.BBox == nil {
-		g.BBox = bboxRect{g.Rect()}
+		switch geometry := g.Geometry.(type) {
+		default:
+			g.BBox = bboxRect{g.Rect()}
+		case Position, Rect:
+		case Point:
+			g.BBox = geometry.BBox
+		}
 	}
 	return g, nil
 }

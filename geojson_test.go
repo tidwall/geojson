@@ -10,7 +10,7 @@ import (
 	"github.com/tidwall/pretty"
 )
 
-func expectJSON(t *testing.T, data string, exp error) Object {
+func expectJSON(t testing.TB, data string, exp error) Object {
 	if t != nil {
 		t.Helper()
 	}
@@ -39,7 +39,7 @@ func cleanJSON(data string) string {
 	return string(pretty.PrettyOptions(dst, &opts))
 }
 
-func testGeoJSONFile(t *testing.T, path string) Object {
+func testGeoJSONFile(t testing.TB, path string) Object {
 	t.Helper()
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

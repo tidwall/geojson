@@ -83,8 +83,9 @@ func TestPositionPoly(t *testing.T) {
 func BenchmarkPosition(t *testing.B) {
 	var r Object = R(0, 0, 20, 20)
 	var p Object = P(10, 10)
+	p = expectJSON(t, `{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2]}}`, nil)
 	for i := 0; i < t.N; i++ {
-		if !r.Contains(p) {
+		if !r.Intersects(p) {
 			t.Fatal("bad")
 		}
 	}

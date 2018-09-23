@@ -90,10 +90,30 @@ func (rect Rect) ContainsPosition(posn Position) bool {
 }
 
 func (rect Rect) Contains(other Object) bool {
+	switch other := other.(type) {
+	case Position:
+		return rect.ContainsPosition(other)
+	case Rect:
+		return rect.ContainsRect(other)
+	case Point:
+		if other.BBox == nil {
+			return rect.ContainsPosition(other.Coordinates)
+		}
+	}
 	return objectContains(rect, other)
 }
 
 func (rect Rect) Intersects(other Object) bool {
+	switch other := other.(type) {
+	case Position:
+		return rect.ContainsPosition(other)
+	case Rect:
+		return rect.IntersectsRect(other)
+	case Point:
+		if other.BBox == nil {
+			return rect.ContainsPosition(other.Coordinates)
+		}
+	}
 	return objectIntersects(rect, other)
 }
 
