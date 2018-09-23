@@ -70,7 +70,7 @@ func loadJSONFeature(data string) (Object, error) {
 		return nil, errGeometryMissing
 	}
 	var err error
-	g.Geometry, err = Load(rgeometry.Raw)
+	g.Geometry, err = Parse(rgeometry.Raw)
 	if err != nil {
 		return nil, err
 	}

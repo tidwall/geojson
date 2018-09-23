@@ -9,7 +9,7 @@ func TestObject(t *testing.T) {
 	expectJSON(t, `{}`, errTypeMissing)
 	expectJSON(t, `{"}`, errDataInvalid)
 	expectJSON(t, `{"type":null}`, errTypeInvalid)
-	_, err := Load(`{"type":"Square"}`)
+	_, err := Parse(`{"type":"Square"}`)
 	if err == nil {
 		t.Fatal("expected an error")
 	}

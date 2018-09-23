@@ -90,3 +90,16 @@ func TestPointPoly(t *testing.T) {
 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
 	).Intersects(P(12, 12)))
 }
+
+func TestPointAux(t *testing.T) {
+	expect(t, (Point{Coordinates: P(10, 10)}).Contains(Point{Coordinates: P(10, 10)}))
+	expect(t, !(Point{Coordinates: P(10, 10)}).Contains(Point{Coordinates: P(11, 10)}))
+	expect(t, (Point{Coordinates: P(10, 10)}).Contains(
+		LineString{Coordinates: []Position{P(10, 10)}},
+	))
+	expect(t, (Point{Coordinates: P(10, 10)}).Contains(
+		Polygon{Coordinates: [][]Position{{P(10, 10)}}},
+	))
+	expect(t, !(Point{Coordinates: P(10, 10)}).primativeContains(nil))
+	expect(t, !(Point{Coordinates: P(10, 10)}).primativeIntersects(nil))
+}

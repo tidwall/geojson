@@ -4,26 +4,32 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// Point GeoJSON type
 type Point struct {
 	Coordinates Position
 	BBox        BBox
 	Extra       *Extra
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g Point) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
+// Rect returns the outer minimum bounding rectangle
 func (g Point) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
 	}
 	return Rect{Min: g.Coordinates, Max: g.Coordinates}
 }
+
+// Center returns the center position of the object
 func (g Point) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g Point) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Point","coordinates":`...)
 	dst = appendJSONPosition(dst, g.Coordinates, g.Extra, 0)
@@ -38,9 +44,12 @@ func (g Point) AppendJSON(dst []byte) []byte {
 // ForEachChild iterates over child objects.
 func (g Point) ForEachChild(func(child Object) bool) {}
 
+// Contains returns true if object contains other object
 func (g Point) Contains(other Object) bool {
 	return objectContains(g, other)
 }
+
+// Intersects returns true if object intersects with other object
 func (g Point) Intersects(other Object) bool {
 	return objectIntersects(g, other)
 }

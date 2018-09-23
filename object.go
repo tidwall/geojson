@@ -36,11 +36,11 @@ type Object interface {
 	Center() Position
 	// AppendJSON appends the GeoJSON reprensentation to dst
 	AppendJSON(dst []byte) []byte
-	// ForEach iterates over child objects.
+	// ForEachChild iterates over child objects.
 	ForEachChild(func(child Object) bool)
 	// Contains returns true if object contains other object
 	Contains(other Object) bool
-	// Contains returns true if object intersects with other object
+	// Intersects returns true if object intersects with other object
 	Intersects(other Object) bool
 }
 
@@ -52,7 +52,8 @@ var _ = []Object{
 	Feature{}, FeatureCollection{},
 }
 
-func Load(data string) (Object, error) {
+// Parse a GeoJSON object
+func Parse(data string) (Object, error) {
 	// look at the first byte
 	for i := 0; ; i++ {
 		if len(data) == 0 {

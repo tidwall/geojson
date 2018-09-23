@@ -14,7 +14,7 @@ func expectJSON(t testing.TB, data string, exp error) Object {
 	if t != nil {
 		t.Helper()
 	}
-	obj, err := Load(data)
+	obj, err := Parse(data)
 	if err != exp {
 		if t == nil {
 			panic(fmt.Sprintf("expected '%v', got '%v'", exp, err))
@@ -45,7 +45,7 @@ func testGeoJSONFile(t testing.TB, path string) Object {
 	if err != nil {
 		t.Fatal(err)
 	}
-	obj, err := Load(string(data))
+	obj, err := Parse(string(data))
 	if err != nil {
 		t.Fatal(err)
 	}

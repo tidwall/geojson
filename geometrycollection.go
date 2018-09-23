@@ -68,7 +68,7 @@ func loadJSONGeometryCollection(data string) (Object, error) {
 	var err error
 	rgeometries.ForEach(func(key, value gjson.Result) bool {
 		var f Object
-		f, err = Load(value.Raw)
+		f, err = Parse(value.Raw)
 		if err != nil {
 			return false
 		}
