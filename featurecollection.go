@@ -2,15 +2,18 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
+// FeatureCollection GeoJSON type
 type FeatureCollection struct {
 	Features []Object
 	BBox     BBox
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g FeatureCollection) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
+// Rect returns the outer minimum bounding rectangle
 func (g FeatureCollection) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -18,10 +21,12 @@ func (g FeatureCollection) Rect() Rect {
 	return calcRectFromObjects(g.Features)
 }
 
+// Center returns the center position of the object
 func (g FeatureCollection) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g FeatureCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"FeatureCollection","features":[`...)
 	for i := 0; i < len(g.Features); i++ {
@@ -48,10 +53,12 @@ func (g FeatureCollection) ForEachChild(iter func(child Object) bool) {
 	}
 }
 
+// Contains returns true if object contains other object
 func (g FeatureCollection) Contains(other Object) bool {
 	return collectionContains(g, other)
 }
 
+// Intersects returns true if object intersects with other object
 func (g FeatureCollection) Intersects(other Object) bool {
 	return collectionIntersects(g, other)
 }

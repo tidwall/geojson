@@ -2,15 +2,18 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
+// MultiPolygon GeoJSON type
 type MultiPolygon struct {
 	Polygons []Polygon
 	BBox     BBox
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g MultiPolygon) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
+// Rect returns the outer minimum bounding rectangle
 func (g MultiPolygon) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -26,10 +29,12 @@ func (g MultiPolygon) Rect() Rect {
 	return rect
 }
 
+// Center returns the center position of the object
 func (g MultiPolygon) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g MultiPolygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiPolygon","coordinates":[`...)
 	for i, g := range g.Polygons {
@@ -57,10 +62,12 @@ func (g MultiPolygon) ForEachChild(iter func(child Object) bool) {
 	}
 }
 
+// Contains returns true if object contains other object
 func (g MultiPolygon) Contains(other Object) bool {
 	return collectionContains(g, other)
 }
 
+// Intersects returns true if object intersects with other object
 func (g MultiPolygon) Intersects(other Object) bool {
 	return collectionIntersects(g, other)
 }

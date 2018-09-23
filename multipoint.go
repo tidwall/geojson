@@ -2,15 +2,18 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
+// MultiPoint GeoJSON type
 type MultiPoint struct {
 	Points []Point
 	BBox   BBox
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g MultiPoint) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
+// Rect returns the outer minimum bounding rectangle
 func (g MultiPoint) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -26,10 +29,12 @@ func (g MultiPoint) Rect() Rect {
 	return rect
 }
 
+// Center returns the center position of the object
 func (g MultiPoint) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g MultiPoint) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiPoint","coordinates":[`...)
 	for i, g := range g.Points {
@@ -57,10 +62,12 @@ func (g MultiPoint) ForEachChild(iter func(child Object) bool) {
 	}
 }
 
+// Contains returns true if object contains other object
 func (g MultiPoint) Contains(other Object) bool {
 	return collectionContains(g, other)
 }
 
+// Intersects returns true if object intersects with other object
 func (g MultiPoint) Intersects(other Object) bool {
 	return collectionIntersects(g, other)
 }

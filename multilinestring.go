@@ -2,15 +2,18 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
+// MultiLineString GeoJSON type
 type MultiLineString struct {
 	LineStrings []LineString
 	BBox        BBox
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g MultiLineString) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
+// Rect returns the outer minimum bounding rectangle
 func (g MultiLineString) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -26,10 +29,12 @@ func (g MultiLineString) Rect() Rect {
 	return rect
 }
 
+// Center returns the center position of the object
 func (g MultiLineString) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g MultiLineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiLineString","coordinates":[`...)
 	for i, g := range g.LineStrings {
@@ -57,10 +62,12 @@ func (g MultiLineString) ForEachChild(iter func(child Object) bool) {
 	}
 }
 
+// Contains returns true if object contains other object
 func (g MultiLineString) Contains(other Object) bool {
 	return collectionContains(g, other)
 }
 
+// Intersects returns true if object intersects with other object
 func (g MultiLineString) Intersects(other Object) bool {
 	return collectionIntersects(g, other)
 }

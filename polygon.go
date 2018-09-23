@@ -2,16 +2,19 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
+// Polygon GeoJSON type
 type Polygon struct {
 	Coordinates [][]Position
 	BBox        BBox
 	Extra       *Extra
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g Polygon) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
+// Rect returns the outer minimum bounding rectangle
 func (g Polygon) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -30,10 +33,12 @@ func (g Polygon) Rect() Rect {
 	return rect
 }
 
+// Center returns the center position of the object
 func (g Polygon) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g Polygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Polygon","coordinates":[`...)
 	var n int
@@ -63,9 +68,12 @@ func (g Polygon) AppendJSON(dst []byte) []byte {
 // ForEachChild iterates over child objects.
 func (g Polygon) ForEachChild(func(child Object) bool) {}
 
+// Contains returns true if object contains other object
 func (g Polygon) Contains(other Object) bool {
 	return objectContains(g, other)
 }
+
+// Intersects returns true if object intersects with other object
 func (g Polygon) Intersects(other Object) bool {
 	return objectIntersects(g, other)
 }
