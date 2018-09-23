@@ -45,4 +45,10 @@ func TestLineStringPoly(t *testing.T) {
 	],"bbox":[10,10,20,20]}`, nil)
 	expect(t, lsb.Contains(P(12, 13)))
 
+	expect(t, ls.Contains(Point{Coordinates: P(20, 20)}))
+	expect(t, ls.Contains(Polygon{Coordinates: [][]Position{{P(20, 20)}}}))
+	expect(t, ls.Intersects(Polygon{Coordinates: [][]Position{{P(20, 20)}}}))
+	expect(t, !ls.(LineString).primativeContains(nil))
+	expect(t, !ls.(LineString).primativeIntersects(nil))
+
 }

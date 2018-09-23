@@ -2,15 +2,19 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
+// LineString GeoJSON type
 type LineString struct {
 	Coordinates []Position
 	BBox        BBox
 	Extra       *Extra
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g LineString) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
+
+// Rect returns the outer minimum bounding rectangle
 func (g LineString) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
@@ -27,10 +31,12 @@ func (g LineString) Rect() Rect {
 	return rect
 }
 
+// Center returns the center position of the object
 func (g LineString) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g LineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"LineString","coordinates":[`...)
 	for i, p := range g.Coordinates {
@@ -51,9 +57,12 @@ func (g LineString) AppendJSON(dst []byte) []byte {
 // ForEachChild iterates over child objects.
 func (g LineString) ForEachChild(func(child Object) bool) {}
 
+// Contains returns true if object contains other object
 func (g LineString) Contains(other Object) bool {
 	return objectContains(g, other)
 }
+
+// Intersects returns true if object intersects with other object
 func (g LineString) Intersects(other Object) bool {
 	return objectIntersects(g, other)
 }
