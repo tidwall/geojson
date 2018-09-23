@@ -12,3 +12,9 @@ func TestGeometryCollection(t *testing.T) {
 	expectJSON(t, `{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[1,2,3]}],"bbox":null}`, errBBoxInvalid)
 	expectJSON(t, `{"type":"GeometryCollection","geometries":[{"type":"Point"}]}`, errCoordinatesMissing)
 }
+
+func TestGeometryCollectionPoly(t *testing.T) {
+	p := expectJSON(t, `{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[1,2]}]}`, nil)
+	expect(t, p.Intersects(P(1, 2)))
+	expect(t, p.Contains(P(1, 2)))
+}

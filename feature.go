@@ -100,10 +100,3 @@ func loadJSONFeature(data string) (Object, error) {
 	}
 	return g, nil
 }
-
-func resultCopy(res gjson.Result) string {
-	if len(res.Raw) > 0 {
-		return string([]byte(res.Raw))
-	}
-	return ""
-}

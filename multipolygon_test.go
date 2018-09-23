@@ -24,3 +24,17 @@ func TestMultiPolygon(t *testing.T) {
 	expectJSON(t, `{"type":"MultiPolygon","coordinates":null}`, errCoordinatesInvalid)
 	expectJSON(t, `{"type":"MultiPolygon","coordinates":[1,null]}`, errCoordinatesInvalid)
 }
+
+func TestMultiPolygonPoly(t *testing.T) {
+	p := expectJSON(t, `{"type":"MultiPolygon","coordinates":[
+		[
+			[[10,10],[20,20],[30,10],[10,10]]
+		],[
+			[[100,100],[200,200],[300,100],[100,100]]
+		]
+	]}`, nil)
+	expect(t, p.Intersects(P(15, 15)))
+	expect(t, p.Contains(P(15, 15)))
+	expect(t, p.Contains(P(150, 150)))
+	expect(t, !p.Contains(P(40, 40)))
+}

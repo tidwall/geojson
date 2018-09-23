@@ -12,3 +12,9 @@ func TestFeatureCollection(t *testing.T) {
 	expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point","coordinates":[1,2,3]}],"bbox":null}`, errBBoxInvalid)
 	expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point"}]}`, errCoordinatesMissing)
 }
+
+func TestFeatureCollectionPoly(t *testing.T) {
+	p := expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point","coordinates":[1,2]}]}`, nil)
+	expect(t, p.Intersects(P(1, 2)))
+	expect(t, p.Contains(P(1, 2)))
+}
