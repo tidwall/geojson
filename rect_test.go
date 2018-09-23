@@ -163,5 +163,4 @@ func TestRectAux(t *testing.T) {
 	expect(t, !R(10, 10, 20, 20).primativeContains(nil))
 	expect(t, !R(10, 10, 20, 20).primativeIntersects(nil))
 	expect(t, R(10, 10, 20, 20).Within(R(-100, -100, 1000, 1000)))
-
 }
