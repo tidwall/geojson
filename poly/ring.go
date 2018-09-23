@@ -1,6 +1,8 @@
 package poly
 
-import "strconv"
+import (
+	"strconv"
+)
 
 // Ring is series of points that make up a closed shape
 type Ring []Point

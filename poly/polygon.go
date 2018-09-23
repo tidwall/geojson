@@ -29,7 +29,7 @@ func (polygon Polygon) InsideRing(ring Ring) bool {
 // InsidePolygon tests if polygon is inside another polygon
 func (polygon Polygon) InsidePolygon(other Polygon) bool {
 	// TODO: better hole detection
-	return polygon.Exterior.InsidePolygon(polygon)
+	return polygon.Exterior.InsidePolygon(other)
 }
 
 // IntersectsPoint tests if polygon intersects a point
