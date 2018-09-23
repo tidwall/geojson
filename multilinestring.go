@@ -48,7 +48,8 @@ func (g MultiLineString) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-func (g MultiLineString) ForEach(iter func(child Object) bool) {
+// ForEachChild iterates over child objects.
+func (g MultiLineString) ForEachChild(iter func(child Object) bool) {
 	for _, child := range g.LineStrings {
 		if !iter(child) {
 			return

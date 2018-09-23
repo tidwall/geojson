@@ -38,7 +38,9 @@ func (g GeometryCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
-func (g GeometryCollection) ForEach(iter func(child Object) bool) {
+
+// ForEachChild iterates over child objects.
+func (g GeometryCollection) ForEachChild(iter func(child Object) bool) {
 	for _, child := range g.Geometries {
 		if !iter(child) {
 			return

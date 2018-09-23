@@ -1,13 +1,16 @@
 package geojson
 
+// Rect is a simple rectangle
 type Rect struct {
 	Min, Max Position
 }
 
+// BBoxDefined returns true when a bbox has been defined
 func (rect Rect) BBoxDefined() bool {
 	return false
 }
 
+// Rect returns the outer rectangle
 func (rect Rect) Rect() Rect {
 	return rect
 }
@@ -20,6 +23,7 @@ func (rect Rect) Center() Position {
 	}
 }
 
+// AppendJSON generates json representation and appends to destination
 func (rect Rect) AppendJSON(dst []byte) []byte {
 	if rect.Min == rect.Max {
 		return rect.Min.AppendJSON(dst)
@@ -32,10 +36,11 @@ func (rect Rect) AppendJSON(dst []byte) []byte {
 		rect.Min,
 	}}}).AppendJSON(dst)
 }
-func (rect Rect) ForEach(func(child Object) bool) {
 
-}
+// ForEachChild iterates over children
+func (rect Rect) ForEachChild(func(child Object) bool) {}
 
+// Expand expands the rect to include a position
 func (rect Rect) Expand(posn Position) Rect {
 	if posn.X < rect.Min.X {
 		rect.Min.X = posn.X
@@ -50,6 +55,7 @@ func (rect Rect) Expand(posn Position) Rect {
 	return rect
 }
 
+// Union joins a two rects and returns a new rect
 func (rect Rect) Union(rect2 Rect) Rect {
 	if rect2.Min.X < rect.Min.X {
 		rect.Min.X = rect2.Min.X
@@ -64,6 +70,7 @@ func (rect Rect) Union(rect2 Rect) Rect {
 	return rect
 }
 
+// ContainsRect returns true when rect contains other rect
 func (rect Rect) ContainsRect(other Rect) bool {
 	if other.Min.X < rect.Min.X || other.Max.X > rect.Max.X {
 		return false
@@ -74,6 +81,7 @@ func (rect Rect) ContainsRect(other Rect) bool {
 	return true
 }
 
+// IntersectsRect returns true when rect intersects other rect
 func (rect Rect) IntersectsRect(other Rect) bool {
 	if other.Min.X > rect.Max.X || other.Max.X < rect.Min.X {
 		return false
@@ -84,36 +92,63 @@ func (rect Rect) IntersectsRect(other Rect) bool {
 	return true
 }
 
+// ContainsPosition returns true when rect contains position
 func (rect Rect) ContainsPosition(posn Position) bool {
 	return posn.X >= rect.Min.X && posn.X <= rect.Max.X &&
 		posn.Y >= rect.Min.Y && posn.Y <= rect.Max.Y
 }
 
+// Contains returns true when rect contains object
 func (rect Rect) Contains(other Object) bool {
-	switch other := other.(type) {
-	case Position:
-		return rect.ContainsPosition(other)
-	case Rect:
-		return rect.ContainsRect(other)
-	case Point:
-		if other.BBox == nil {
-			return rect.ContainsPosition(other.Coordinates)
-		}
-	}
+	// // hot paths
+	// switch other := other.(type) {
+	// case Position:
+	// 	return rect.ContainsPosition(other)
+	// case Rect:
+	// 	return rect.ContainsRect(other)
+	// case Point:
+	// 	if other.BBox == nil {
+	// 		return rect.ContainsPosition(other.Coordinates)
+	// 	}
+	// case Feature:
+	// 	if other.BBox == nil {
+	// 		switch other := other.Geometry.(type) {
+	// 		case Point:
+	// 			if other.BBox == nil {
+	// 				return rect.ContainsPosition(other.Coordinates)
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// standard algo
 	return objectContains(rect, other)
 }
 
+// Intersects returns true when rect intersects object
 func (rect Rect) Intersects(other Object) bool {
-	switch other := other.(type) {
-	case Position:
-		return rect.ContainsPosition(other)
-	case Rect:
-		return rect.IntersectsRect(other)
-	case Point:
-		if other.BBox == nil {
-			return rect.ContainsPosition(other.Coordinates)
-		}
-	}
+	// // hot paths
+	// switch other := other.(type) {
+	// case Position:
+	// 	return rect.ContainsPosition(other)
+	// case Rect:
+	// 	return rect.IntersectsRect(other)
+	// case Point:
+	// 	if other.BBox == nil {
+	// 		return rect.ContainsPosition(other.Coordinates)
+	// 	}
+	// case Feature:
+	// 	if other.BBox == nil {
+	// 		switch other := other.Geometry.(type) {
+	// 		case Position:
+	// 			return rect.ContainsPosition(other)
+	// 		case Point:
+	// 			if other.BBox == nil {
+	// 				return rect.ContainsPosition(other.Coordinates)
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// standard algo
 	return objectIntersects(rect, other)
 }
 

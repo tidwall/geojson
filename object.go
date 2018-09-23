@@ -36,10 +36,8 @@ type Object interface {
 	Center() Position
 	// AppendJSON appends the GeoJSON reprensentation to dst
 	AppendJSON(dst []byte) []byte
-	// ForEach iterates over child objects. Used for GeoJSON types:
-	//   MultiPoint, MultiLineString, MultiPolygon, Feature, FeatureCollection,
-	//   and GeometryCollection
-	ForEach(func(child Object) bool)
+	// ForEach iterates over child objects.
+	ForEachChild(func(child Object) bool)
 	// Contains returns true if object contains other object
 	Contains(other Object) bool
 	// Contains returns true if object intersects with other object
@@ -179,7 +177,7 @@ func collectionContains(col, other Object, testBounds bool) bool {
 		return col.Rect().Contains(other)
 	}
 	var contains bool
-	col.ForEach(func(child Object) bool {
+	col.ForEachChild(func(child Object) bool {
 		if child.Contains(other) {
 			contains = true
 			return false
@@ -194,7 +192,7 @@ func collectionIntersects(col, other Object, testBounds bool) bool {
 		return col.Rect().Intersects(other)
 	}
 	var intersects bool
-	col.ForEach(func(child Object) bool {
+	col.ForEachChild(func(child Object) bool {
 		if child.Intersects(other) {
 			intersects = true
 			return false

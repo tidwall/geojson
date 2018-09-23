@@ -59,7 +59,9 @@ func (g Polygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
-func (g Polygon) ForEach(func(child Object) bool) {}
+
+// ForEachChild iterates over child objects.
+func (g Polygon) ForEachChild(func(child Object) bool) {}
 
 func (g Polygon) Contains(other Object) bool {
 	return objectContains(g, other)

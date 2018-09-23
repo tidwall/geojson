@@ -47,7 +47,9 @@ func (g LineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
-func (g LineString) ForEach(func(child Object) bool) {}
+
+// ForEachChild iterates over child objects.
+func (g LineString) ForEachChild(func(child Object) bool) {}
 
 func (g LineString) Contains(other Object) bool {
 	return objectContains(g, other)

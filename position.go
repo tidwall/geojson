@@ -62,7 +62,8 @@ func (posn Position) primativeIntersects(other Object) bool {
 	return false
 }
 
-func (posn Position) ForEach(func(child Object) bool) {}
+// ForEachChild iterates over child objects.
+func (posn Position) ForEachChild(func(child Object) bool) {}
 
 func appendJSONPosition(dst []byte, posn Position, ex *Extra, idx int) []byte {
 	dst = append(dst, '[')

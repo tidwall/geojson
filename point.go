@@ -34,7 +34,9 @@ func (g Point) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
-func (g Point) ForEach(func(child Object) bool) {}
+
+// ForEachChild iterates over child objects.
+func (g Point) ForEachChild(func(child Object) bool) {}
 
 func (g Point) Contains(other Object) bool {
 	return objectContains(g, other)

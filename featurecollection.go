@@ -38,7 +38,9 @@ func (g FeatureCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 }
-func (g FeatureCollection) ForEach(iter func(child Object) bool) {
+
+// ForEachChild iterates over child objects.
+func (g FeatureCollection) ForEachChild(iter func(child Object) bool) {
 	for _, child := range g.Features {
 		if !iter(child) {
 			return

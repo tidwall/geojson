@@ -48,7 +48,8 @@ func (g MultiPoint) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-func (g MultiPoint) ForEach(iter func(child Object) bool) {
+// ForEachChild iterates over child objects.
+func (g MultiPoint) ForEachChild(iter func(child Object) bool) {
 	for _, child := range g.Points {
 		if !iter(child) {
 			return

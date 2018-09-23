@@ -91,3 +91,23 @@ func TestGeoJSON(t *testing.T) {
 		testGeoJSONFile(t, filepath.Join("test_files", fi.Name()))
 	}
 }
+
+func BenchmarkFeature(t *testing.B) {
+	var r Object = R(0, 0, 20, 20)
+	var p Object = P(10, 10)
+	p = expectJSON(t, `{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2]}}`, nil)
+	for i := 0; i < t.N; i++ {
+		if !r.Intersects(p) {
+			t.Fatal("bad")
+		}
+	}
+}
+func BenchmarkPosition(t *testing.B) {
+	var r Object = R(0, 0, 20, 20)
+	var p Object = P(10, 10)
+	for i := 0; i < t.N; i++ {
+		if !r.Intersects(p) {
+			t.Fatal("bad")
+		}
+	}
+}

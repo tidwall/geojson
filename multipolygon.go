@@ -48,7 +48,8 @@ func (g MultiPolygon) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-func (g MultiPolygon) ForEach(iter func(child Object) bool) {
+// ForEachChild iterates over child objects.
+func (g MultiPolygon) ForEachChild(iter func(child Object) bool) {
 	for _, child := range g.Polygons {
 		if !iter(child) {
 			return

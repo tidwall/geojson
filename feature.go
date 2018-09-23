@@ -2,6 +2,7 @@ package geojson
 
 import "github.com/tidwall/gjson"
 
+// Feature GeoJSON type
 type Feature struct {
 	BBox       BBox
 	Geometry   Object
@@ -9,20 +10,25 @@ type Feature struct {
 	Properties string
 }
 
+// BBoxDefined return true if there is a defined GeoJSON "bbox" member
 func (g Feature) BBoxDefined() bool {
 	return g.BBox != nil && g.BBox.Defined()
 }
 
+// Rect returns the outer minimum bounding rectangle
 func (g Feature) Rect() Rect {
 	if g.BBox != nil {
 		return g.BBox.Rect()
 	}
 	return g.Geometry.Rect()
 }
+
+// Center returns the center position of the object
 func (g Feature) Center() Position {
 	return g.Rect().Center()
 }
 
+// AppendJSON appends the GeoJSON reprensentation to dst
 func (g Feature) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Feature","geometry":`...)
 	dst = g.Geometry.AppendJSON(dst)
@@ -42,10 +48,12 @@ func (g Feature) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-func (g Feature) ForEach(iter func(child Object) bool) {
+// ForEachChild iterates over child objects.
+func (g Feature) ForEachChild(iter func(child Object) bool) {
 	iter(g.Geometry)
 }
 
+// Contains returns true if object contains other object
 func (g Feature) Contains(other Object) bool {
 	return collectionContains(g, other, true)
 }
@@ -82,8 +90,11 @@ func loadJSONFeature(data string) (Object, error) {
 		default:
 			g.BBox = bboxRect{g.Rect()}
 		case Position, Rect:
+			// ignore bbox generation for simple types
 		case Point:
-			g.BBox = geometry.BBox
+			if geometry.BBox != nil {
+				g.BBox = bboxRect{g.Rect()}
+			}
 		}
 	}
 	return g, nil

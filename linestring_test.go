@@ -22,7 +22,7 @@ func TestLineStringPoly(t *testing.T) {
 		[10,10],[20,20],[20,10]
 	]}`, nil)
 	expect(t, !ls.BBoxDefined())
-	ls.ForEach(func(Object) bool { panic("should not be reached") })
+	ls.ForEachChild(func(Object) bool { panic("should not be reached") })
 	expect(t, ls.(LineString).Contains(ls))
 	expect(t, ls.Contains(P(10, 10)))
 	expect(t, ls.Contains(P(15, 15)))

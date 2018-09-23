@@ -73,7 +73,7 @@ func TestRect(t *testing.T) {
 func TestRectPoly(t *testing.T) {
 	r := R(10, 10, 20, 20)
 	expect(t, !r.BBoxDefined())
-	r.ForEach(func(Object) bool { panic("should not be reached") })
+	r.ForEachChild(func(Object) bool { panic("should not be reached") })
 	expect(t, r.ContainsPosition(P(15, 15)))
 	expect(t, r.ContainsPosition(P(10, 10)))
 	expect(t, r.ContainsPosition(P(20, 20)))

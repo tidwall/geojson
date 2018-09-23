@@ -18,7 +18,7 @@ func TestPoint(t *testing.T) {
 func TestPointPoly(t *testing.T) {
 	p := expectJSON(t, `{"type":"Point","coordinates":[15,15,0]}`, nil)
 	expect(t, !p.BBoxDefined())
-	p.ForEach(func(Object) bool { panic("should not be reached") })
+	p.ForEachChild(func(Object) bool { panic("should not be reached") })
 	expect(t, p.Contains(P(15, 15)))
 	expect(t, p.Contains(R(15, 15, 15, 15)))
 	expect(t, !p.Contains(R(10, 10, 15, 15)))
