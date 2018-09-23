@@ -79,3 +79,16 @@ func TestPositionPoly(t *testing.T) {
 		}`, nil),
 	))
 }
+
+func TestPositionAux(t *testing.T) {
+	expect(t, P(10, 10).Contains(Point{Coordinates: P(10, 10)}))
+	expect(t, !P(10, 10).Contains(Point{Coordinates: P(11, 10)}))
+	expect(t, P(10, 10).Contains(
+		LineString{Coordinates: []Position{P(10, 10)}},
+	))
+	expect(t, P(10, 10).Contains(
+		Polygon{Coordinates: [][]Position{{P(10, 10)}}},
+	))
+	expect(t, !P(10, 10).primativeContains(nil))
+	expect(t, !P(10, 10).primativeIntersects(nil))
+}

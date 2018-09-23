@@ -49,11 +49,11 @@ func (g GeometryCollection) ForEachChild(iter func(child Object) bool) {
 }
 
 func (g GeometryCollection) Contains(other Object) bool {
-	return collectionContains(g, other, true)
+	return collectionContains(g, other)
 }
 
 func (g GeometryCollection) Intersects(other Object) bool {
-	return collectionIntersects(g, other, true)
+	return collectionIntersects(g, other)
 }
 
 func loadJSONGeometryCollection(data string) (Object, error) {

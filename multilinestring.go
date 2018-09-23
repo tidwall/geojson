@@ -58,11 +58,11 @@ func (g MultiLineString) ForEachChild(iter func(child Object) bool) {
 }
 
 func (g MultiLineString) Contains(other Object) bool {
-	return collectionContains(g, other, true)
+	return collectionContains(g, other)
 }
 
 func (g MultiLineString) Intersects(other Object) bool {
-	return collectionIntersects(g, other, true)
+	return collectionIntersects(g, other)
 }
 
 func loadJSONMultiLineString(data string) (Object, error) {

@@ -58,11 +58,11 @@ func (g MultiPoint) ForEachChild(iter func(child Object) bool) {
 }
 
 func (g MultiPoint) Contains(other Object) bool {
-	return collectionContains(g, other, true)
+	return collectionContains(g, other)
 }
 
 func (g MultiPoint) Intersects(other Object) bool {
-	return collectionIntersects(g, other, true)
+	return collectionIntersects(g, other)
 }
 
 func loadJSONMultiPoint(data string) (Object, error) {

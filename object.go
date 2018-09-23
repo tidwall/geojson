@@ -154,7 +154,15 @@ func objectIntersects(g primativeObject, other Object) bool {
 	if other, ok := other.(primativeObject); ok {
 		return g.primativeIntersects(other)
 	}
-	return collectionIntersects(other, g, false)
+	var intersects bool
+	other.ForEachChild(func(child Object) bool {
+		if g.Intersects(child) {
+			intersects = true
+			return false
+		}
+		return true
+	})
+	return intersects
 }
 
 func objectContains(g primativeObject, other Object) bool {
@@ -170,11 +178,19 @@ func objectContains(g primativeObject, other Object) bool {
 	if other, ok := other.(primativeObject); ok {
 		return g.primativeContains(other)
 	}
-	return collectionContains(other, g, false)
+	var contains bool
+	other.ForEachChild(func(child Object) bool {
+		if g.Contains(child) {
+			contains = true
+			return false
+		}
+		return true
+	})
+	return contains
 }
 
-func collectionContains(col, other Object, testBounds bool) bool {
-	if testBounds && col.BBoxDefined() {
+func collectionContains(col, other Object) bool {
+	if col.BBoxDefined() {
 		return col.Rect().Contains(other)
 	}
 	var contains bool
@@ -188,8 +204,8 @@ func collectionContains(col, other Object, testBounds bool) bool {
 	return contains
 }
 
-func collectionIntersects(col, other Object, testBounds bool) bool {
-	if testBounds && col.BBoxDefined() {
+func collectionIntersects(col, other Object) bool {
+	if col.BBoxDefined() {
 		return col.Rect().Intersects(other)
 	}
 	var intersects bool

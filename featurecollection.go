@@ -49,11 +49,11 @@ func (g FeatureCollection) ForEachChild(iter func(child Object) bool) {
 }
 
 func (g FeatureCollection) Contains(other Object) bool {
-	return collectionContains(g, other, true)
+	return collectionContains(g, other)
 }
 
 func (g FeatureCollection) Intersects(other Object) bool {
-	return collectionIntersects(g, other, true)
+	return collectionIntersects(g, other)
 }
 
 func loadJSONFeatureCollection(data string) (Object, error) {

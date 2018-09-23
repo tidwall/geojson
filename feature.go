@@ -55,11 +55,12 @@ func (g Feature) ForEachChild(iter func(child Object) bool) {
 
 // Contains returns true if object contains other object
 func (g Feature) Contains(other Object) bool {
-	return collectionContains(g, other, true)
+	return collectionContains(g, other)
 }
 
+// Intersects returns true if object intersects other object
 func (g Feature) Intersects(other Object) bool {
-	return collectionIntersects(g, other, true)
+	return collectionIntersects(g, other)
 }
 
 // loadJSONFeature will return a valid GeoJSON object.

@@ -136,4 +136,30 @@ func TestRectPoly(t *testing.T) {
 		}`, nil),
 	))
 
+	expect(t, R(9, 10, 20, 20).Contains(
+		expectJSON(t, `{"type":"Feature","geometry":
+			{"type":"Polygon","coordinates":[
+				[[10,10],[10,20],[20,20],[20,10],[10,10]]
+			]}
+		}`, nil),
+	))
+
+}
+
+func TestRectAux(t *testing.T) {
+	expect(t, R(10, 10, 20, 20).Contains(
+		expectJSON(t, `{"type":"Feature","geometry":
+			{"type":"Polygon","coordinates":[
+				[[10,10],[10,20],[20,20],[20,10],[10,10]]
+			]}
+		}`, nil),
+	))
+	expect(t, R(0, 0, 20, 20).primativeContains(
+		expectJSON(t, `{"type":"LineString","coordinates":[[5,5],[8,8]]}`, nil),
+	))
+	expect(t, !R(10, 10, 20, 20).primativeContains(
+		expectJSON(t, `{"type":"LineString","coordinates":[[5,5],[8,8]]}`, nil),
+	))
+	expect(t, !R(10, 10, 20, 20).primativeContains(nil))
+	expect(t, !R(10, 10, 20, 20).primativeIntersects(nil))
 }
