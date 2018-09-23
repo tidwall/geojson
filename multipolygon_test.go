@@ -37,4 +37,5 @@ func TestMultiPolygonPoly(t *testing.T) {
 	expect(t, p.Contains(P(15, 15)))
 	expect(t, p.Contains(P(150, 150)))
 	expect(t, !p.Contains(P(40, 40)))
+	expect(t, p.Within(R(-100, -100, 1000, 1000)))
 }

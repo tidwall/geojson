@@ -68,6 +68,11 @@ func (g Polygon) AppendJSON(dst []byte) []byte {
 // ForEachChild iterates over child objects.
 func (g Polygon) ForEachChild(func(child Object) bool) {}
 
+// Within is the inverse of contains
+func (g Polygon) Within(other Object) bool {
+	return other.Contains(g)
+}
+
 // Contains returns true if object contains other object
 func (g Polygon) Contains(other Object) bool {
 	return objectContains(g, other)

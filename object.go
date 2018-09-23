@@ -40,6 +40,8 @@ type Object interface {
 	ForEachChild(func(child Object) bool)
 	// Contains returns true if object contains other object
 	Contains(other Object) bool
+	// Within is the inverse of contains
+	Within(other Object) bool
 	// Intersects returns true if object intersects with other object
 	Intersects(other Object) bool
 }

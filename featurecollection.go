@@ -53,6 +53,11 @@ func (g FeatureCollection) ForEachChild(iter func(child Object) bool) {
 	}
 }
 
+// Within is the inverse of contains
+func (g FeatureCollection) Within(other Object) bool {
+	return other.Contains(g)
+}
+
 // Contains returns true if object contains other object
 func (g FeatureCollection) Contains(other Object) bool {
 	return collectionContains(g, other)

@@ -57,6 +57,11 @@ func (g LineString) AppendJSON(dst []byte) []byte {
 // ForEachChild iterates over child objects.
 func (g LineString) ForEachChild(func(child Object) bool) {}
 
+// Within is the inverse of contains
+func (g LineString) Within(other Object) bool {
+	return other.Contains(g)
+}
+
 // Contains returns true if object contains other object
 func (g LineString) Contains(other Object) bool {
 	return objectContains(g, other)

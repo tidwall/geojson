@@ -53,6 +53,11 @@ func (g Feature) ForEachChild(iter func(child Object) bool) {
 	iter(g.Geometry)
 }
 
+// Within is the inverse of contains
+func (g Feature) Within(other Object) bool {
+	return other.Contains(g)
+}
+
 // Contains returns true if object contains other object
 func (g Feature) Contains(other Object) bool {
 	return collectionContains(g, other)

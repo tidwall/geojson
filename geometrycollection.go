@@ -53,6 +53,11 @@ func (g GeometryCollection) ForEachChild(iter func(child Object) bool) {
 	}
 }
 
+// Within is the inverse of contains
+func (g GeometryCollection) Within(other Object) bool {
+	return other.Contains(g)
+}
+
 // Contains returns true if object contains other object
 func (g GeometryCollection) Contains(other Object) bool {
 	return collectionContains(g, other)

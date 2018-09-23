@@ -62,6 +62,11 @@ func (g MultiLineString) ForEachChild(iter func(child Object) bool) {
 	}
 }
 
+// Within is the inverse of contains
+func (g MultiLineString) Within(other Object) bool {
+	return other.Contains(g)
+}
+
 // Contains returns true if object contains other object
 func (g MultiLineString) Contains(other Object) bool {
 	return collectionContains(g, other)

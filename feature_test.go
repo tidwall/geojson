@@ -16,4 +16,6 @@ func TestFeaturePoly(t *testing.T) {
 	p := expectJSON(t, `{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2]}}`, nil)
 	expect(t, p.Intersects(P(1, 2)))
 	expect(t, p.Contains(P(1, 2)))
+	expect(t, p.Within(P(1, 2)))
+
 }

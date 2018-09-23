@@ -29,6 +29,11 @@ func (posn Position) AppendJSON(dst []byte) []byte {
 	return Point{Coordinates: posn}.AppendJSON(dst)
 }
 
+// Within is the inverse of contains
+func (posn Position) Within(other Object) bool {
+	return other.Contains(posn)
+}
+
 // Contains returns true if object contains other object
 func (posn Position) Contains(other Object) bool {
 	return objectContains(posn, other)

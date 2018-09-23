@@ -98,6 +98,11 @@ func (rect Rect) ContainsPosition(posn Position) bool {
 		posn.Y >= rect.Min.Y && posn.Y <= rect.Max.Y
 }
 
+// Within is the inverse of contains
+func (rect Rect) Within(other Object) bool {
+	return other.Contains(rect)
+}
+
 // Contains returns true when rect contains object
 func (rect Rect) Contains(other Object) bool {
 	// // hot paths
