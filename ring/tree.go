@@ -75,48 +75,27 @@ func (ring *treeRing) Convex() bool {
 
 func (ring *treeRing) init() {
 	ring.convex, ring.rect = pointsConvexRect(ring.points)
-	if false {
-		for i := 0; i < len(ring.points); i++ {
-			var seg Segment
-			seg.A = ring.points[i]
-			if i == len(ring.points)-1 {
-				if seg.A == ring.points[0] {
-					break
-				}
-				seg.B = ring.points[0]
-			} else {
-				seg.B = ring.points[i+1]
+	var items []d2.BulkItem
+	for i := 0; i < len(ring.points); i++ {
+		var seg Segment
+		seg.A = ring.points[i]
+		if i == len(ring.points)-1 {
+			if seg.A == ring.points[0] {
+				break
 			}
-			rect := seg.Rect()
-			ring.tree.Insert(
-				[]float64{rect.Min.X, rect.Min.Y},
-				[]float64{rect.Max.X, rect.Max.Y},
-				i,
-			)
+			seg.B = ring.points[0]
+		} else {
+			seg.B = ring.points[i+1]
 		}
-	} else {
-		var items []d2.BulkItem
-		for i := 0; i < len(ring.points); i++ {
-			var seg Segment
-			seg.A = ring.points[i]
-			if i == len(ring.points)-1 {
-				if seg.A == ring.points[0] {
-					break
-				}
-				seg.B = ring.points[0]
-			} else {
-				seg.B = ring.points[i+1]
-			}
 
-			rect := seg.Rect()
-			items = append(items, d2.BulkItem{
-				Min:   []float64{rect.Min.X, rect.Min.Y},
-				Max:   []float64{rect.Max.X, rect.Max.Y},
-				Value: i,
-			})
-		}
-		ring.tree.BulkLoad(items)
+		rect := seg.Rect()
+		items = append(items, d2.BulkItem{
+			Min:   []float64{rect.Min.X, rect.Min.Y},
+			Max:   []float64{rect.Max.X, rect.Max.Y},
+			Value: i,
+		})
 	}
+	ring.tree.BulkLoad(items)
 }
 
 func (ring *treeRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {

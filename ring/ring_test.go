@@ -381,6 +381,17 @@ func TestRingContainsRing(t *testing.T) {
 	expect(t, tree.ContainsRing(small.move(2, 2), false))
 	expect(t, !simple.ContainsRing(small.move(-2, -2), false))
 	expect(t, !tree.ContainsRing(small.move(-2, -2), false))
+
+	expect(t, !simple.ContainsRing(small.move(5, 0), true))
+	expect(t, !tree.ContainsRing(small.move(5, 0), true))
+	expect(t, !simple.ContainsRing(small.move(-5, 0), true))
+	expect(t, !tree.ContainsRing(small.move(-5, 0), true))
+
+	expect(t, !simple.ContainsRing(small.move(0, 5), true))
+	expect(t, !tree.ContainsRing(small.move(0, 5), true))
+	expect(t, !simple.ContainsRing(small.move(0, -5), true))
+	expect(t, !tree.ContainsRing(small.move(0, -5), true))
+
 }
 func TestBowtie(t *testing.T) {
 	simple := NewRing(bowtie, false)
@@ -391,5 +402,70 @@ func TestBowtie(t *testing.T) {
 	expect(t, tree.IntersectsRing(square, true))
 	expect(t, !simple.ContainsRing(square, true))
 	expect(t, !tree.ContainsRing(square, true))
+
+}
+
+func TestVarious(t *testing.T) {
+	ring := NewRing(octagon[:len(octagon)-1], true)
+	n := 0
+	ring.Search(R(0, 0, 10, 10), func(seg Segment, index int) bool {
+		n++
+		return true
+	})
+	expect(t, n == 8)
+	n = 0
+	ring.Scan(func(seg Segment) bool {
+		n++
+		return true
+	})
+	expect(t, n == 8)
+	n = 0
+	ring.Scan(func(seg Segment) bool {
+		n++
+		return false
+	})
+	expect(t, n == 1)
+	expect(t, ring.IntersectsSegment(S(0, 0, 4, 4), true))
+	expect(t, !NewRing([]Point{}, false).Convex())
+	expect(t, NewRing(octagon, false).Convex())
+	expect(t, !NewRing([]Point{}, true).Convex())
+	expect(t, NewRing(octagon, true).Convex())
+
+	ring = NewRing(octagon[:len(octagon)-1], false)
+	n = 0
+	ring.Search(R(0, 0, 10, 10), func(seg Segment, index int) bool {
+		n++
+		return false
+	})
+	expect(t, n == 1)
+	n = 0
+	ring.Scan(func(seg Segment) bool {
+		n++
+		return true
+	})
+	expect(t, n == 8)
+	expect(t, ring.IntersectsSegment(S(0, 0, 4, 4), true))
+
+	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, false).(*simpleRing)
+	expect(t, small.IntersectsRing(ring, true))
+	expect(t, ring.IntersectsRing(small, true))
+
+	expect(t, raycast(P(0, 0), P(0, 0), P(0, 0)).on)
+}
+
+func TestSegmentsIntersect(t *testing.T) {
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(11, 0), P(21, 10)))
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(-11, 0), P(-21, 10)))
+	expect(t, !segmentsIntersect(P(10, 10), P(0, 10), P(11, 0), P(21, 10)))
+	expect(t, !segmentsIntersect(P(10, 10), P(0, 10), P(-11, 0), P(-21, 10)))
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(0, 11), P(10, 21)))
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(0, -11), P(10, -21)))
+	expect(t, !segmentsIntersect(P(10, 10), P(0, 0), P(0, 11), P(10, 21)))
+	expect(t, !segmentsIntersect(P(10, 10), P(0, 0), P(0, -11), P(10, -21)))
+
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(11, 0), P(21, 0)))
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(0, 1), P(10, 1)))
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(0, -1), P(10, -1)))
+	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(1, 0), P(11, 10)))
 
 }
