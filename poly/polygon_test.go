@@ -58,3 +58,69 @@ func TestPolygon(t *testing.T) {
 	}
 
 }
+
+func TestIssue360(t *testing.T) {
+	exterior := Ring{
+		{-122.4408378, 37.7341129},
+		{-122.4408378, 37.733},
+		{-122.44, 37.733},
+		{-122.44, 37.7341129},
+		{-122.4408378, 37.7341129},
+	}
+	holes := []Ring{
+		Ring{
+			{-122.44060993194579, 37.73345766902749},
+			{-122.44044363498686, 37.73345766902749},
+			{-122.44044363498686, 37.73355524732416},
+			{-122.44060993194579, 37.73355524732416},
+			{-122.44060993194579, 37.73345766902749},
+		},
+		Ring{
+			{-122.44060724973677, 37.7336888869566},
+			{-122.4402102828026, 37.7336888869566},
+			{-122.4402102828026, 37.7339752567853},
+			{-122.44060724973677, 37.7339752567853},
+			{-122.44060724973677, 37.7336888869566},
+		},
+	}
+	_ = holes
+	box := Ring{
+		{-122.4434208869934, 37.73138728181471},
+		{-122.43711233139038, 37.73138728181471},
+		{-122.43711233139038, 37.73579951265516},
+		{-122.4434208869934, 37.73579951265516},
+		{-122.4434208869934, 37.73138728181471},
+	}
+	if !exterior.IntersectsRing(exterior) {
+		t.Fatal("expected true")
+	}
+	if !exterior.InsideRing(exterior) {
+		t.Fatal("expected true")
+	}
+
+	if !exterior.IntersectsRing(box) {
+		t.Fatal("expected true")
+	}
+	if !exterior.InsideRing(box) {
+		t.Fatal("expected true")
+	}
+	if !(Polygon{exterior, nil}).IntersectsRing(box) {
+		t.Fatal("expected true")
+	}
+	if !(Polygon{exterior, nil}).InsideRing(box) {
+
+		t.Fatal("expected true")
+	}
+	if !(Polygon{exterior, holes}).IntersectsRing(box) {
+		t.Fatal("expected true")
+	}
+	if !(Polygon{exterior, holes}).InsideRing(box) {
+		t.Fatal("expected true")
+	}
+	if !(Polygon{exterior, holes}).IntersectsPolygon(Polygon{box, nil}) {
+		t.Fatal("expected true")
+	}
+	if !(Polygon{exterior, holes}).InsidePolygon(Polygon{box, nil}) {
+		t.Fatal("expected true")
+	}
+}

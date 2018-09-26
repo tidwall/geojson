@@ -1,5 +1,19 @@
 package poly
 
+// // forEachSegment will return each segment on a line, ring, or polygon. When
+// // close is provided, the last segment will be guarenteed to be end where the
+// // the first started. When there is only one point, a single segment will be
+// // returned where point 'a' and 'b' are equal
+// func forEachSegment(points []Point, close bool, iter func(a, b Point) bool) {
+// 	if len(points) == 1 {
+// 		if !iter(points[0], points[0]) {
+// 			return
+// 		}
+// 	}
+// 	//Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+// }
+
 // pointInRing return true when point is inside a ring. When then exterior
 // param is provided, the function will return false if the point is on the
 // edge of the ring.
@@ -158,14 +172,25 @@ func rectIntersectsRect(a, b Rect) bool {
 }
 
 func ringInPolygon(ring Ring, polygon Polygon) bool {
-	var ok bool
+	// all points in ring must be inside of the polygon
 	for _, p := range ring {
-		ok = pointInPolygon(p, polygon)
-		if !ok {
+		if !pointInPolygon(p, polygon) {
 			return false
 		}
 	}
-	ok = true
+	// // all ring segments *must not* intersect with polygon segments
+	// ext := polygon.Exterior
+	// for i := 0; i < len(ring); i++ {
+	// 	ringA, ringB := ring[i], ring[(i+1)%len(ring)]
+	// 	for j := 0; j < len(ext); j++ {
+	// 		extA, extB := ext[j], ext[(j+1)%len(ext)]
+	// 		if segmentsIntersect(ringA, ringB, extA, extB) {
+	// 			return false
+	// 		}
+	// 	}
+	// }
+
+	ok := true
 	for _, hole := range polygon.Holes {
 		if ringInPolygon(hole, Polygon{ring, nil}) {
 			return false

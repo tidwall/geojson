@@ -50,19 +50,27 @@ func (rect Rect) InsideLine(line Line) bool {
 // InsideRing tests if a rect is inside of a ring
 func (rect Rect) InsideRing(ring Ring) bool {
 	// all four points should be inside the ring
-	return (Point{rect.Min.X, rect.Min.Y}).InsideRing(ring) &&
-		(Point{rect.Max.X, rect.Min.Y}).InsideRing(ring) &&
-		(Point{rect.Max.X, rect.Max.Y}).InsideRing(ring) &&
-		(Point{rect.Min.X, rect.Max.Y}).InsideRing(ring)
+	rectRing := Ring{
+		{rect.Min.X, rect.Min.Y},
+		{rect.Max.X, rect.Min.Y},
+		{rect.Max.X, rect.Max.Y},
+		{rect.Min.X, rect.Max.Y},
+		{rect.Min.X, rect.Min.Y},
+	}
+	return rectRing.InsideRing(ring)
 }
 
 // InsidePolygon tests if a rect is inside a polygon
 func (rect Rect) InsidePolygon(polygon Polygon) bool {
 	// all four points should be inside the polygon
-	return (Point{rect.Min.X, rect.Min.Y}).InsidePolygon(polygon) &&
-		(Point{rect.Max.X, rect.Min.Y}).InsidePolygon(polygon) &&
-		(Point{rect.Max.X, rect.Max.Y}).InsidePolygon(polygon) &&
-		(Point{rect.Min.X, rect.Max.Y}).InsidePolygon(polygon)
+	ring := Ring{
+		{rect.Min.X, rect.Min.Y},
+		{rect.Max.X, rect.Min.Y},
+		{rect.Max.X, rect.Max.Y},
+		{rect.Min.X, rect.Max.Y},
+		{rect.Min.X, rect.Min.Y},
+	}
+	return ring.InsidePolygon(polygon)
 }
 
 // IntersectsPoint tests if a rects intersects a point
