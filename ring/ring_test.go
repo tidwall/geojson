@@ -142,13 +142,89 @@ func TestRingSearch(t *testing.T) {
 	})
 }
 
+func TestRingIntersectsSegment(t *testing.T) {
+	simple := NewRing(concave1, false)
+	tree := NewRing(concave1, true)
+
+	expect(t, !simple.IntersectsSegment(S(0, 0, 3, 3), true))
+	expect(t, !tree.IntersectsSegment(S(0, 0, 3, 3), true))
+	expect(t, !simple.IntersectsSegment(S(0, 0, 3, 3), false))
+	expect(t, !tree.IntersectsSegment(S(0, 0, 3, 3), false))
+
+	expect(t, simple.IntersectsSegment(S(0, 0, 5, 5), true))
+	expect(t, tree.IntersectsSegment(S(0, 0, 5, 5), true))
+	expect(t, !simple.IntersectsSegment(S(0, 0, 5, 5), false))
+	expect(t, !tree.IntersectsSegment(S(0, 0, 5, 5), false))
+
+	expect(t, simple.IntersectsSegment(S(0, 0, 10, 10), true))
+	expect(t, tree.IntersectsSegment(S(0, 0, 10, 10), true))
+	expect(t, !simple.IntersectsSegment(S(0, 0, 10, 10), false))
+	expect(t, !tree.IntersectsSegment(S(0, 0, 10, 10), false))
+
+	expect(t, simple.IntersectsSegment(S(0, 0, 11, 11), true))
+	expect(t, tree.IntersectsSegment(S(0, 0, 11, 11), true))
+	expect(t, !simple.IntersectsSegment(S(0, 0, 11, 11), false))
+	expect(t, !tree.IntersectsSegment(S(0, 0, 11, 11), false))
+
+}
+
+func TestRingIntersectsRing(t *testing.T) {
+	simple := NewRing(concave1, false)
+	tree := NewRing(concave1, true)
+	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, false).(*simpleRing)
+
+	intersects := func(ring Ring) bool {
+		tt := simple.IntersectsRing(ring, true)
+		if tree.IntersectsRing(ring, true) != tt {
+			panic("structure mismatch")
+		}
+		return tt
+	}
+
+	intersectsOnEdgeNotAllowed := func(ring Ring) bool {
+		tt := simple.IntersectsRing(ring, false)
+		if tree.IntersectsRing(ring, false) != tt {
+			panic("structure mismatch")
+		}
+		return tt
+	}
+
+	expect(t, intersects(small))
+	expect(t, intersects(small.move(-6, 0)))
+	expect(t, intersects(small.move(6, 0)))
+	expect(t, !intersects(small.move(-7, 0)))
+	expect(t, !intersects(small.move(7, 0)))
+	expect(t, intersects(small.move(1, 1)))
+	expect(t, intersects(small.move(-1, -1)))
+	expect(t, intersects(small.move(2, 2)))
+	expect(t, !intersects(small.move(-2, -2)))
+	expect(t, intersects(small.move(0, -6)))
+	expect(t, intersects(small.move(0, 6)))
+	expect(t, !intersects(small.move(0, -7)))
+	expect(t, !intersects(small.move(0, 7)))
+
+	expect(t, intersectsOnEdgeNotAllowed(small.move(-5, 0)))
+	expect(t, intersectsOnEdgeNotAllowed(small.move(5, 0)))
+	expect(t, intersectsOnEdgeNotAllowed(small.move(0, -5)))
+	expect(t, intersectsOnEdgeNotAllowed(small.move(0, 5)))
+
+	expect(t, !intersectsOnEdgeNotAllowed(small.move(-6, 0)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.move(6, 0)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.move(0, -6)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.move(0, 6)))
+
+	expect(t, intersectsOnEdgeNotAllowed(small.move(1, 1)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.move(-1, -1)))
+
+}
+
 func TestBigRandomPIP(t *testing.T) {
 	simple := NewRing(az, false)
 	tree := NewRing(az, true)
 	expect(t, simple.Rect() == tree.Rect())
 	rect := tree.Rect()
 	start := time.Now()
-	for time.Since(start) < time.Second/2 {
+	for time.Since(start) < time.Second/4 {
 		point := P(
 			rand.Float64()*(rect.Max.X-rect.Min.X)+rect.Min.X,
 			rand.Float64()*(rect.Max.Y-rect.Min.Y)+rect.Min.Y,
@@ -250,4 +326,70 @@ func TestBigTexas(t *testing.T) {
 			tree.ContainsPoint(pointOut, true)
 		})
 	}
+}
+
+func TestRingContainsRing(t *testing.T) {
+	simple := NewRing(concave1, false)
+	tree := NewRing(concave1, true)
+
+	expect(t, simple.ContainsRing(simple, true))
+	expect(t, simple.ContainsRing(tree, true))
+	expect(t, tree.ContainsRing(simple, true))
+	expect(t, tree.ContainsRing(tree, true))
+
+	expect(t, !simple.ContainsRing(simple, false))
+	expect(t, !simple.ContainsRing(tree, false))
+	expect(t, !tree.ContainsRing(simple, false))
+	expect(t, !tree.ContainsRing(tree, false))
+
+	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, false).(*simpleRing)
+
+	expect(t, !simple.ContainsRing(small, true))
+	expect(t, !tree.ContainsRing(small, true))
+
+	for x := 1.0; x <= 4; x++ {
+		expect(t, simple.ContainsRing(small.move(x, 0), true))
+		expect(t, tree.ContainsRing(small.move(x, 0), true))
+	}
+	expect(t, !simple.ContainsRing(small.move(4, 0), false))
+	expect(t, !tree.ContainsRing(small.move(4, 0), false))
+	for y := 1.0; y <= 4; y++ {
+		expect(t, simple.ContainsRing(small.move(0, y), true))
+		expect(t, tree.ContainsRing(small.move(0, y), true))
+	}
+	expect(t, !simple.ContainsRing(small.move(0, 4), false))
+	expect(t, !tree.ContainsRing(small.move(0, 4), false))
+
+	for x := -1.0; x >= -4; x-- {
+		expect(t, !simple.ContainsRing(small.move(x, 0), true))
+		expect(t, !tree.ContainsRing(small.move(x, 0), true))
+	}
+	expect(t, !simple.ContainsRing(small.move(-4, 0), false))
+	expect(t, !tree.ContainsRing(small.move(-4, 0), false))
+	for y := -1.0; y >= -4; y-- {
+		expect(t, !simple.ContainsRing(small.move(0, y), true))
+		expect(t, !tree.ContainsRing(small.move(0, y), true))
+	}
+	expect(t, !simple.ContainsRing(small.move(0, -4), false))
+	expect(t, !tree.ContainsRing(small.move(0, -4), false))
+
+	expect(t, !simple.ContainsRing(small.move(1, 0), false))
+	expect(t, !tree.ContainsRing(small.move(1, 0), false))
+	expect(t, simple.ContainsRing(small.move(2, 0), false))
+	expect(t, tree.ContainsRing(small.move(2, 0), false))
+	expect(t, simple.ContainsRing(small.move(2, 2), false))
+	expect(t, tree.ContainsRing(small.move(2, 2), false))
+	expect(t, !simple.ContainsRing(small.move(-2, -2), false))
+	expect(t, !tree.ContainsRing(small.move(-2, -2), false))
+}
+func TestBowtie(t *testing.T) {
+	simple := NewRing(bowtie, false)
+	tree := NewRing(bowtie, true)
+	square := NewRing([]Point{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)}, false)
+
+	expect(t, simple.IntersectsRing(square, true))
+	expect(t, tree.IntersectsRing(square, true))
+	expect(t, !simple.ContainsRing(square, true))
+	expect(t, !tree.ContainsRing(square, true))
+
 }

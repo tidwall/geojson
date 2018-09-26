@@ -13,7 +13,7 @@ type treeRing struct {
 	tree   d2.BoxTree
 }
 
-func newTreeRing(points []Point) Ring {
+func newTreeRing(points []Point) *treeRing {
 	var ring treeRing
 	ring.points = make([]Point, len(points))
 	copy(ring.points, points)
@@ -75,23 +75,47 @@ func (ring *treeRing) Convex() bool {
 
 func (ring *treeRing) init() {
 	ring.convex, ring.rect = pointsConvexRect(ring.points)
-	for i := 0; i < len(ring.points); i++ {
-		var seg Segment
-		seg.A = ring.points[i]
-		if i == len(ring.points)-1 {
-			if seg.A == ring.points[0] {
-				break
+	if false {
+		for i := 0; i < len(ring.points); i++ {
+			var seg Segment
+			seg.A = ring.points[i]
+			if i == len(ring.points)-1 {
+				if seg.A == ring.points[0] {
+					break
+				}
+				seg.B = ring.points[0]
+			} else {
+				seg.B = ring.points[i+1]
 			}
-			seg.B = ring.points[0]
-		} else {
-			seg.B = ring.points[i+1]
+			rect := seg.Rect()
+			ring.tree.Insert(
+				[]float64{rect.Min.X, rect.Min.Y},
+				[]float64{rect.Max.X, rect.Max.Y},
+				i,
+			)
 		}
-		rect := seg.Rect()
-		ring.tree.Insert(
-			[]float64{rect.Min.X, rect.Min.Y},
-			[]float64{rect.Max.X, rect.Max.Y},
-			i,
-		)
+	} else {
+		var items []d2.BulkItem
+		for i := 0; i < len(ring.points); i++ {
+			var seg Segment
+			seg.A = ring.points[i]
+			if i == len(ring.points)-1 {
+				if seg.A == ring.points[0] {
+					break
+				}
+				seg.B = ring.points[0]
+			} else {
+				seg.B = ring.points[i+1]
+			}
+
+			rect := seg.Rect()
+			items = append(items, d2.BulkItem{
+				Min:   []float64{rect.Min.X, rect.Min.Y},
+				Max:   []float64{rect.Max.X, rect.Max.Y},
+				Value: i,
+			})
+		}
+		ring.tree.BulkLoad(items)
 	}
 }
 
@@ -111,6 +135,15 @@ func (ring *treeRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 				other.B = ring.points[index+1]
 			}
 			if segmentsIntersect(seg.A, seg.B, other.A, other.B) {
+				if !allowOnEdge {
+					if raycast(seg.A, other.A, other.B).on ||
+						raycast(seg.B, other.A, other.B).on ||
+						raycast(other.A, seg.A, seg.B).on ||
+						raycast(other.B, seg.A, seg.B).on {
+						intersects = false
+						return false
+					}
+				}
 				intersects = true
 				return false
 			}
@@ -139,10 +172,10 @@ func (ring *treeRing) ContainsPoint(point Point, allowOnEdge bool) bool {
 	return in
 }
 
-func (ring *treeRing) ContainsRing(other Ring) bool {
-	panic("not ready")
+func (ring *treeRing) ContainsRing(other Ring, allowOnEdge bool) bool {
+	return ringContainsRing(ring, other, allowOnEdge)
 }
 
-func (ring *treeRing) IntersectsRing(other Ring) bool {
-	return false
+func (ring *treeRing) IntersectsRing(other Ring, allowOnEdge bool) bool {
+	return ringIntersectsRing(ring, other, allowOnEdge)
 }

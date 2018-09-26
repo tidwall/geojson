@@ -4,7 +4,16 @@ type simpleRing struct {
 	points []Point
 }
 
-func newSimpleRing(points []Point) Ring {
+func (ring *simpleRing) move(deltaX, deltaY float64) *simpleRing {
+	points := make([]Point, len(ring.points))
+	for i := 0; i < len(ring.points); i++ {
+		points[i].X = ring.points[i].X + deltaX
+		points[i].Y = ring.points[i].Y + deltaY
+	}
+	return newSimpleRing(points)
+}
+
+func newSimpleRing(points []Point) *simpleRing {
 	return &simpleRing{points: points}
 }
 
@@ -65,6 +74,14 @@ func (ring *simpleRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 			other.B = ring.points[i+1]
 		}
 		if segmentsIntersect(seg.A, seg.B, other.A, other.B) {
+			if !allowOnEdge {
+				if raycast(seg.A, other.A, other.B).on ||
+					raycast(seg.B, other.A, other.B).on ||
+					raycast(other.A, seg.A, seg.B).on ||
+					raycast(other.B, seg.A, seg.B).on {
+					return false
+				}
+			}
 			return true
 		}
 	}
@@ -92,37 +109,10 @@ func (ring *simpleRing) ContainsPoint(point Point, allowOnEdge bool) bool {
 	return in
 }
 
-func (ring *simpleRing) ContainsRing(other Ring) bool {
-
-	panic("not ready")
+func (ring *simpleRing) ContainsRing(other Ring, allowOnEdge bool) bool {
+	return ringContainsRing(ring, other, allowOnEdge)
 }
 
-func (ring *simpleRing) IntersectsRing(other Ring) bool {
-	return ringsIntersect(ring, other)
-}
-
-func ringsIntersect(inner, outer Ring) bool {
-	outerRect := outer.Rect()
-	innerRect := inner.Rect()
-	// 1) make sure the outer rect area is greater to inner rect area
-	if outerRect.Area() < innerRect.Area() {
-		outer, inner = inner, outer
-		outerRect, innerRect = innerRect, outerRect
-	}
-	// 2) check if the rects intersect each other
-	if !outerRect.IntersectsRect(innerRect) {
-		// they do not intersect so stop now
-		return false
-	}
-	// 3) test is points and segment intersection
-	var intersects bool
-	inner.Scan(func(seg Segment) bool {
-		if outer.ContainsPoint(seg.A, true) {
-			// point from inner is inside outer. they intersect so stop now
-			intersects = true
-			return false
-		}
-		return true
-	})
-	return intersects
+func (ring *simpleRing) IntersectsRing(other Ring, allowOnEdge bool) bool {
+	return ringIntersectsRing(ring, other, allowOnEdge)
 }

@@ -178,7 +178,6 @@ func segmentsIntersect(
 			}
 		}
 	}
-
 	// the following code is from http://ideone.com/PnPJgb
 	cmpx, cmpy := c.X-a.X, c.Y-a.Y
 	rx, ry := b.X-a.X, b.Y-a.Y
