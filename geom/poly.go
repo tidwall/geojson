@@ -6,6 +6,9 @@ type Poly interface {
 	Holes() []Ring
 	ContainsPoint(point Point) bool
 	ContainsRing(ring Ring) bool
+	ContainsPoly(poly Poly) bool
+	IntersectsRing(ring Ring) bool
+	IntersectsPoly(poly Poly) bool
 }
 
 // NewPoly ...
@@ -47,12 +50,14 @@ func (poly *sharedPoly) ContainsPoint(point Point) bool {
 }
 
 func (poly *sharedPoly) ContainsRing(ring Ring) bool {
+	// 1) other exterior must be fully contained inside of the ring.
 	if !poly.Exterior().ContainsRing(ring, true) {
 		return false
 	}
+	// 2) ring cannot intersect poly holes
 	contains := true
-	for _, hole := range poly.holes {
-		if hole.IntersectsRing(ring, false) {
+	for _, polyHole := range poly.Holes() {
+		if polyHole.IntersectsRing(ring, true) {
 			contains = false
 			break
 		}
@@ -65,18 +70,40 @@ func (poly *sharedPoly) ContainsPoly(other Poly) bool {
 	if !poly.Exterior().ContainsRing(other.Exterior(), true) {
 		return false
 	}
-	// 2) all poly holes must be fully contained in a
+	// 2) ring cannot intersect poly holes
+	contains := true
+	for _, polyHole := range poly.Holes() {
+		if polyHole.IntersectsRing(other.Exterior(), false) {
+			contains = false
+			// 3) unless the poly hole is contain inside of a other hole
+			for _, otherHole := range other.Holes() {
+				if otherHole.ContainsRing(polyHole, true) {
+					contains = true
+					break
+				}
+			}
+			if !contains {
+				break
+			}
+		}
+	}
+	return contains
+}
+
+func (poly *sharedPoly) IntersectsRing(ring Ring) bool {
+	// 1) ring must intersect poly exterior
+	if !poly.Exterior().IntersectsRing(ring, true) {
+		return false
+	}
+	// 2) ring cannot be contained by a poly hole
+	for _, polyHole := range poly.Holes() {
+		if polyHole.ContainsRing(ring, false) {
+			return false
+		}
+	}
 	return true
-	// contains := true
-	// otherHoles := other.Holes()
-	// polyHoles := poly.Holes()
-	// for _, polyHole := range polyHoles {
-	// 	for _, hole := range otherHoles {
-	// 		if poly.Contains(hole) {
-	// 			contains = false
-	// 			break
-	// 		}
-	// 	}
-	// }
-	// return contains
+}
+
+func (poly *sharedPoly) IntersectsPoly(other Poly) bool {
+	return poly.IntersectsRing(other.Exterior())
 }

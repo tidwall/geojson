@@ -1,0 +1,30 @@
+package geom
+
+import (
+	"testing"
+)
+
+func TestRTree(t *testing.T) {
+	// return
+	// // N := 100000
+	// var rects []rTreeRect
+	// if true {
+	// 	for i := range cities.Cities {
+	// 		j := rand.Intn(i + 1)
+	// 		cities.Cities[i], cities.Cities[j] =
+	// 			cities.Cities[j], cities.Cities[i]
+	// 	}
+	// }
+
+	// for _, city := range cities.Cities {
+	// 	rects = append(rects, rTreeRect{
+	// 		min: [2]float64{city.Longitude, city.Latitude},
+	// 		max: [2]float64{city.Longitude, city.Latitude},
+	// 	})
+	// }
+	// var tr rTree
+	// start := time.Now()
+	// tr.load(rects)
+	// println(time.Since(start).String())
+	// ioutil.WriteFile("out.svg", []byte(tr.svg()), 0666)
+}

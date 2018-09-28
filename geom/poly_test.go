@@ -30,6 +30,36 @@ func TestPolyVarious(t *testing.T) {
 			expect(t, !poly.ContainsPoint(P(5, 5)))
 			expect(t, poly.ContainsPoint(P(6, 6)))
 			expect(t, poly.ContainsPoint(P(7, 7)))
-		})
+
+			expect(t, poly.ContainsPoly(poly))
+			expect(t, !poly.ContainsRing(poly.Exterior()))
+			expect(t, !poly.ContainsRing(poly.Holes()[0]))
+
+			expect(t, !poly.ContainsRing(newSimpleRing(small).move(10, 0)))
+			expect(t, !poly.ContainsPoly(NewPoly(
+				newSimpleRing(small).move(10, 0).Points(), nil, NoIndex)))
+
+		},
+	)
+
+	ex1 := newSimpleRing([]Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}})
+	ex2 := newSimpleRing([]Point{{1, 1}, {9, 1}, {9, 9}, {1, 9}, {1, 1}})
+	ex3 := newSimpleRing([]Point{{2, 2}, {8, 2}, {8, 8}, {2, 8}, {2, 2}})
+	ex4 := newSimpleRing([]Point{{3, 3}, {7, 3}, {7, 7}, {3, 7}, {3, 3}})
+	ex5 := newSimpleRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
+	out5 := ex5.move(10, 0)
+
+	p1 := NewPoly(ex1.Points(), [][]Point{ex4.Points()}, NoIndex)
+	p2 := NewPoly(ex2.Points(), [][]Point{ex3.Points()}, NoIndex)
+	p3 := NewPoly(ex2.Points(), [][]Point{ex5.Points()}, NoIndex)
+
+	expect(t, p1.ContainsPoly(p2))
+	expect(t, !p1.ContainsPoly(p3))
+
+	expect(t, p1.IntersectsPoly(p1))
+	expect(t, p1.IntersectsRing(ex1))
+	expect(t, !p1.IntersectsRing(out5))
+
+	expect(t, !p2.IntersectsRing(ex5))
 
 }

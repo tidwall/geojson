@@ -6,14 +6,14 @@ import (
 	"github.com/tidwall/boxtree/d2"
 )
 
-//const useNewRTree = true
+//const useNewRTree = false
 
 type treeRing struct {
 	points []Point
 	rect   Rect
 	convex bool
 	tree   d2.BoxTree
-	// tree2  rTree
+	//tree2  rTree
 }
 
 func newTreeRing(points []Point) *treeRing {
@@ -26,7 +26,7 @@ func newTreeRing(points []Point) *treeRing {
 
 func (ring *treeRing) init() {
 	ring.convex, ring.rect = pointsConvexRect(ring.points)
-	// var rects []rTreeRect
+	//var rects []rTreeRect
 	for i := 0; i < len(ring.points); i++ {
 		var seg Segment
 		seg.A = ring.points[i]
