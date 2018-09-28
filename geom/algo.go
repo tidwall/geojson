@@ -1,4 +1,4 @@
-package ring
+package geom
 
 // pointsRect returns the outer rectangle for points. These point could be a
 // line, ring, or just a bunch of points.

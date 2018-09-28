@@ -1,4 +1,11 @@
-package ring
+package geom
+
+// DefaultIndex ...
+const (
+	Index     = 0
+	NoIndex   = -1
+	AutoIndex = 48
+)
 
 // Ring ...
 type Ring interface {
@@ -6,17 +13,18 @@ type Ring interface {
 	Search(rect Rect, iter func(seg Segment, index int) bool)
 	Points() []Point
 	Rect() Rect
+	IsClosed() bool
 	Convex() bool
 
 	IntersectsSegment(seg Segment, allowOnEdge bool) bool
 	ContainsPoint(point Point, allowOnEdge bool) bool
 	IntersectsRing(ring Ring, allowOnEdge bool) bool
-	ContainsRing(other Ring, allowOnEdge bool) bool
+	ContainsRing(ring Ring, allowOnEdge bool) bool
 }
 
-// NewRing ...
-func NewRing(points []Point, indexed bool) Ring {
-	if indexed {
+// NewRing returns a new ring. index of zero reutrns simple ring
+func NewRing(points []Point, index int) Ring {
+	if index >= 0 && len(points) > index {
 		return newTreeRing(points)
 	}
 	return newSimpleRing(points)

@@ -1,4 +1,4 @@
-package ring
+package geom
 
 import "math"
 

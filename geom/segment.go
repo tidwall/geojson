@@ -1,4 +1,4 @@
-package ring
+package geom
 
 // Segment ...
 type Segment struct {

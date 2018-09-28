@@ -1,4 +1,4 @@
-package ring
+package geom
 
 type simpleRing struct {
 	points []Point
@@ -14,7 +14,10 @@ func (ring *simpleRing) move(deltaX, deltaY float64) *simpleRing {
 }
 
 func newSimpleRing(points []Point) *simpleRing {
-	return &simpleRing{points: points}
+	ring := new(simpleRing)
+	ring.points = make([]Point, len(points))
+	copy(ring.points, points)
+	return ring
 }
 
 func (ring *simpleRing) Points() []Point {
@@ -59,6 +62,10 @@ func (ring *simpleRing) Rect() Rect {
 
 func (ring *simpleRing) Convex() bool {
 	return pointsConvex(ring.points)
+}
+
+func (ring *simpleRing) IsClosed() bool {
+	return true
 }
 
 func (ring *simpleRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {

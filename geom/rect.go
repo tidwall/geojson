@@ -1,4 +1,4 @@
-package ring
+package geom
 
 // Rect ...
 type Rect struct {

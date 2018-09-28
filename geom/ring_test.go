@@ -1,4 +1,4 @@
-package ring
+package geom
 
 import (
 	"fmt"
@@ -54,8 +54,8 @@ func expect(t testing.TB, what bool) {
 }
 
 func TestRingScan(t *testing.T) {
-	test := func(t *testing.T, indexed bool) {
-		rectangleRing := NewRing(rectangle, indexed)
+	test := func(t *testing.T, index int) {
+		rectangleRing := NewRing(rectangle, index)
 		var segs []Segment
 		rectangleRing.Scan(func(seg Segment) bool {
 			segs = append(segs, seg)
@@ -73,7 +73,7 @@ func TestRingScan(t *testing.T) {
 		}
 
 		segs = nil
-		notClosedRing := NewRing(rectangle, indexed)
+		notClosedRing := NewRing(rectangle, index)
 		notClosedRing.Scan(func(seg Segment) bool {
 			segs = append(segs, seg)
 			return true
@@ -84,16 +84,16 @@ func TestRingScan(t *testing.T) {
 		}
 	}
 	t.Run("Indexed", func(t *testing.T) {
-		test(t, true)
+		test(t, Index)
 	})
 	t.Run("Simple", func(t *testing.T) {
-		test(t, false)
+		test(t, NoIndex)
 	})
 }
 
 func TestRingSearch(t *testing.T) {
-	test := func(t *testing.T, indexed bool) {
-		octagonRing := NewRing(octagon, indexed)
+	test := func(t *testing.T, index int) {
+		octagonRing := NewRing(octagon, index)
 		var segs []Segment
 		octagonRing.Search(R(0, 0, 0, 0), func(seg Segment, _ int) bool {
 			segs = append(segs, seg)
@@ -135,16 +135,16 @@ func TestRingSearch(t *testing.T) {
 		}
 	}
 	t.Run("Indexed", func(t *testing.T) {
-		test(t, true)
+		test(t, Index)
 	})
 	t.Run("Simple", func(t *testing.T) {
-		test(t, false)
+		test(t, NoIndex)
 	})
 }
 
 func TestRingIntersectsSegment(t *testing.T) {
-	simple := NewRing(concave1, false)
-	tree := NewRing(concave1, true)
+	simple := NewRing(concave1, NoIndex)
+	tree := NewRing(concave1, Index)
 
 	expect(t, !simple.IntersectsSegment(S(0, 0, 3, 3), true))
 	expect(t, !tree.IntersectsSegment(S(0, 0, 3, 3), true))
@@ -169,9 +169,9 @@ func TestRingIntersectsSegment(t *testing.T) {
 }
 
 func TestRingIntersectsRing(t *testing.T) {
-	simple := NewRing(concave1, false)
-	tree := NewRing(concave1, true)
-	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, false).(*simpleRing)
+	simple := NewRing(concave1, NoIndex)
+	tree := NewRing(concave1, Index)
+	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, NoIndex).(*simpleRing)
 
 	intersects := func(ring Ring) bool {
 		tt := simple.IntersectsRing(ring, true)
@@ -219,8 +219,8 @@ func TestRingIntersectsRing(t *testing.T) {
 }
 
 func TestBigRandomPIP(t *testing.T) {
-	simple := NewRing(az, false)
-	tree := NewRing(az, true)
+	simple := NewRing(az, NoIndex)
+	tree := NewRing(az, Index)
 	expect(t, simple.Rect() == tree.Rect())
 	rect := tree.Rect()
 	start := time.Now()
@@ -234,12 +234,12 @@ func TestBigRandomPIP(t *testing.T) {
 	}
 }
 
-func TestBigArizona(t *testing.T) {
-	simple := NewRing(az, false)
-	tree := NewRing(az, true)
-	pointIn := P(-112, 33)
-	pointOut := P(-114.47753906249999, 33.99802726234877)
-	pointOn := P(-114.604715, 35.061744)
+func testBig(
+	t *testing.T, label string, points []Point, pointIn, pointOut Point,
+) {
+	simple := NewRing(points, NoIndex)
+	tree := NewRing(points, Index)
+	pointOn := points[len(points)/2]
 
 	expect(t, simple.ContainsPoint(pointIn, true))
 	expect(t, tree.ContainsPoint(pointIn, true))
@@ -254,83 +254,62 @@ func TestBigArizona(t *testing.T) {
 	expect(t, !tree.ContainsPoint(pointOut, true))
 	if os.Getenv("PIPBENCH") == "1" {
 		lotsa.Output = os.Stderr
-		fmt.Printf("az/tree/in  ")
+		fmt.Printf(label + "/simp/in  ")
 		lotsa.Ops(1000, 1, func(_, _ int) {
 			simple.ContainsPoint(pointIn, true)
 		})
-		fmt.Printf("az/simp/in  ")
+		fmt.Printf(label + "/tree/in  ")
 		lotsa.Ops(1000, 1, func(_, _ int) {
 			tree.ContainsPoint(pointIn, true)
 		})
-		fmt.Printf("az/simp/on  ")
+		fmt.Printf(label + "/simp/on  ")
 		lotsa.Ops(1000, 1, func(_, _ int) {
 			simple.ContainsPoint(pointOn, true)
 		})
-		fmt.Printf("az/tree/on  ")
+		fmt.Printf(label + "/tree/on  ")
 		lotsa.Ops(1000, 1, func(_, _ int) {
 			tree.ContainsPoint(pointOn, true)
 		})
-		fmt.Printf("az/simp/out ")
+		fmt.Printf(label + "/simp/out ")
 		lotsa.Ops(1000, 1, func(_, _ int) {
 			simple.ContainsPoint(pointOut, true)
 		})
-		fmt.Printf("az/tree/out ")
+		fmt.Printf(label + "/tree/out ")
 		lotsa.Ops(1000, 1, func(_, _ int) {
 			tree.ContainsPoint(pointOut, true)
 		})
 	}
+}
+
+func TestBigArizona(t *testing.T) {
+	testBig(t, "az", az, P(-112, 33), P(-114.477539062, 33.99802726))
 }
 
 func TestBigTexas(t *testing.T) {
-	simple := NewRing(tx, false)
-	tree := NewRing(tx, true)
-	pointIn := P(-98.525390625, 29.36302703778376)
-	pointOut := P(-101.953125, 29.32472016151103)
-	pointOn := P(-100.402214, 28.532657)
+	testBig(t, "tx", tx, P(-98.52539, 29.363027), P(-101.953125, 29.324720161))
+}
 
-	expect(t, simple.ContainsPoint(pointIn, true))
-	expect(t, tree.ContainsPoint(pointIn, true))
-
-	expect(t, simple.ContainsPoint(pointOn, true))
-	expect(t, tree.ContainsPoint(pointOn, true))
-
-	expect(t, !simple.ContainsPoint(pointOn, false))
-	expect(t, !tree.ContainsPoint(pointOn, false))
-
-	expect(t, !simple.ContainsPoint(pointOut, true))
-	expect(t, !tree.ContainsPoint(pointOut, true))
-	if os.Getenv("PIPBENCH") == "1" {
-		lotsa.Output = os.Stderr
-		fmt.Printf("tx/simp/in  ")
-		lotsa.Ops(1000, 1, func(_, _ int) {
-			simple.ContainsPoint(pointIn, true)
-		})
-		fmt.Printf("tx/tree/in  ")
-		lotsa.Ops(1000, 1, func(_, _ int) {
-			tree.ContainsPoint(pointIn, true)
-		})
-		fmt.Printf("tx/simp/on  ")
-		lotsa.Ops(1000, 1, func(_, _ int) {
-			simple.ContainsPoint(pointOn, true)
-		})
-		fmt.Printf("tx/tree/on  ")
-		lotsa.Ops(1000, 1, func(_, _ int) {
-			tree.ContainsPoint(pointOn, true)
-		})
-		fmt.Printf("tx/simp/out ")
-		lotsa.Ops(1000, 1, func(_, _ int) {
-			simple.ContainsPoint(pointOut, true)
-		})
-		fmt.Printf("tx/tree/out ")
-		lotsa.Ops(1000, 1, func(_, _ int) {
-			tree.ContainsPoint(pointOut, true)
-		})
+func TestBigCircle(t *testing.T) {
+	circle := CircleRing(P(-100.1, 31.2), 660000, 10000, 0).Points()
+	if false {
+		s := `{"type":"Polygon","coordinates":[[`
+		for i, p := range circle {
+			if i > 0 {
+				s += ","
+			}
+			s += fmt.Sprintf("[%v,%v]", p.X, p.Y)
+		}
+		s += `]]}`
+		println(s)
 	}
+	testBig(t, "circ", circle, P(-98.52, 29.363), P(-107.8857, 31.5410))
+	circle = CircleRing(P(-100.1, 31.2), 660000, 2, 0).Points()
+	expect(t, len(circle) == 4)
 }
 
 func TestRingContainsRing(t *testing.T) {
-	simple := NewRing(concave1, false)
-	tree := NewRing(concave1, true)
+	simple := NewRing(concave1, NoIndex)
+	tree := NewRing(concave1, Index)
 
 	expect(t, simple.ContainsRing(simple, true))
 	expect(t, simple.ContainsRing(tree, true))
@@ -342,7 +321,7 @@ func TestRingContainsRing(t *testing.T) {
 	expect(t, !tree.ContainsRing(simple, false))
 	expect(t, !tree.ContainsRing(tree, false))
 
-	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, false).(*simpleRing)
+	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, NoIndex).(*simpleRing)
 
 	expect(t, !simple.ContainsRing(small, true))
 	expect(t, !tree.ContainsRing(small, true))
@@ -394,9 +373,9 @@ func TestRingContainsRing(t *testing.T) {
 
 }
 func TestBowtie(t *testing.T) {
-	simple := NewRing(bowtie, false)
-	tree := NewRing(bowtie, true)
-	square := NewRing([]Point{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)}, false)
+	simple := NewRing(bowtie, NoIndex)
+	tree := NewRing(bowtie, Index)
+	square := NewRing([]Point{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)}, 0)
 
 	expect(t, simple.IntersectsRing(square, true))
 	expect(t, tree.IntersectsRing(square, true))
@@ -406,7 +385,7 @@ func TestBowtie(t *testing.T) {
 }
 
 func TestVarious(t *testing.T) {
-	ring := NewRing(octagon[:len(octagon)-1], true)
+	ring := NewRing(octagon[:len(octagon)-1], Index)
 	n := 0
 	ring.Search(R(0, 0, 10, 10), func(seg Segment, index int) bool {
 		n++
@@ -426,12 +405,12 @@ func TestVarious(t *testing.T) {
 	})
 	expect(t, n == 1)
 	expect(t, ring.IntersectsSegment(S(0, 0, 4, 4), true))
-	expect(t, !NewRing([]Point{}, false).Convex())
-	expect(t, NewRing(octagon, false).Convex())
-	expect(t, !NewRing([]Point{}, true).Convex())
-	expect(t, NewRing(octagon, true).Convex())
+	expect(t, !NewRing([]Point{}, NoIndex).Convex())
+	expect(t, NewRing(octagon, NoIndex).Convex())
+	expect(t, !NewRing([]Point{}, Index).Convex())
+	expect(t, NewRing(octagon, Index).Convex())
 
-	ring = NewRing(octagon[:len(octagon)-1], false)
+	ring = NewRing(octagon[:len(octagon)-1], NoIndex)
 	n = 0
 	ring.Search(R(0, 0, 10, 10), func(seg Segment, index int) bool {
 		n++
@@ -446,11 +425,48 @@ func TestVarious(t *testing.T) {
 	expect(t, n == 8)
 	expect(t, ring.IntersectsSegment(S(0, 0, 4, 4), true))
 
-	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, false).(*simpleRing)
+	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, NoIndex).(*simpleRing)
 	expect(t, small.IntersectsRing(ring, true))
 	expect(t, ring.IntersectsRing(small, true))
 
 	expect(t, raycast(P(0, 0), P(0, 0), P(0, 0)).on)
+
+	ring1 := NewRing(octagon, NoIndex)
+	n1 := 0
+	ring1.Scan(func(seg Segment) bool {
+		n1++
+		return true
+	})
+	expect(t, ring1.IsClosed())
+	ring2 := NewRing(octagon[:len(octagon)-1], NoIndex)
+	n2 := 0
+	ring2.Scan(func(seg Segment) bool {
+		n2++
+		return true
+	})
+	expect(t, n1 == n2)
+	expect(t, ring2.IsClosed())
+
+	ring1 = NewRing(octagon, Index)
+	n1 = 0
+	ring1.Scan(func(seg Segment) bool {
+		n1++
+		return true
+	})
+	expect(t, ring1.IsClosed())
+	ring2 = NewRing(octagon[:len(octagon)-1], Index)
+	n2 = 0
+	ring2.Scan(func(seg Segment) bool {
+		n2++
+		return true
+	})
+	expect(t, n1 == n2)
+	expect(t, ring2.IsClosed())
+
+	convex, rect := pointsConvexRect([]Point{P(0, 0)})
+	expect(t, !convex)
+	expect(t, rect == Rect{})
+
 }
 
 func TestSegmentsIntersect(t *testing.T) {
@@ -467,5 +483,9 @@ func TestSegmentsIntersect(t *testing.T) {
 	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(0, 1), P(10, 1)))
 	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(0, -1), P(10, -1)))
 	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(1, 0), P(11, 10)))
+
+}
+
+func TestSweetSpot(t *testing.T) {
 
 }

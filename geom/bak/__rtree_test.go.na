@@ -1,0 +1,59 @@
+package geom
+
+import (
+	"io/ioutil"
+	"testing"
+	"time"
+
+	"github.com/tidwall/cities"
+)
+
+func TestIndex(t *testing.T) {
+
+	// ring := NewRing(tx, NoIndex)
+	// var rects []rTreeRect
+	// var index int
+	// ring.Scan(func(seg Segment) bool {
+	// 	rect := seg.Rect()
+	// 	rects = append(rects, rTreeRect{
+	// 		min:  [2]float64{rect.Min.X, rect.Min.Y},
+	// 		max:  [2]float64{rect.Max.X, rect.Max.Y},
+	// 		data: index,
+	// 	})
+	// 	index++
+	// 	return true
+	// })
+
+	// // for i := 0; i <= len(segs); i++ {
+	// // 	start := time.Now()
+	// // 	tr := newRTree(segs[:i])
+	// // 	println(i, len(segs), time.Since(start).String())
+	// // 	_ = tr
+	// // }
+
+	// N := 10000
+	// rects := make([]rTreeRect, N)
+	// for i := 0; i < N; i++ {
+	// 	rects[i].max[0] = rand.Float64()*360 - 180
+	// 	rects[i].max[1] = rand.Float64()*180 - 90
+	// 	rects[i].min = rects[i].max
+	// }
+	rects := make([]rTreeRect, len(cities.Cities))
+	for i, city := range cities.Cities {
+		rects[i].max[0] = city.Longitude
+		rects[i].max[1] = city.Latitude
+		rects[i].min = rects[i].max
+
+		// tr.Insert([]float64{, city.Latitude}, nil, &city)
+	}
+
+	start := time.Now()
+	var tr rTree
+	tr.load(rects)
+	println(time.Since(start).String())
+	ioutil.WriteFile("out.svg", []byte(tr.svg()), 0666)
+	_ = tr
+
+	//println(tr)
+	//println(tr.svg())
+}

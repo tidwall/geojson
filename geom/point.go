@@ -1,4 +1,4 @@
-package ring
+package geom
 
 // Point ...
 type Point struct {
