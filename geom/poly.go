@@ -4,10 +4,14 @@ package geom
 type Poly interface {
 	Exterior() Ring
 	Holes() []Ring
+
 	ContainsPoint(point Point) bool
+
 	ContainsRing(ring Ring) bool
-	ContainsPoly(poly Poly) bool
+
 	IntersectsRing(ring Ring) bool
+
+	ContainsPoly(poly Poly) bool
 	IntersectsPoly(poly Poly) bool
 }
 
@@ -91,17 +95,7 @@ func (poly *sharedPoly) ContainsPoly(other Poly) bool {
 }
 
 func (poly *sharedPoly) IntersectsRing(ring Ring) bool {
-	// 1) ring must intersect poly exterior
-	if !poly.Exterior().IntersectsRing(ring, true) {
-		return false
-	}
-	// 2) ring cannot be contained by a poly hole
-	for _, polyHole := range poly.Holes() {
-		if polyHole.ContainsRing(ring, false) {
-			return false
-		}
-	}
-	return true
+	return ring.IntersectsPoly(poly, true)
 }
 
 func (poly *sharedPoly) IntersectsPoly(other Poly) bool {

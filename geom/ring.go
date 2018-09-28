@@ -16,10 +16,19 @@ type Ring interface {
 	IsClosed() bool
 	Convex() bool
 
-	IntersectsSegment(seg Segment, allowOnEdge bool) bool
 	ContainsPoint(point Point, allowOnEdge bool) bool
-	IntersectsRing(ring Ring, allowOnEdge bool) bool
+
+	ContainsSegment(seg Segment, allowOnEdge bool) bool
+	IntersectsSegment(seg Segment, allowOnEdge bool) bool
+
+	ContainsRect(rect Rect, allowOnEdge bool) bool
+	IntersectsRect(rect Rect, allowOnEdge bool) bool
+
 	ContainsRing(ring Ring, allowOnEdge bool) bool
+	IntersectsRing(ring Ring, allowOnEdge bool) bool
+
+	ContainsPoly(poly Poly, allowOnEdge bool) bool
+	IntersectsPoly(poly Poly, allowOnEdge bool) bool
 }
 
 // NewRing returns a new ring. index of zero reutrns simple ring
@@ -89,6 +98,47 @@ func ringContainsRing(outer, inner Ring, allowOnEdge bool) bool {
 			return true
 		})
 		if intersects {
+			return false
+		}
+	}
+	return true
+}
+
+func ringContainsRect(ring Ring, rect Rect, allowOnEdge bool) bool {
+	points := rect.ringPoints()
+	rectRing := &simpleRing{points: points[:]}
+	return ringContainsRing(ring, rectRing, allowOnEdge)
+}
+
+func ringIntersectsRect(ring Ring, rect Rect, allowOnEdge bool) bool {
+	points := rect.ringPoints()
+	rectRing := &simpleRing{points: points[:]}
+	return ringIntersectsRing(ring, rectRing, allowOnEdge)
+}
+
+func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
+	if !ring.ContainsPoint(seg.A, allowOnEdge) {
+		return false
+	}
+	if !ring.ContainsPoint(seg.B, allowOnEdge) {
+		return false
+	}
+	if !ring.Convex() {
+		if ring.IntersectsSegment(seg, false) {
+			return false
+		}
+	}
+	return true
+}
+
+func ringIntersectsPoly(ring Ring, poly Poly, allowOnEdge bool) bool {
+	// 1) ring must intersect poly exterior
+	if !poly.Exterior().IntersectsRing(ring, allowOnEdge) {
+		return false
+	}
+	// 2) ring cannot be contained by a poly hole
+	for _, polyHole := range poly.Holes() {
+		if polyHole.ContainsRing(ring, false) {
 			return false
 		}
 	}

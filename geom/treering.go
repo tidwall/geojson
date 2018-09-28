@@ -24,6 +24,15 @@ func newTreeRing(points []Point) *treeRing {
 	return &ring
 }
 
+func (ring *treeRing) move(deltaX, deltaY float64) *treeRing {
+	points := make([]Point, len(ring.points))
+	for i := 0; i < len(ring.points); i++ {
+		points[i].X = ring.points[i].X + deltaX
+		points[i].Y = ring.points[i].Y + deltaY
+	}
+	return newTreeRing(points)
+}
+
 func (ring *treeRing) init() {
 	ring.convex, ring.rect = pointsConvexRect(ring.points)
 	//var rects []rTreeRect
@@ -179,10 +188,30 @@ func (ring *treeRing) ContainsPoint(point Point, allowOnEdge bool) bool {
 	return in
 }
 
+func (ring *treeRing) ContainsSegment(seg Segment, allowOnEdge bool) bool {
+	return ringContainsSegment(ring, seg, allowOnEdge)
+}
+
 func (ring *treeRing) ContainsRing(other Ring, allowOnEdge bool) bool {
 	return ringContainsRing(ring, other, allowOnEdge)
 }
 
 func (ring *treeRing) IntersectsRing(other Ring, allowOnEdge bool) bool {
 	return ringIntersectsRing(ring, other, allowOnEdge)
+}
+
+func (ring *treeRing) ContainsRect(rect Rect, allowOnEdge bool) bool {
+	return ringContainsRect(ring, rect, allowOnEdge)
+}
+
+func (ring *treeRing) IntersectsRect(rect Rect, allowOnEdge bool) bool {
+	return ringIntersectsRect(ring, rect, allowOnEdge)
+}
+
+func (ring *treeRing) ContainsPoly(poly Poly, allowOnEdge bool) bool {
+	return ring.ContainsRing(poly.Exterior(), allowOnEdge)
+}
+
+func (ring *treeRing) IntersectsPoly(poly Poly, allowOnEdge bool) bool {
+	return ringIntersectsPoly(ring, poly, allowOnEdge)
 }

@@ -116,10 +116,30 @@ func (ring *simpleRing) ContainsPoint(point Point, allowOnEdge bool) bool {
 	return in
 }
 
+func (ring *simpleRing) ContainsSegment(seg Segment, allowOnEdge bool) bool {
+	return ringContainsSegment(ring, seg, allowOnEdge)
+}
+
 func (ring *simpleRing) ContainsRing(other Ring, allowOnEdge bool) bool {
 	return ringContainsRing(ring, other, allowOnEdge)
 }
 
 func (ring *simpleRing) IntersectsRing(other Ring, allowOnEdge bool) bool {
 	return ringIntersectsRing(ring, other, allowOnEdge)
+}
+
+func (ring *simpleRing) ContainsRect(rect Rect, allowOnEdge bool) bool {
+	return ringContainsRect(ring, rect, allowOnEdge)
+}
+
+func (ring *simpleRing) IntersectsRect(rect Rect, allowOnEdge bool) bool {
+	return ringIntersectsRect(ring, rect, allowOnEdge)
+}
+
+func (ring *simpleRing) ContainsPoly(poly Poly, allowOnEdge bool) bool {
+	return ring.ContainsRing(poly.Exterior(), allowOnEdge)
+}
+
+func (ring *simpleRing) IntersectsPoly(poly Poly, allowOnEdge bool) bool {
+	return ringIntersectsPoly(ring, poly, allowOnEdge)
 }

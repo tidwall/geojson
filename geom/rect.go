@@ -31,3 +31,32 @@ func (rect Rect) IntersectsRect(other Rect) bool {
 	}
 	return true
 }
+
+// ContainsRing ...
+func (rect Rect) ContainsRing(ring Ring) bool {
+	return rect.ContainsRect(ring.Rect())
+}
+
+func (rect Rect) ringPoints() [5]Point {
+	return [5]Point{
+		{rect.Min.X, rect.Min.Y},
+		{rect.Max.X, rect.Min.Y},
+		{rect.Max.X, rect.Max.Y},
+		{rect.Min.X, rect.Max.Y},
+		{rect.Min.X, rect.Min.Y},
+	}
+}
+
+// IntersectsRing ...
+func (rect Rect) IntersectsRing(ring Ring) bool {
+	rectPoints := rect.ringPoints()
+	rectRing := &simpleRing{points: rectPoints[:]}
+	return rectRing.IntersectsRing(ring, true)
+}
+
+// // ContainsPoly ...
+// func (rect Rect) ContainsPoly(poly Poly) bool {
+// 	rectPoints := rect.ringPoints()
+// 	rectRing := &simpleRing{points: rectPoints[:]}
+// 	return rectRing.ContainsPoly(ring, true)
+// }
