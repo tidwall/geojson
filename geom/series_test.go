@@ -6,22 +6,22 @@ import (
 )
 
 func TestABC(t *testing.T) {
-	series2 := NewSeries(ri, true, true)
+	series2 := MakeSeries(ri, true, true)
 	_ = series2
 }
 
 func TestSeries(t *testing.T) {
 	t.Run("Basic", func(t *testing.T) {
-		series := NewSeries(octagon, true, true)
+		series := MakeSeries(octagon, true, true)
 		expect(t, reflect.DeepEqual(series.Points(), octagon))
 		expect(t, series.Convex())
 		expect(t, series.Rect() == R(0, 0, 10, 10))
 		expect(t, series.Closed())
-		series = NewSeries(octagon, false, true)
+		series = MakeSeries(octagon, false, true)
 		expect(t, reflect.DeepEqual(series.Points(), octagon))
 	})
 	t.Run("Search", func(t *testing.T) {
-		series := NewSeries(octagon, true, true)
+		series := MakeSeries(octagon, true, true)
 		var segs []Segment
 		series.Search(R(0, 0, 0, 0), func(seg Segment, _ int) bool {
 			segs = append(segs, seg)
@@ -84,7 +84,7 @@ func TestSeries(t *testing.T) {
 		t.Run("Closed", func(t *testing.T) {
 
 			// clip off the last point to force an auto closure
-			series := NewSeries(ri[:len(ri)-1], true, true)
+			series := MakeSeries(ri[:len(ri)-1], true, true)
 			var seg2sA []Segment
 			series.Search(series.Rect(), func(seg Segment, idx int) bool {
 				seg2sA = append(seg2sA, seg)
@@ -99,7 +99,7 @@ func TestSeries(t *testing.T) {
 			expect(t, checkSegsDups(seg2sA, seg2sB))
 
 			// use all points
-			series2 := NewSeries(ri, true, true)
+			series2 := MakeSeries(ri, true, true)
 			var seg2sC []Segment
 			series2.Scan(func(seg Segment, idx int) bool {
 				seg2sC = append(seg2sC, seg)
@@ -118,7 +118,7 @@ func TestSeries(t *testing.T) {
 			expect(t, first == seg2sA[0])
 		})
 		t.Run("Opened", func(t *testing.T) {
-			series := NewSeries(az, true, false)
+			series := MakeSeries(az, true, false)
 			var seg2sA []Segment
 			series.Search(series.Rect(), func(seg Segment, idx int) bool {
 				seg2sA = append(seg2sA, seg)
@@ -140,7 +140,7 @@ func TestSeries(t *testing.T) {
 			for i := len(shape) - 1; i >= 0; i-- {
 				rev = append(rev, shape[i])
 			}
-			series := NewSeries(rev, true, true)
+			series := MakeSeries(rev, true, true)
 			var seg2sA []Segment
 			series.Search(series.Rect(), func(seg Segment, idx int) bool {
 				seg2sA = append(seg2sA, seg)

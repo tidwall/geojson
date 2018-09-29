@@ -5,6 +5,11 @@ type Rect struct {
 	Min, Max Point
 }
 
+// Center ...
+func (rect Rect) Center() Point {
+	return Point{(rect.Max.X + rect.Min.X) / 2, (rect.Max.Y + rect.Min.Y) / 2}
+}
+
 // Area ...
 func (rect Rect) Area() float64 {
 	return (rect.Max.X - rect.Min.X) * (rect.Max.Y - rect.Min.Y)

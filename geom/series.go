@@ -1,8 +1,6 @@
 package geom
 
-import (
-	"github.com/tidwall/boxtree/d2"
-)
+import "github.com/tidwall/boxtree/d2"
 
 // minTreePoints are the minumum number of points required before it makes
 // sense to index an the segments in it's own rtree.
@@ -16,12 +14,12 @@ type Series struct {
 	convex bool        // points create a convex shape
 	rect   Rect        // minumum bounding rectangle
 	points []Point     // original points
-	tree   *d2.BoxTree // segment tree. should be access though loadTree()
+	tree   *d2.BoxTree // segment tree
 }
 
-// NewSeries returns a new Series
-func NewSeries(points []Point, copyPoints, closed bool) *Series {
-	series := new(Series)
+// MakeSeries returns a new Series
+func MakeSeries(points []Point, copyPoints, closed bool) Series {
+	var series Series
 	series.closed = closed
 	if copyPoints {
 		series.points = make([]Point, len(points))
