@@ -1,17 +1,17 @@
 package geom
 
-// Poly2 ...
-type Poly2 struct {
-	Exterior *Ring2
-	Holes    []*Ring2
+// Poly ...
+type Poly struct {
+	Exterior *Ring
+	Holes    []*Ring
 }
 
 // NewPoly2 ...
-func NewPoly2(exterior []Point, holes [][]Point) *Poly2 {
-	poly := new(Poly2)
+func NewPoly2(exterior []Point, holes [][]Point) *Poly {
+	poly := new(Poly)
 	poly.Exterior = NewRing2(exterior)
 	if len(holes) > 0 {
-		poly.Holes = make([]*Ring2, len(holes))
+		poly.Holes = make([]*Ring, len(holes))
 		for i := range holes {
 			poly.Holes[i] = NewRing2(holes[i])
 		}
@@ -20,7 +20,7 @@ func NewPoly2(exterior []Point, holes [][]Point) *Poly2 {
 }
 
 // ContainsPoint ...
-func (poly *Poly2) ContainsPoint(point Point) bool {
+func (poly *Poly) ContainsPoint(point Point) bool {
 	if !poly.Exterior.ContainsPoint(point, true) {
 		return false
 	}
@@ -35,12 +35,12 @@ func (poly *Poly2) ContainsPoint(point Point) bool {
 }
 
 // IntersectsPoint ...
-func (poly *Poly2) IntersectsPoint(point Point) bool {
+func (poly *Poly) IntersectsPoint(point Point) bool {
 	return poly.ContainsPoint(point)
 }
 
 // ContainsPoly ...
-func (poly *Poly2) ContainsPoly(other *Poly2) bool {
+func (poly *Poly) ContainsPoly(other *Poly) bool {
 	// 1) other exterior must be fully contained inside of the poly exterior.
 	if !poly.Exterior.ContainsRing(other.Exterior, true) {
 		return false
@@ -66,6 +66,6 @@ func (poly *Poly2) ContainsPoly(other *Poly2) bool {
 }
 
 // IntersectsPoly ...
-func (poly *Poly2) IntersectsPoly(other *Poly2) bool {
+func (poly *Poly) IntersectsPoly(other *Poly) bool {
 	return other.Exterior.IntersectsPoly(poly, true)
 }

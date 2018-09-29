@@ -48,14 +48,14 @@ func (rect Rect) ringPoints() [5]Point {
 }
 
 // ContainsRing ...
-func (rect Rect) ContainsRing(ring *Ring2) bool {
+func (rect Rect) ContainsRing(ring *Ring) bool {
 	return rect.ContainsRect(ring.Rect())
 }
 
 // IntersectsRing ...
-func (rect Rect) IntersectsRing(ring *Ring2) bool {
+func (rect Rect) IntersectsRing(ring *Ring) bool {
 	rectPoints := rect.ringPoints()
-	rectRing := &Ring2{MakeSeries(rectPoints[:], false, true)}
+	rectRing := &Ring{MakeSeries(rectPoints[:], false, true)}
 	return rectRing.IntersectsRing(ring, true)
 }
 

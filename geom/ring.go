@@ -2,19 +2,19 @@ package geom
 
 import "math"
 
-// Ring2 ...
-type Ring2 struct {
+// Ring ...
+type Ring struct {
 	Series
 }
 
 // NewRing2 ...
-func NewRing2(points []Point) *Ring2 {
-	ring := new(Ring2)
+func NewRing2(points []Point) *Ring {
+	ring := new(Ring)
 	ring.Series = MakeSeries(points, true, true)
 	return ring
 }
 
-func (ring *Ring2) move(deltaX, deltaY float64) *Ring2 {
+func (ring *Ring) move(deltaX, deltaY float64) *Ring {
 	points := make([]Point, len(ring.points))
 	for i := 0; i < len(ring.points); i++ {
 		points[i].X = ring.points[i].X + deltaX
@@ -24,7 +24,7 @@ func (ring *Ring2) move(deltaX, deltaY float64) *Ring2 {
 }
 
 // ContainsPoint ...
-func (ring *Ring2) ContainsPoint(point Point, allowOnEdge bool) bool {
+func (ring *Ring) ContainsPoint(point Point, allowOnEdge bool) bool {
 	in := false
 	ring.Search(
 		Rect{Point{math.Inf(-1), point.Y}, Point{math.Inf(+1), point.Y}},
@@ -44,12 +44,12 @@ func (ring *Ring2) ContainsPoint(point Point, allowOnEdge bool) bool {
 }
 
 // IntersectsPoint ...
-func (ring *Ring2) IntersectsPoint(point Point, allowOnEdge bool) bool {
+func (ring *Ring) IntersectsPoint(point Point, allowOnEdge bool) bool {
 	return ring.ContainsPoint(point, allowOnEdge)
 }
 
 // ContainsSegment ...
-func (ring *Ring2) ContainsSegment(seg Segment, allowOnEdge bool) bool {
+func (ring *Ring) ContainsSegment(seg Segment, allowOnEdge bool) bool {
 	if !ring.ContainsPoint(seg.A, allowOnEdge) {
 		return false
 	}
@@ -66,7 +66,7 @@ func (ring *Ring2) ContainsSegment(seg Segment, allowOnEdge bool) bool {
 }
 
 // IntersectsSegment ...
-func (ring *Ring2) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
+func (ring *Ring) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 	var intersects bool
 	ring.Search(seg.Rect(), func(other Segment, index int) bool {
 		if segmentsIntersect(seg.A, seg.B, other.A, other.B) {
@@ -88,21 +88,21 @@ func (ring *Ring2) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 }
 
 // ContainsRect ...
-func (ring *Ring2) ContainsRect(rect Rect, allowOnEdge bool) bool {
+func (ring *Ring) ContainsRect(rect Rect, allowOnEdge bool) bool {
 	points := rect.ringPoints()
-	rectRing := &Ring2{MakeSeries(points[:], false, true)}
+	rectRing := &Ring{MakeSeries(points[:], false, true)}
 	return ring.ContainsRing(rectRing, allowOnEdge)
 }
 
 // IntersectsRect ...
-func (ring *Ring2) IntersectsRect(rect Rect, allowOnEdge bool) bool {
+func (ring *Ring) IntersectsRect(rect Rect, allowOnEdge bool) bool {
 	points := rect.ringPoints()
-	rectRing := &Ring2{MakeSeries(points[:], false, true)}
+	rectRing := &Ring{MakeSeries(points[:], false, true)}
 	return ring.IntersectsRing(rectRing, allowOnEdge)
 }
 
 // ContainsRing ...
-func (ring *Ring2) ContainsRing(other *Ring2, allowOnEdge bool) bool {
+func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
 	outer, inner := ring, other
 	outerRect := outer.Rect()
 	innerRect := inner.Rect()
@@ -137,7 +137,7 @@ func (ring *Ring2) ContainsRing(other *Ring2, allowOnEdge bool) bool {
 }
 
 // IntersectsRing ...
-func (ring *Ring2) IntersectsRing(other *Ring2, allowOnEdge bool) bool {
+func (ring *Ring) IntersectsRing(other *Ring, allowOnEdge bool) bool {
 	outer, inner := ring, other
 	outerRect := outer.Rect()
 	innerRect := inner.Rect()
@@ -170,12 +170,12 @@ func (ring *Ring2) IntersectsRing(other *Ring2, allowOnEdge bool) bool {
 }
 
 // ContainsPoly ...
-func (ring *Ring2) ContainsPoly(poly *Poly2, allowOnEdge bool) bool {
+func (ring *Ring) ContainsPoly(poly *Poly, allowOnEdge bool) bool {
 	return ring.ContainsRing(poly.Exterior, allowOnEdge)
 }
 
 // IntersectsPoly ...
-func (ring *Ring2) IntersectsPoly(poly *Poly2, allowOnEdge bool) bool {
+func (ring *Ring) IntersectsPoly(poly *Poly, allowOnEdge bool) bool {
 	// 1) ring must intersect poly exterior
 	if !poly.Exterior.IntersectsRing(ring, allowOnEdge) {
 		return false

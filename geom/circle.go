@@ -5,7 +5,7 @@ import (
 )
 
 // CircleRing ...
-func CircleRing(center Point, meters float64, segments int) *Ring2 {
+func CircleRing(center Point, meters float64, segments int) *Ring {
 	if segments < 3 {
 		segments = 3
 	}

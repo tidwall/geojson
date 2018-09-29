@@ -187,7 +187,7 @@ func TestRingIntersectsRing(t *testing.T) {
 	small := NewRing2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
 	small.tree = nil
 
-	intersects := func(ring *Ring2) bool {
+	intersects := func(ring *Ring) bool {
 		tt := simple.IntersectsRing(ring, true)
 		if tree.IntersectsRing(ring, true) != tt {
 			panic("structure mismatch")
@@ -195,7 +195,7 @@ func TestRingIntersectsRing(t *testing.T) {
 		return tt
 	}
 
-	intersectsOnEdgeNotAllowed := func(ring *Ring2) bool {
+	intersectsOnEdgeNotAllowed := func(ring *Ring) bool {
 		tt := simple.IntersectsRing(ring, false)
 		if tree.IntersectsRing(ring, false) != tt {
 			panic("structure mismatch")
@@ -501,12 +501,12 @@ func TestRingVarious(t *testing.T) {
 	expect(t, rect == Rect{})
 }
 
-func newRingSimple2(points []Point) *Ring2 {
+func newRingSimple2(points []Point) *Ring {
 	ring := NewRing2(points)
 	ring.tree = nil
 	return ring
 }
-func newRingIndexed2(points []Point) *Ring2 {
+func newRingIndexed2(points []Point) *Ring {
 	ring := NewRing2(points)
 	ring.buildTree()
 	return ring
