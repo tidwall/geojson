@@ -37,11 +37,6 @@ func (rect Rect) IntersectsRect(other Rect) bool {
 	return true
 }
 
-// ContainsRing ...
-func (rect Rect) ContainsRing(ring Ring) bool {
-	return rect.ContainsRect(ring.Rect())
-}
-
 func (rect Rect) ringPoints() [5]Point {
 	return [5]Point{
 		{rect.Min.X, rect.Min.Y},
@@ -52,10 +47,15 @@ func (rect Rect) ringPoints() [5]Point {
 	}
 }
 
+// ContainsRing ...
+func (rect Rect) ContainsRing(ring *Ring2) bool {
+	return rect.ContainsRect(ring.Rect())
+}
+
 // IntersectsRing ...
-func (rect Rect) IntersectsRing(ring Ring) bool {
+func (rect Rect) IntersectsRing(ring *Ring2) bool {
 	rectPoints := rect.ringPoints()
-	rectRing := &ringSimple{points: rectPoints[:]}
+	rectRing := &Ring2{MakeSeries(rectPoints[:], false, true)}
 	return rectRing.IntersectsRing(ring, true)
 }
 

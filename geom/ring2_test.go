@@ -54,10 +54,15 @@ func expect(t testing.TB, what bool) {
 }
 
 func TestRingScan(t *testing.T) {
-	test := func(t *testing.T, index int) {
-		rectangleRing := NewRing(rectangle, index)
+	test := func(t *testing.T, index bool) {
+		rectangleRing := NewRing2(rectangle)
+		if !index {
+			rectangleRing.tree = nil
+		} else {
+			rectangleRing.buildTree()
+		}
 		var segs []Segment
-		rectangleRing.Scan(func(seg Segment) bool {
+		rectangleRing.Scan(func(seg Segment, idx int) bool {
 			segs = append(segs, seg)
 			return true
 		})
@@ -73,8 +78,13 @@ func TestRingScan(t *testing.T) {
 		}
 
 		segs = nil
-		notClosedRing := NewRing(rectangle, index)
-		notClosedRing.Scan(func(seg Segment) bool {
+		notClosedRing := NewRing2(rectangle)
+		if !index {
+			notClosedRing.tree = nil
+		} else {
+			notClosedRing.buildTree()
+		}
+		notClosedRing.Scan(func(seg Segment, idx int) bool {
 			segs = append(segs, seg)
 			return true
 		})
@@ -84,16 +94,21 @@ func TestRingScan(t *testing.T) {
 		}
 	}
 	t.Run("Indexed", func(t *testing.T) {
-		test(t, Index)
+		test(t, true)
 	})
 	t.Run("Simple", func(t *testing.T) {
-		test(t, NoIndex)
+		test(t, false)
 	})
 }
 
 func TestRingSearch(t *testing.T) {
-	test := func(t *testing.T, index int) {
-		octagonRing := NewRing(octagon, index)
+	test := func(t *testing.T, index bool) {
+		octagonRing := NewRing2(octagon)
+		if !index {
+			octagonRing.tree = nil
+		} else {
+			octagonRing.buildTree()
+		}
 		var segs []Segment
 		octagonRing.Search(R(0, 0, 0, 0), func(seg Segment, _ int) bool {
 			segs = append(segs, seg)
@@ -129,16 +144,18 @@ func TestRingSearch(t *testing.T) {
 		expect(t, checkSegsDups(segsExpect, segs))
 	}
 	t.Run("Indexed", func(t *testing.T) {
-		test(t, Index)
+		test(t, true)
 	})
 	t.Run("Simple", func(t *testing.T) {
-		test(t, NoIndex)
+		test(t, false)
 	})
 }
 
 func TestRingIntersectsSegment(t *testing.T) {
-	simple := NewRing(concave1, NoIndex)
-	tree := NewRing(concave1, Index)
+	simple := NewRing2(concave1)
+	simple.tree = nil
+	tree := NewRing2(concave1)
+	tree.buildTree()
 
 	expect(t, !simple.IntersectsSegment(S(0, 0, 3, 3), true))
 	expect(t, !tree.IntersectsSegment(S(0, 0, 3, 3), true))
@@ -163,11 +180,14 @@ func TestRingIntersectsSegment(t *testing.T) {
 }
 
 func TestRingIntersectsRing(t *testing.T) {
-	simple := NewRing(concave1, NoIndex)
-	tree := NewRing(concave1, Index)
-	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, NoIndex).(*ringSimple)
+	simple := NewRing2(concave1)
+	simple.tree = nil
+	tree := NewRing2(concave1)
+	tree.buildTree()
+	small := NewRing2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
+	small.tree = nil
 
-	intersects := func(ring Ring) bool {
+	intersects := func(ring *Ring2) bool {
 		tt := simple.IntersectsRing(ring, true)
 		if tree.IntersectsRing(ring, true) != tt {
 			panic("structure mismatch")
@@ -175,7 +195,7 @@ func TestRingIntersectsRing(t *testing.T) {
 		return tt
 	}
 
-	intersectsOnEdgeNotAllowed := func(ring Ring) bool {
+	intersectsOnEdgeNotAllowed := func(ring *Ring2) bool {
 		tt := simple.IntersectsRing(ring, false)
 		if tree.IntersectsRing(ring, false) != tt {
 			panic("structure mismatch")
@@ -213,8 +233,10 @@ func TestRingIntersectsRing(t *testing.T) {
 }
 
 func TestBigRandomPIP(t *testing.T) {
-	simple := NewRing(az, NoIndex)
-	tree := NewRing(az, Index)
+	simple := NewRing2(az)
+	simple.tree = nil
+	tree := NewRing2(az)
+	tree.buildTree()
 	expect(t, simple.Rect() == tree.Rect())
 	rect := tree.Rect()
 	start := time.Now()
@@ -232,8 +254,10 @@ func testBig(
 	t *testing.T, label string, points []Point, pointIn, pointOut Point,
 ) {
 	N := 10000
-	simple := NewRing(points, NoIndex)
-	tree := NewRing(points, Index)
+	simple := NewRing2(points)
+	simple.tree = nil
+	tree := NewRing2(points)
+	tree.buildTree()
 	pointOn := points[len(points)/2]
 
 	expect(t, simple.ContainsPoint(pointIn, true))
@@ -285,7 +309,7 @@ func TestBigTexas(t *testing.T) {
 }
 
 func TestBigCircle(t *testing.T) {
-	circle := CircleRing(P(-100.1, 31.2), 660000, 10000, 0).Points()
+	circle := CircleRing(P(-100.1, 31.2), 660000, 10000).Points()
 	if false {
 		s := `{"type":"Polygon","coordinates":[[`
 		for i, p := range circle {
@@ -298,13 +322,15 @@ func TestBigCircle(t *testing.T) {
 		println(s)
 	}
 	testBig(t, "circ", circle, P(-98.52, 29.363), P(-107.8857, 31.5410))
-	circle = CircleRing(P(-100.1, 31.2), 660000, 2, 0).Points()
+	circle = CircleRing(P(-100.1, 31.2), 660000, 2).Points()
 	expect(t, len(circle) == 4)
 }
 
 func TestRingContainsRing(t *testing.T) {
-	simple := NewRing(concave1, NoIndex)
-	tree := NewRing(concave1, Index)
+	simple := NewRing2(concave1)
+	simple.tree = nil
+	tree := NewRing2(concave1)
+	tree.buildTree()
 
 	expect(t, simple.ContainsRing(simple, true))
 	expect(t, simple.ContainsRing(tree, true))
@@ -316,7 +342,8 @@ func TestRingContainsRing(t *testing.T) {
 	expect(t, !tree.ContainsRing(simple, false))
 	expect(t, !tree.ContainsRing(tree, false))
 
-	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, NoIndex).(*ringSimple)
+	small := NewRing2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
+	small.tree = nil
 
 	expect(t, !simple.ContainsRing(small, true))
 	expect(t, !tree.ContainsRing(small, true))
@@ -368,9 +395,12 @@ func TestRingContainsRing(t *testing.T) {
 
 }
 func TestBowtie(t *testing.T) {
-	simple := NewRing(bowtie, NoIndex)
-	tree := NewRing(bowtie, Index)
-	square := NewRing([]Point{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)}, 0)
+	simple := NewRing2(bowtie)
+	simple.tree = nil
+	tree := NewRing2(bowtie)
+	tree.buildTree()
+	square := NewRing2([]Point{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)})
+	square.tree = nil
 
 	expect(t, simple.IntersectsRing(square, true))
 	expect(t, tree.IntersectsRing(square, true))
@@ -380,7 +410,8 @@ func TestBowtie(t *testing.T) {
 }
 
 func TestRingVarious(t *testing.T) {
-	ring := NewRing(octagon[:len(octagon)-1], Index)
+	ring := NewRing2(octagon[:len(octagon)-1])
+	ring.buildTree()
 	n := 0
 	ring.Search(R(0, 0, 10, 10), func(seg Segment, index int) bool {
 		n++
@@ -388,24 +419,25 @@ func TestRingVarious(t *testing.T) {
 	})
 	expect(t, n == 8)
 	n = 0
-	ring.Scan(func(seg Segment) bool {
+	ring.Scan(func(seg Segment, idx int) bool {
 		n++
 		return true
 	})
 	expect(t, n == 8)
 	n = 0
-	ring.Scan(func(seg Segment) bool {
+	ring.Scan(func(seg Segment, idx int) bool {
 		n++
 		return false
 	})
 	expect(t, n == 1)
 	expect(t, ring.IntersectsSegment(S(0, 0, 4, 4), true))
-	expect(t, !NewRing([]Point{}, NoIndex).Convex())
-	expect(t, NewRing(octagon, NoIndex).Convex())
-	expect(t, !NewRing([]Point{}, Index).Convex())
-	expect(t, NewRing(octagon, Index).Convex())
+	expect(t, !newRingSimple2([]Point{}).Convex())
+	expect(t, newRingSimple2(octagon).Convex())
+	expect(t, !newRingIndexed2([]Point{}).Convex())
+	expect(t, newRingIndexed2(octagon).Convex())
 
-	ring = NewRing(octagon[:len(octagon)-1], NoIndex)
+	ring = NewRing2(octagon[:len(octagon)-1])
+	ring.tree = nil
 	n = 0
 	ring.Search(R(0, 0, 10, 10), func(seg Segment, index int) bool {
 		n++
@@ -413,114 +445,131 @@ func TestRingVarious(t *testing.T) {
 	})
 	expect(t, n == 1)
 	n = 0
-	ring.Scan(func(seg Segment) bool {
+	ring.Scan(func(seg Segment, idx int) bool {
 		n++
 		return true
 	})
 	expect(t, n == 8)
 	expect(t, ring.IntersectsSegment(S(0, 0, 4, 4), true))
 
-	small := NewRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}, NoIndex).(*ringSimple)
+	small := NewRing2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
+	small.tree = nil
+
 	expect(t, small.IntersectsRing(ring, true))
 	expect(t, ring.IntersectsRing(small, true))
 
 	expect(t, raycast(P(0, 0), P(0, 0), P(0, 0)).on)
 
-	ring1 := NewRing(octagon, NoIndex)
+	ring1 := NewRing2(octagon)
+	ring1.tree = nil
 	n1 := 0
-	ring1.Scan(func(seg Segment) bool {
+	ring1.Scan(func(seg Segment, idx int) bool {
 		n1++
 		return true
 	})
-	expect(t, ring1.IsClosed())
-	ring2 := NewRing(octagon[:len(octagon)-1], NoIndex)
+	expect(t, ring1.Closed())
+	ring2 := NewRing2(octagon[:len(octagon)-1])
+	ring2.tree = nil
 	n2 := 0
-	ring2.Scan(func(seg Segment) bool {
+	ring2.Scan(func(seg Segment, idx int) bool {
 		n2++
 		return true
 	})
 	expect(t, n1 == n2)
-	expect(t, ring2.IsClosed())
+	expect(t, ring2.Closed())
 
-	ring1 = NewRing(octagon, Index)
+	ring1 = NewRing2(octagon)
+	ring1.buildTree()
 	n1 = 0
-	ring1.Scan(func(seg Segment) bool {
+	ring1.Scan(func(seg Segment, idx int) bool {
 		n1++
 		return true
 	})
-	expect(t, ring1.IsClosed())
-	ring2 = NewRing(octagon[:len(octagon)-1], Index)
+	expect(t, ring1.Closed())
+	ring2 = NewRing2(octagon[:len(octagon)-1])
+	ring2.buildTree()
 	n2 = 0
-	ring2.Scan(func(seg Segment) bool {
+	ring2.Scan(func(seg Segment, idx int) bool {
 		n2++
 		return true
 	})
 	expect(t, n1 == n2)
-	expect(t, ring2.IsClosed())
+	expect(t, ring2.Closed())
 
 	convex, rect := pointsConvexRect([]Point{P(0, 0)})
 	expect(t, !convex)
 	expect(t, rect == Rect{})
 }
 
+func newRingSimple2(points []Point) *Ring2 {
+	ring := NewRing2(points)
+	ring.tree = nil
+	return ring
+}
+func newRingIndexed2(points []Point) *Ring2 {
+	ring := NewRing2(points)
+	ring.buildTree()
+	return ring
+}
+
 func TestRingContainsPoint(t *testing.T) {
-	expect(t, newRingSimple(octagon).IntersectsPoint(P(4, 4), true))
-	expect(t, newRingIndexed(octagon).IntersectsPoint(P(4, 4), true))
+	expect(t, newRingSimple2(octagon).IntersectsPoint(P(4, 4), true))
+	expect(t, newRingIndexed2(octagon).IntersectsPoint(P(4, 4), true))
 }
 
 func TestRingContainsSegment(t *testing.T) {
-	expect(t, newRingSimple(octagon).ContainsSegment(S(4, 4, 6, 6), true))
-	expect(t, newRingIndexed(octagon).ContainsSegment(S(4, 4, 6, 6), true))
-	expect(t, !newRingSimple(octagon).ContainsSegment(S(9, 4, 11, 6), true))
-	expect(t, !newRingIndexed(octagon).ContainsSegment(S(9, 4, 11, 6), true))
-	expect(t, !newRingSimple(octagon).ContainsSegment(S(11, 4, 9, 6), true))
-	expect(t, !newRingIndexed(octagon).ContainsSegment(S(11, 4, 9, 6), true))
-	expect(t, !newRingSimple(concave1).ContainsSegment(S(11, 4, 9, 6), true))
-	expect(t, !newRingIndexed(concave1).ContainsSegment(S(11, 4, 9, 6), true))
-	expect(t, newRingSimple(concave1).ContainsSegment(S(6, 6, 8, 8), true))
-	expect(t, newRingIndexed(concave1).ContainsSegment(S(6, 6, 8, 8), true))
-	expect(t, !newRingSimple(concave1).ContainsSegment(S(1, 6, 6, 1), true))
-	expect(t, !newRingIndexed(concave1).ContainsSegment(S(1, 6, 6, 1), true))
+	expect(t, newRingSimple2(octagon).ContainsSegment(S(4, 4, 6, 6), true))
+	expect(t, newRingIndexed2(octagon).ContainsSegment(S(4, 4, 6, 6), true))
+	expect(t, !newRingSimple2(octagon).ContainsSegment(S(9, 4, 11, 6), true))
+	expect(t, !newRingIndexed2(octagon).ContainsSegment(S(9, 4, 11, 6), true))
+	expect(t, !newRingSimple2(octagon).ContainsSegment(S(11, 4, 9, 6), true))
+	expect(t, !newRingIndexed2(octagon).ContainsSegment(S(11, 4, 9, 6), true))
+	expect(t, !newRingSimple2(concave1).ContainsSegment(S(11, 4, 9, 6), true))
+	expect(t, !newRingIndexed2(concave1).ContainsSegment(S(11, 4, 9, 6), true))
+	expect(t, newRingSimple2(concave1).ContainsSegment(S(6, 6, 8, 8), true))
+	expect(t, newRingIndexed2(concave1).ContainsSegment(S(6, 6, 8, 8), true))
+	expect(t, !newRingSimple2(concave1).ContainsSegment(S(1, 6, 6, 1), true))
+	expect(t, !newRingIndexed2(concave1).ContainsSegment(S(1, 6, 6, 1), true))
 }
 func TestRingContainsRect(t *testing.T) {
-	expect(t, newRingSimple(octagon).ContainsRect(R(4, 4, 6, 6), true))
-	expect(t, newRingIndexed(octagon).ContainsRect(R(4, 4, 6, 6), true))
-	expect(t, newRingSimple(octagon).ContainsRect(R(4, 4, 6, 6), false))
-	expect(t, newRingIndexed(octagon).ContainsRect(R(4, 4, 6, 6), false))
+	expect(t, newRingSimple2(octagon).ContainsRect(R(4, 4, 6, 6), true))
+	expect(t, newRingIndexed2(octagon).ContainsRect(R(4, 4, 6, 6), true))
+	expect(t, newRingSimple2(octagon).ContainsRect(R(4, 4, 6, 6), false))
+	expect(t, newRingIndexed2(octagon).ContainsRect(R(4, 4, 6, 6), false))
 }
 func TestRingIntersectsRect(t *testing.T) {
-	expect(t, newRingSimple(octagon).IntersectsRect(R(9, 4, 11, 6), true))
-	expect(t, newRingIndexed(octagon).IntersectsRect(R(9, 4, 11, 6), true))
-	expect(t, !newRingSimple(octagon).IntersectsRect(R(10, 4, 12, 6), false))
-	expect(t, !newRingIndexed(octagon).IntersectsRect(R(10, 4, 12, 6), false))
-	expect(t, newRingSimple(octagon).IntersectsRect(R(10, 4, 12, 6), true))
-	expect(t, newRingIndexed(octagon).IntersectsRect(R(10, 4, 12, 6), true))
-	expect(t, !newRingSimple(octagon).IntersectsRect(R(11, 4, 13, 6), true))
-	expect(t, !newRingIndexed(octagon).IntersectsRect(R(11, 4, 13, 6), true))
+	expect(t, newRingSimple2(octagon).IntersectsRect(R(9, 4, 11, 6), true))
+	expect(t, newRingIndexed2(octagon).IntersectsRect(R(9, 4, 11, 6), true))
+	expect(t, !newRingSimple2(octagon).IntersectsRect(R(10, 4, 12, 6), false))
+	expect(t, !newRingIndexed2(octagon).IntersectsRect(R(10, 4, 12, 6), false))
+	expect(t, newRingSimple2(octagon).IntersectsRect(R(10, 4, 12, 6), true))
+	expect(t, newRingIndexed2(octagon).IntersectsRect(R(10, 4, 12, 6), true))
+	expect(t, !newRingSimple2(octagon).IntersectsRect(R(11, 4, 13, 6), true))
+	expect(t, !newRingIndexed2(octagon).IntersectsRect(R(11, 4, 13, 6), true))
 }
 func TestRingContainsPoly(t *testing.T) {
-	expect(t, newRingSimple(octagon).ContainsPoly(
-		NewPoly(octagon, nil, NoIndex), true))
-	expect(t, newRingIndexed(octagon).ContainsPoly(
-		NewPoly(octagon, nil, NoIndex), true))
-	expect(t, !newRingSimple(octagon).ContainsPoly(
-		NewPoly(octagon, nil, NoIndex), false))
-	expect(t, !newRingIndexed(octagon).ContainsPoly(
-		NewPoly(octagon, nil, NoIndex), false))
+	expect(t, newRingSimple2(octagon).ContainsPoly(
+		NewPoly2(octagon, nil), true))
+	expect(t, newRingIndexed2(octagon).ContainsPoly(
+		NewPoly2(octagon, nil), true))
+	expect(t, !newRingSimple2(octagon).ContainsPoly(
+		NewPoly2(octagon, nil), false))
+	expect(t, !newRingIndexed2(octagon).ContainsPoly(
+		NewPoly2(octagon, nil), false))
 }
 func TestRingIntersectsPoly(t *testing.T) {
-	expect(t, newRingSimple(octagon).move(5, 0).IntersectsPoly(
-		NewPoly(octagon, nil, NoIndex), true))
-	expect(t, newRingIndexed(octagon).move(5, 0).IntersectsPoly(
-		NewPoly(octagon, nil, NoIndex), true))
-	expect(t, newRingSimple(octagon).move(10, 0).IntersectsPoly(
-		NewPoly(octagon, nil, NoIndex), true))
-	expect(t, newRingIndexed(octagon).move(10, 0).IntersectsPoly(
-		NewPoly(octagon, nil, NoIndex), true))
-	expect(t, !newRingSimple(octagon).move(10, 0).IntersectsPoly(
-		NewPoly(octagon, nil, NoIndex), false))
-	expect(t, !newRingIndexed(octagon).move(10, 0).IntersectsPoly(
-		NewPoly(octagon, nil, NoIndex), false))
+	expect(t, newRingSimple2(octagon).move(5, 0).IntersectsPoly(
+		NewPoly2(octagon, nil), true))
+	expect(t, newRingIndexed2(octagon).move(5, 0).IntersectsPoly(
+		NewPoly2(octagon, nil), true))
+	expect(t, newRingSimple2(octagon).move(10, 0).IntersectsPoly(
+		NewPoly2(octagon, nil), true))
+	expect(t, newRingIndexed2(octagon).move(10, 0).IntersectsPoly(
+		NewPoly2(octagon, nil), true))
+	expect(t, !newRingSimple2(octagon).move(10, 0).IntersectsPoly(
+		NewPoly2(octagon, nil), false))
+	expect(t, !newRingIndexed2(octagon).move(10, 0).IntersectsPoly(
+		NewPoly2(octagon, nil), false))
 }
 
 func TestSegmentsIntersect(t *testing.T) {
@@ -542,8 +591,10 @@ func TestSegmentsIntersect(t *testing.T) {
 
 func BenchmarkCircleRect(b *testing.B) {
 	for i := 4; i < 256; i *= 2 {
-		indexed := CircleRing(P(-112, 33), 1000, i, Index)
-		simple := CircleRing(P(-112, 33), 1000, i, NoIndex)
+		indexed := CircleRing(P(-112, 33), 1000, i)
+		indexed.buildTree()
+		simple := CircleRing(P(-112, 33), 1000, i)
+		simple.tree = nil
 		b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
 			b.Run("Simple", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
@@ -554,10 +605,7 @@ func BenchmarkCircleRect(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					indexed.Rect()
 				}
-
 			})
-
 		})
 	}
-
 }

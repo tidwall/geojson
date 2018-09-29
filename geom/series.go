@@ -112,11 +112,19 @@ func (series *Series) Scan(iter func(seg Segment, idx int) bool) {
 	}
 }
 
+func (series *Series) buildTree() {
+	series.tree = new(d2.BoxTree)
+	processPoints(series.points, series.closed, series.tree)
+}
+
 // processPoints tests if the ring is convex, calculates the outer
 // rectangle, and inserts segments into a boxtree in one pass.
 func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 	convex bool, rect Rect,
 ) {
+	if len(points) == 0 {
+		return
+	}
 	var concave bool
 	var dir int
 	var a, b, c Point

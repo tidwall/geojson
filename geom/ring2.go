@@ -14,6 +14,15 @@ func NewRing2(points []Point) *Ring2 {
 	return ring
 }
 
+func (ring *Ring2) move(deltaX, deltaY float64) *Ring2 {
+	points := make([]Point, len(ring.points))
+	for i := 0; i < len(ring.points); i++ {
+		points[i].X = ring.points[i].X + deltaX
+		points[i].Y = ring.points[i].Y + deltaY
+	}
+	return NewRing2(points)
+}
+
 // ContainsPoint ...
 func (ring *Ring2) ContainsPoint(point Point, allowOnEdge bool) bool {
 	in := false
