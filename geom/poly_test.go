@@ -35,18 +35,18 @@ func TestPolyVarious(t *testing.T) {
 			expect(t, !poly.ContainsRing(poly.Exterior()))
 			expect(t, !poly.ContainsRing(poly.Holes()[0]))
 
-			expect(t, !poly.ContainsRing(newSimpleRing(small).move(10, 0)))
+			expect(t, !poly.ContainsRing(newRingSimple(small).move(10, 0)))
 			expect(t, !poly.ContainsPoly(NewPoly(
-				newSimpleRing(small).move(10, 0).Points(), nil, NoIndex)))
+				newRingSimple(small).move(10, 0).Points(), nil, NoIndex)))
 
 		},
 	)
 
-	ex1 := newSimpleRing([]Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}})
-	ex2 := newSimpleRing([]Point{{1, 1}, {9, 1}, {9, 9}, {1, 9}, {1, 1}})
-	ex3 := newSimpleRing([]Point{{2, 2}, {8, 2}, {8, 8}, {2, 8}, {2, 2}})
-	ex4 := newSimpleRing([]Point{{3, 3}, {7, 3}, {7, 7}, {3, 7}, {3, 3}})
-	ex5 := newSimpleRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
+	ex1 := newRingSimple([]Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}})
+	ex2 := newRingSimple([]Point{{1, 1}, {9, 1}, {9, 9}, {1, 9}, {1, 1}})
+	ex3 := newRingSimple([]Point{{2, 2}, {8, 2}, {8, 8}, {2, 8}, {2, 2}})
+	ex4 := newRingSimple([]Point{{3, 3}, {7, 3}, {7, 7}, {3, 7}, {3, 3}})
+	ex5 := newRingSimple([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
 	out5 := ex5.move(10, 0)
 
 	p1 := NewPoly(ex1.Points(), [][]Point{ex4.Points()}, NoIndex)

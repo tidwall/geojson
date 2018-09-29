@@ -6,36 +6,32 @@ import (
 	"github.com/tidwall/boxtree/d2"
 )
 
-//const useNewRTree = false
-
-type treeRing struct {
+type ringIndexed struct {
 	points []Point
 	rect   Rect
 	convex bool
 	tree   d2.BoxTree
-	//tree2  rTree
 }
 
-func newTreeRing(points []Point) *treeRing {
-	var ring treeRing
+func newRingIndexed(points []Point) *ringIndexed {
+	var ring ringIndexed
 	ring.points = make([]Point, len(points))
 	copy(ring.points, points)
 	ring.init()
 	return &ring
 }
 
-func (ring *treeRing) move(deltaX, deltaY float64) *treeRing {
+func (ring *ringIndexed) move(deltaX, deltaY float64) *ringIndexed {
 	points := make([]Point, len(ring.points))
 	for i := 0; i < len(ring.points); i++ {
 		points[i].X = ring.points[i].X + deltaX
 		points[i].Y = ring.points[i].Y + deltaY
 	}
-	return newTreeRing(points)
+	return newRingIndexed(points)
 }
 
-func (ring *treeRing) init() {
+func (ring *ringIndexed) init() {
 	ring.convex, ring.rect = pointsConvexRect(ring.points)
-	//var rects []rTreeRect
 	for i := 0; i < len(ring.points); i++ {
 		var seg Segment
 		seg.A = ring.points[i]
@@ -48,66 +44,33 @@ func (ring *treeRing) init() {
 			seg.B = ring.points[i+1]
 		}
 		rect := seg.Rect()
-		// if useNewRTree {
-		// 	rects = append(rects, rTreeRect{
-		// 		min:  [2]float64{rect.Min.X, rect.Min.Y},
-		// 		max:  [2]float64{rect.Max.X, rect.Max.Y},
-		// 		data: i,
-		// 	})
-		// } else {
 		ring.tree.Insert(
 			[]float64{rect.Min.X, rect.Min.Y},
 			[]float64{rect.Max.X, rect.Max.Y},
 			i,
 		)
-		// }
 	}
-	// if useNewRTree {
-	// 	ring.tree2.load(rects)
-	// }
 }
 
-func (ring *treeRing) Points() []Point {
+func (ring *ringIndexed) Points() []Point {
 	return ring.points
 }
 
-func (ring *treeRing) IsClosed() bool {
+func (ring *ringIndexed) IsClosed() bool {
 	return true
 }
 
-func (ring *treeRing) Rect() Rect {
+func (ring *ringIndexed) Rect() Rect {
 	return ring.rect
 }
 
-func (ring *treeRing) Convex() bool {
+func (ring *ringIndexed) Convex() bool {
 	return ring.convex
 }
 
-func (ring *treeRing) Search(
+func (ring *ringIndexed) Search(
 	rect Rect, iter func(seg Segment, index int) bool,
 ) {
-	// if useNewRTree {
-	// 	ring.tree2.search(
-	// 		rTreeRect{
-	// 			min: [2]float64{rect.Min.X, rect.Min.Y},
-	// 			max: [2]float64{rect.Max.X, rect.Max.Y},
-	// 		},
-	// 		func(rect rTreeRect) bool {
-	// 			index := rect.data.(int)
-	// 			var seg Segment
-	// 			seg.A = ring.points[index]
-	// 			if index == len(ring.points)-1 {
-	// 				seg.B = ring.points[0]
-	// 			} else {
-	// 				seg.B = ring.points[index+1]
-	// 			}
-	// 			if !iter(seg, index) {
-	// 				return false
-	// 			}
-	// 			return true
-	// 		},
-	// 	)
-	// } else {
 	ring.tree.Search(
 		[]float64{rect.Min.X, rect.Min.Y},
 		[]float64{rect.Max.X, rect.Max.Y},
@@ -126,10 +89,9 @@ func (ring *treeRing) Search(
 			return true
 		},
 	)
-	// }
 }
 
-func (ring *treeRing) Scan(iter func(seg Segment) bool) {
+func (ring *ringIndexed) Scan(iter func(seg Segment) bool) {
 	for i := 0; i < len(ring.points); i++ {
 		var seg Segment
 		seg.A = ring.points[i]
@@ -147,7 +109,7 @@ func (ring *treeRing) Scan(iter func(seg Segment) bool) {
 	}
 }
 
-func (ring *treeRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
+func (ring *ringIndexed) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 	var intersects bool
 	ring.Search(seg.Rect(), func(other Segment, index int) bool {
 		if segmentsIntersect(seg.A, seg.B, other.A, other.B) {
@@ -168,7 +130,7 @@ func (ring *treeRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 	return intersects
 }
 
-func (ring *treeRing) ContainsPoint(point Point, allowOnEdge bool) bool {
+func (ring *ringIndexed) ContainsPoint(point Point, allowOnEdge bool) bool {
 	rect := Rect{
 		Min: Point{math.Inf(-1), point.Y},
 		Max: Point{math.Inf(+1), point.Y},
@@ -188,30 +150,34 @@ func (ring *treeRing) ContainsPoint(point Point, allowOnEdge bool) bool {
 	return in
 }
 
-func (ring *treeRing) ContainsSegment(seg Segment, allowOnEdge bool) bool {
+func (ring *ringIndexed) IntersectsPoint(point Point, allowOnEdge bool) bool {
+	return ring.ContainsPoint(point, allowOnEdge)
+}
+
+func (ring *ringIndexed) ContainsSegment(seg Segment, allowOnEdge bool) bool {
 	return ringContainsSegment(ring, seg, allowOnEdge)
 }
 
-func (ring *treeRing) ContainsRing(other Ring, allowOnEdge bool) bool {
+func (ring *ringIndexed) ContainsRing(other Ring, allowOnEdge bool) bool {
 	return ringContainsRing(ring, other, allowOnEdge)
 }
 
-func (ring *treeRing) IntersectsRing(other Ring, allowOnEdge bool) bool {
+func (ring *ringIndexed) IntersectsRing(other Ring, allowOnEdge bool) bool {
 	return ringIntersectsRing(ring, other, allowOnEdge)
 }
 
-func (ring *treeRing) ContainsRect(rect Rect, allowOnEdge bool) bool {
+func (ring *ringIndexed) ContainsRect(rect Rect, allowOnEdge bool) bool {
 	return ringContainsRect(ring, rect, allowOnEdge)
 }
 
-func (ring *treeRing) IntersectsRect(rect Rect, allowOnEdge bool) bool {
+func (ring *ringIndexed) IntersectsRect(rect Rect, allowOnEdge bool) bool {
 	return ringIntersectsRect(ring, rect, allowOnEdge)
 }
 
-func (ring *treeRing) ContainsPoly(poly Poly, allowOnEdge bool) bool {
+func (ring *ringIndexed) ContainsPoly(poly Poly, allowOnEdge bool) bool {
 	return ring.ContainsRing(poly.Exterior(), allowOnEdge)
 }
 
-func (ring *treeRing) IntersectsPoly(poly Poly, allowOnEdge bool) bool {
+func (ring *ringIndexed) IntersectsPoly(poly Poly, allowOnEdge bool) bool {
 	return ringIntersectsPoly(ring, poly, allowOnEdge)
 }

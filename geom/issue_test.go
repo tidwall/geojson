@@ -24,6 +24,6 @@ func TestIssue362(t *testing.T) {
 		{-122.44850635528563, 37.73885397998102},
 		{-122.4475622177124, 37.7359013302630},
 	}
-	expect(t, !newSimpleRing(shape).ContainsRing(newSimpleRing(box), true))
+	expect(t, !newRingSimple(shape).ContainsRing(newRingSimple(box), true))
 	// expect(t, !newSimpleRing(shape).ContainsRect(rect, true))
 }

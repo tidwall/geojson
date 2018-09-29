@@ -1,30 +1,30 @@
 package geom
 
-type simpleRing struct {
+type ringSimple struct {
 	points []Point
 }
 
-func (ring *simpleRing) move(deltaX, deltaY float64) *simpleRing {
+func (ring *ringSimple) move(deltaX, deltaY float64) *ringSimple {
 	points := make([]Point, len(ring.points))
 	for i := 0; i < len(ring.points); i++ {
 		points[i].X = ring.points[i].X + deltaX
 		points[i].Y = ring.points[i].Y + deltaY
 	}
-	return newSimpleRing(points)
+	return newRingSimple(points)
 }
 
-func newSimpleRing(points []Point) *simpleRing {
-	ring := new(simpleRing)
+func newRingSimple(points []Point) *ringSimple {
+	ring := new(ringSimple)
 	ring.points = make([]Point, len(points))
 	copy(ring.points, points)
 	return ring
 }
 
-func (ring *simpleRing) Points() []Point {
+func (ring *ringSimple) Points() []Point {
 	return ring.points
 }
 
-func (ring *simpleRing) Search(
+func (ring *ringSimple) Search(
 	rect Rect, iter func(seg Segment, index int) bool,
 ) {
 	var index int
@@ -38,7 +38,7 @@ func (ring *simpleRing) Search(
 		return true
 	})
 }
-func (ring *simpleRing) Scan(iter func(seg Segment) bool) {
+func (ring *ringSimple) Scan(iter func(seg Segment) bool) {
 	for i := 0; i < len(ring.points); i++ {
 		var seg Segment
 		seg.A = ring.points[i]
@@ -56,19 +56,19 @@ func (ring *simpleRing) Scan(iter func(seg Segment) bool) {
 	}
 }
 
-func (ring *simpleRing) Rect() Rect {
+func (ring *ringSimple) Rect() Rect {
 	return pointsRect(ring.points)
 }
 
-func (ring *simpleRing) Convex() bool {
+func (ring *ringSimple) Convex() bool {
 	return pointsConvex(ring.points)
 }
 
-func (ring *simpleRing) IsClosed() bool {
+func (ring *ringSimple) IsClosed() bool {
 	return true
 }
 
-func (ring *simpleRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
+func (ring *ringSimple) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 	for i := 0; i < len(ring.points); i++ {
 		var other Segment
 		other.A = ring.points[i]
@@ -95,7 +95,7 @@ func (ring *simpleRing) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 	return false
 }
 
-func (ring *simpleRing) ContainsPoint(point Point, allowOnEdge bool) bool {
+func (ring *ringSimple) ContainsPoint(point Point, allowOnEdge bool) bool {
 	in := false
 	var a, b Point
 	for i := 0; i < len(ring.points); i++ {
@@ -115,31 +115,34 @@ func (ring *simpleRing) ContainsPoint(point Point, allowOnEdge bool) bool {
 	}
 	return in
 }
+func (ring *ringSimple) IntersectsPoint(point Point, allowOnEdge bool) bool {
+	return ring.ContainsPoint(point, allowOnEdge)
+}
 
-func (ring *simpleRing) ContainsSegment(seg Segment, allowOnEdge bool) bool {
+func (ring *ringSimple) ContainsSegment(seg Segment, allowOnEdge bool) bool {
 	return ringContainsSegment(ring, seg, allowOnEdge)
 }
 
-func (ring *simpleRing) ContainsRing(other Ring, allowOnEdge bool) bool {
+func (ring *ringSimple) ContainsRing(other Ring, allowOnEdge bool) bool {
 	return ringContainsRing(ring, other, allowOnEdge)
 }
 
-func (ring *simpleRing) IntersectsRing(other Ring, allowOnEdge bool) bool {
+func (ring *ringSimple) IntersectsRing(other Ring, allowOnEdge bool) bool {
 	return ringIntersectsRing(ring, other, allowOnEdge)
 }
 
-func (ring *simpleRing) ContainsRect(rect Rect, allowOnEdge bool) bool {
+func (ring *ringSimple) ContainsRect(rect Rect, allowOnEdge bool) bool {
 	return ringContainsRect(ring, rect, allowOnEdge)
 }
 
-func (ring *simpleRing) IntersectsRect(rect Rect, allowOnEdge bool) bool {
+func (ring *ringSimple) IntersectsRect(rect Rect, allowOnEdge bool) bool {
 	return ringIntersectsRect(ring, rect, allowOnEdge)
 }
 
-func (ring *simpleRing) ContainsPoly(poly Poly, allowOnEdge bool) bool {
+func (ring *ringSimple) ContainsPoly(poly Poly, allowOnEdge bool) bool {
 	return ring.ContainsRing(poly.Exterior(), allowOnEdge)
 }
 
-func (ring *simpleRing) IntersectsPoly(poly Poly, allowOnEdge bool) bool {
+func (ring *ringSimple) IntersectsPoly(poly Poly, allowOnEdge bool) bool {
 	return ringIntersectsPoly(ring, poly, allowOnEdge)
 }

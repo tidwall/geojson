@@ -17,16 +17,13 @@ type Ring interface {
 	Convex() bool
 
 	ContainsPoint(point Point, allowOnEdge bool) bool
-
+	IntersectsPoint(point Point, allowOnEdge bool) bool
 	ContainsSegment(seg Segment, allowOnEdge bool) bool
 	IntersectsSegment(seg Segment, allowOnEdge bool) bool
-
 	ContainsRect(rect Rect, allowOnEdge bool) bool
 	IntersectsRect(rect Rect, allowOnEdge bool) bool
-
 	ContainsRing(ring Ring, allowOnEdge bool) bool
 	IntersectsRing(ring Ring, allowOnEdge bool) bool
-
 	ContainsPoly(poly Poly, allowOnEdge bool) bool
 	IntersectsPoly(poly Poly, allowOnEdge bool) bool
 }
@@ -34,9 +31,9 @@ type Ring interface {
 // NewRing returns a new ring. index of zero reutrns simple ring
 func NewRing(points []Point, index int) Ring {
 	if index >= 0 && len(points) > index {
-		return newTreeRing(points)
+		return newRingIndexed(points)
 	}
-	return newSimpleRing(points)
+	return newRingSimple(points)
 }
 
 func ringIntersectsRing(outer, inner Ring, allowOnEdge bool) bool {
@@ -106,13 +103,13 @@ func ringContainsRing(outer, inner Ring, allowOnEdge bool) bool {
 
 func ringContainsRect(ring Ring, rect Rect, allowOnEdge bool) bool {
 	points := rect.ringPoints()
-	rectRing := &simpleRing{points: points[:]}
+	rectRing := &ringSimple{points: points[:]}
 	return ringContainsRing(ring, rectRing, allowOnEdge)
 }
 
 func ringIntersectsRect(ring Ring, rect Rect, allowOnEdge bool) bool {
 	points := rect.ringPoints()
-	rectRing := &simpleRing{points: points[:]}
+	rectRing := &ringSimple{points: points[:]}
 	return ringIntersectsRing(ring, rectRing, allowOnEdge)
 }
 

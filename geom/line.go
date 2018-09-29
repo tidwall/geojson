@@ -7,4 +7,15 @@ type Line interface {
 	Points() []Point
 	Rect() Rect
 	IsClosed() bool
+
+	ContainsPoint(point Point) bool
+	IntersectsPoint(point Point) bool
+}
+
+// NewLine ...
+func NewLine(points []Point, index int) Line {
+	if index >= 0 && len(points) > index {
+		return newLineIndexed(points)
+	}
+	return newLineSimple(points)
 }

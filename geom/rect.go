@@ -50,7 +50,7 @@ func (rect Rect) ringPoints() [5]Point {
 // IntersectsRing ...
 func (rect Rect) IntersectsRing(ring Ring) bool {
 	rectPoints := rect.ringPoints()
-	rectRing := &simpleRing{points: rectPoints[:]}
+	rectRing := &ringSimple{points: rectPoints[:]}
 	return rectRing.IntersectsRing(ring, true)
 }
 

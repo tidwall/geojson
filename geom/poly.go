@@ -5,11 +5,13 @@ type Poly interface {
 	Exterior() Ring
 	Holes() []Ring
 
-	ContainsPoint(point Point) bool
-
 	ContainsRing(ring Ring) bool
-
 	IntersectsRing(ring Ring) bool
+
+	///////////
+
+	ContainsPoint(point Point) bool
+	IntersectsPoint(point Point) bool
 
 	ContainsPoly(poly Poly) bool
 	IntersectsPoly(poly Poly) bool
@@ -100,4 +102,8 @@ func (poly *sharedPoly) IntersectsRing(ring Ring) bool {
 
 func (poly *sharedPoly) IntersectsPoly(other Poly) bool {
 	return poly.IntersectsRing(other.Exterior())
+}
+
+func (poly *sharedPoly) IntersectsPoint(point Point) bool {
+	return poly.ContainsPoint(point)
 }
