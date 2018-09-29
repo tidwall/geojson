@@ -10,49 +10,6 @@ import (
 	"github.com/tidwall/lotsa"
 )
 
-func init() {
-	seed := time.Now().UnixNano()
-	println(seed)
-	rand.Seed(seed)
-	if os.Getenv("PIPBENCH") != "1" {
-		println("use PIPBENCH=1 for point-in-polygon benchmarks")
-	}
-}
-
-func S(ax, ay, bx, by float64) Segment {
-	return Segment{Point{ax, ay}, Point{bx, by}}
-}
-func R(minX, minY, maxX, maxY float64) Rect {
-	return Rect{Point{minX, minY}, Point{maxX, maxY}}
-}
-func P(x, y float64) Point {
-	return Point{x, y}
-}
-
-var (
-	rectangle = []Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}}
-	pentagon  = []Point{{2, 2}, {8, 0}, {10, 6}, {5, 10}, {0, 6}, {2, 2}}
-	triangle  = []Point{{0, 0}, {10, 0}, {5, 10}, {0, 0}}
-	trapezoid = []Point{{0, 0}, {10, 0}, {8, 10}, {2, 10}, {0, 0}}
-	octagon   = []Point{
-		{3, 0}, {7, 0}, {10, 3}, {10, 7},
-		{7, 10}, {3, 10}, {0, 7}, {0, 3}, {3, 0},
-	}
-	concave1  = []Point{{5, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 5}, {5, 5}, {5, 0}}
-	concave2  = []Point{{0, 0}, {5, 0}, {5, 5}, {10, 5}, {10, 10}, {0, 10}, {0, 0}}
-	concave3  = []Point{{0, 0}, {10, 0}, {10, 5}, {5, 5}, {5, 10}, {0, 10}, {0, 0}}
-	concave4  = []Point{{0, 0}, {10, 0}, {10, 10}, {5, 10}, {5, 5}, {0, 5}, {0, 0}}
-	bowtie    = []Point{{0, 0}, {5, 4}, {10, 0}, {10, 10}, {5, 6}, {0, 10}, {0, 0}}
-	notClosed = []Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}}
-)
-
-func expect(t testing.TB, what bool) {
-	t.Helper()
-	if !what {
-		t.Fatal("expection failure")
-	}
-}
-
 func TestRingScan(t *testing.T) {
 	test := func(t *testing.T, index bool) {
 		rectangleRing := NewRing2(rectangle)
@@ -496,9 +453,6 @@ func TestRingVarious(t *testing.T) {
 	expect(t, n1 == n2)
 	expect(t, ring2.Closed())
 
-	convex, rect := pointsConvexRect([]Point{P(0, 0)})
-	expect(t, !convex)
-	expect(t, rect == Rect{})
 }
 
 func newRingSimple2(points []Point) *Ring {
@@ -570,6 +524,14 @@ func TestRingIntersectsPoly(t *testing.T) {
 		NewPoly2(octagon, nil), false))
 	expect(t, !newRingIndexed2(octagon).move(10, 0).IntersectsPoly(
 		NewPoly2(octagon, nil), false))
+
+	expect(t, !newRingIndexed2(
+		[]Point{P(4, 4), P(6, 4), P(6, 6), P(4, 6), P(4, 4)},
+	).IntersectsPoly(NewPoly2(
+		[]Point{P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)},
+		[][]Point{{P(3, 3), P(7, 3), P(7, 7), P(3, 7), P(3, 3)}},
+	), false))
+
 }
 
 func TestSegmentsIntersect(t *testing.T) {

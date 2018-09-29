@@ -113,8 +113,10 @@ func (series *Series) Scan(iter func(seg Segment, idx int) bool) {
 }
 
 func (series *Series) buildTree() {
-	series.tree = new(d2.BoxTree)
-	processPoints(series.points, series.closed, series.tree)
+	if series.tree == nil {
+		series.tree = new(d2.BoxTree)
+		processPoints(series.points, series.closed, series.tree)
+	}
 }
 
 // processPoints tests if the ring is convex, calculates the outer
