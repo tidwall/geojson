@@ -7,8 +7,8 @@ type Ring struct {
 	Series
 }
 
-// NewRing2 ...
-func NewRing2(points []Point) *Ring {
+// NewRing ...
+func NewRing(points []Point) *Ring {
 	ring := new(Ring)
 	ring.Series = MakeSeries(points, true, true)
 	return ring
@@ -20,7 +20,7 @@ func (ring *Ring) move(deltaX, deltaY float64) *Ring {
 		points[i].X = ring.points[i].X + deltaX
 		points[i].Y = ring.points[i].Y + deltaY
 	}
-	return NewRing2(points)
+	return NewRing(points)
 }
 
 // ContainsPoint ...
@@ -101,8 +101,21 @@ func (ring *Ring) IntersectsRect(rect Rect, allowOnEdge bool) bool {
 	return ring.IntersectsRing(rectRing, allowOnEdge)
 }
 
+// ContainsLine ...
+func (ring *Ring) ContainsLine(line *Line, allowOnEdge bool) bool {
+	panic("not ready")
+}
+
+// IntersectsLine ...
+func (ring *Ring) IntersectsLine(line *Line, allowOnEdge bool) bool {
+	panic("not ready")
+}
+
 // ContainsRing ...
 func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
+	if ring.Empty() || other.Empty() {
+		return false
+	}
 	outer, inner := ring, other
 	outerRect := outer.Rect()
 	innerRect := inner.Rect()
@@ -112,17 +125,22 @@ func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
 		return false
 	}
 	// 2) test if points are inside
-	points := inner.Points()
-	for _, point := range points {
+	inside := true
+	inner.ForEachPoint(func(point Point) bool {
 		if !outer.ContainsPoint(point, allowOnEdge) {
 			// not contained, stop now
+			inside = false
 			return false
 		}
+		return true
+	})
+	if !inside {
+		return false
 	}
 	// 3) check intersecting segments if outer is convex
 	if !outer.Convex() {
 		var intersects bool
-		inner.Scan(func(seg Segment, idx int) bool {
+		inner.ForEachSegment(func(seg Segment, idx int) bool {
 			if outer.IntersectsSegment(seg, false) {
 				intersects = true
 				return false
@@ -138,6 +156,9 @@ func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
 
 // IntersectsRing ...
 func (ring *Ring) IntersectsRing(other *Ring, allowOnEdge bool) bool {
+	if ring.Empty() || other.Empty() {
+		return false
+	}
 	outer, inner := ring, other
 	outerRect := outer.Rect()
 	innerRect := inner.Rect()
@@ -153,7 +174,7 @@ func (ring *Ring) IntersectsRing(other *Ring, allowOnEdge bool) bool {
 	}
 	// 3) test if points or segment intersection
 	var intersects bool
-	inner.Scan(func(seg Segment, idx int) bool {
+	inner.ForEachSegment(func(seg Segment, idx int) bool {
 		if outer.ContainsPoint(seg.A, allowOnEdge) {
 			// point from inner is inside outer. they intersect, stop now
 			intersects = true

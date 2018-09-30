@@ -6,17 +6,27 @@ type Poly struct {
 	Holes    []*Ring
 }
 
-// NewPoly2 ...
-func NewPoly2(exterior []Point, holes [][]Point) *Poly {
+// NewPoly ...
+func NewPoly(exterior []Point, holes [][]Point) *Poly {
 	poly := new(Poly)
-	poly.Exterior = NewRing2(exterior)
+	poly.Exterior = NewRing(exterior)
 	if len(holes) > 0 {
 		poly.Holes = make([]*Ring, len(holes))
 		for i := range holes {
-			poly.Holes[i] = NewRing2(holes[i])
+			poly.Holes[i] = NewRing(holes[i])
 		}
 	}
 	return poly
+}
+
+// Empty ...
+func (poly *Poly) Empty() bool {
+	return poly.Exterior.Empty()
+}
+
+// Rect ...
+func (poly *Poly) Rect() Rect {
+	return poly.Exterior.Rect()
 }
 
 // ContainsPoint ...
@@ -37,6 +47,26 @@ func (poly *Poly) ContainsPoint(point Point) bool {
 // IntersectsPoint ...
 func (poly *Poly) IntersectsPoint(point Point) bool {
 	return poly.ContainsPoint(point)
+}
+
+// ContainsRect ...
+func (poly *Poly) ContainsRect(rect Rect) bool {
+	panic("not ready")
+}
+
+// IntersectsRect ...
+func (poly *Poly) IntersectsRect(rect Rect) bool {
+	panic("not ready")
+}
+
+// ContainsLine ...
+func (poly *Poly) ContainsLine(line *Line) bool {
+	panic("not ready")
+}
+
+// IntersectsLine ...
+func (poly *Poly) IntersectsLine(line *Line) bool {
+	panic("not ready")
 }
 
 // ContainsPoly ...

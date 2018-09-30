@@ -15,6 +15,43 @@ func (rect Rect) Area() float64 {
 	return (rect.Max.X - rect.Min.X) * (rect.Max.Y - rect.Min.Y)
 }
 
+func (rect Rect) ringPoints() [5]Point {
+	return [5]Point{
+		{rect.Min.X, rect.Min.Y},
+		{rect.Max.X, rect.Min.Y},
+		{rect.Max.X, rect.Max.Y},
+		{rect.Min.X, rect.Max.Y},
+		{rect.Min.X, rect.Min.Y},
+	}
+}
+
+func (rect Rect) ring() *Ring {
+	points := rect.ringPoints()
+	series := Series{closed: true, convex: true, rect: rect, points: points[:]}
+	return &Ring{series}
+}
+
+// Empty ...
+func (rect Rect) Empty() bool {
+	return false
+}
+
+// Rect ...
+func (rect Rect) Rect() Rect {
+	return rect
+}
+
+// ContainsPoint ...
+func (rect Rect) ContainsPoint(point Point) bool {
+	return point.X >= rect.Min.X && point.X <= rect.Max.X &&
+		point.Y >= rect.Min.Y && point.Y <= rect.Max.Y
+}
+
+// IntersectsPoint ...
+func (rect Rect) IntersectsPoint(point Point) bool {
+	return rect.ContainsPoint(point)
+}
+
 // ContainsRect ...
 func (rect Rect) ContainsRect(other Rect) bool {
 	if other.Min.X < rect.Min.X || other.Max.X > rect.Max.X {
@@ -37,31 +74,23 @@ func (rect Rect) IntersectsRect(other Rect) bool {
 	return true
 }
 
-func (rect Rect) ringPoints() [5]Point {
-	return [5]Point{
-		{rect.Min.X, rect.Min.Y},
-		{rect.Max.X, rect.Min.Y},
-		{rect.Max.X, rect.Max.Y},
-		{rect.Min.X, rect.Max.Y},
-		{rect.Min.X, rect.Min.Y},
-	}
+// ContainsLine ...
+func (rect Rect) ContainsLine(line *Line) bool {
+	return !line.Empty() && rect.ContainsRect(line.Rect())
 }
 
-// ContainsRing ...
-func (rect Rect) ContainsRing(ring *Ring) bool {
-	return rect.ContainsRect(ring.Rect())
+// IntersectsLine ...
+func (rect Rect) IntersectsLine(line *Line) bool {
+	return rect.ring().IntersectsLine(line, true)
 }
 
-// IntersectsRing ...
-func (rect Rect) IntersectsRing(ring *Ring) bool {
-	rectPoints := rect.ringPoints()
-	rectRing := &Ring{MakeSeries(rectPoints[:], false, true)}
-	return rectRing.IntersectsRing(ring, true)
+// ContainsPoly ...
+func (rect Rect) ContainsPoly(poly *Poly) bool {
+	return !poly.Empty() && rect.ContainsRect(poly.Rect())
 }
 
-// // ContainsPoly ...
-// func (rect Rect) ContainsPoly(poly Poly) bool {
-// 	rectPoints := rect.ringPoints()
-// 	rectRing := &simpleRing{points: rectPoints[:]}
-// 	return rectRing.ContainsPoly(ring, true)
-// }
+// IntersectsPoly ...
+func (rect Rect) IntersectsPoly(poly *Poly) bool {
+	// TODO: optimize
+	return rect.ring().IntersectsPoly(poly, true)
+}

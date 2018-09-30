@@ -6,7 +6,7 @@ import (
 )
 
 func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
-	poly := NewPoly2(exterior, holes)
+	poly := NewPoly(exterior, holes)
 	poly.Exterior.buildTree()
 	for _, hole := range poly.Holes {
 		hole.buildTree()
@@ -15,7 +15,7 @@ func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
 }
 
 func newPolySimple(exterior []Point, holes [][]Point) *Poly {
-	poly := NewPoly2(exterior, holes)
+	poly := NewPoly(exterior, holes)
 	poly.Exterior.tree = nil
 	for _, hole := range poly.Holes {
 		hole.tree = nil

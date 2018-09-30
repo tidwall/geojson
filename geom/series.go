@@ -17,7 +17,7 @@ type Series struct {
 	tree   *d2.BoxTree // segment tree
 }
 
-// MakeSeries returns a new Series
+// MakeSeries returns a new Series.
 func MakeSeries(points []Point, copyPoints, closed bool) Series {
 	var series Series
 	series.closed = closed
@@ -32,6 +32,11 @@ func MakeSeries(points []Point, copyPoints, closed bool) Series {
 	}
 	series.convex, series.rect = processPoints(points, closed, series.tree)
 	return series
+}
+
+// Empty returns true if the series does not take up space.
+func (series *Series) Empty() bool {
+	return (series.closed && len(series.points) < 3) || len(series.points) < 2
 }
 
 // Rect returns the series rectangle
@@ -54,10 +59,19 @@ func (series *Series) Points() []Point {
 	return series.points
 }
 
+// ForEachPoint iterates of points
+func (series *Series) ForEachPoint(iter func(point Point) bool) {
+	for _, point := range series.points {
+		if !iter(point) {
+			return
+		}
+	}
+}
+
 // Search finds a searches for segments that intersect the provided rectangle
 func (series *Series) Search(rect Rect, iter func(seg Segment, idx int) bool) {
 	if series.tree == nil {
-		series.Scan(func(seg Segment, idx int) bool {
+		series.ForEachSegment(func(seg Segment, idx int) bool {
 			if seg.Rect().IntersectsRect(rect) {
 				if !iter(seg, idx) {
 					return false
@@ -87,12 +101,18 @@ func (series *Series) Search(rect Rect, iter func(seg Segment, idx int) bool) {
 	}
 }
 
-// Scan all segments in series
-func (series *Series) Scan(iter func(seg Segment, idx int) bool) {
+// ForEachSegment all segments in series
+func (series *Series) ForEachSegment(iter func(seg Segment, idx int) bool) {
 	var count int
 	if series.closed {
+		if len(series.points) < 3 {
+			return
+		}
 		count = len(series.points)
 	} else {
+		if len(series.points) < 2 {
+			return
+		}
 		count = len(series.points) - 1
 	}
 	for i := 0; i < count; i++ {
@@ -124,7 +144,7 @@ func (series *Series) buildTree() {
 func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 	convex bool, rect Rect,
 ) {
-	if len(points) == 0 {
+	if (closed && len(points) < 3) || len(points) < 2 {
 		return
 	}
 	var concave bool

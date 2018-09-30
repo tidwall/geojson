@@ -50,12 +50,12 @@ func expect(t testing.TB, what bool) {
 	}
 }
 
-func TestRectVarious(t *testing.T) {
-	expect(t, R(0, 0, 10, 10).ContainsRing(newRingSimple2(octagon)))
-	expect(t, !R(5, 0, 15, 10).ContainsRing(newRingSimple2(octagon)))
-	expect(t, R(5, 0, 15, 10).IntersectsRing(newRingSimple2(octagon)))
-	expect(t, R(0, 0, 10, 10).Center() == P(5, 5))
-}
+// func TestRectVarious(t *testing.T) {
+// 	expect(t, R(0, 0, 10, 10).ContainsRing(newRingSimple2(octagon)))
+// 	expect(t, !R(5, 0, 15, 10).ContainsRing(newRingSimple2(octagon)))
+// 	expect(t, R(5, 0, 15, 10).IntersectsRing(newRingSimple2(octagon)))
+// 	expect(t, R(0, 0, 10, 10).Center() == P(5, 5))
+// }
 
 func TestRaycastBounds(t *testing.T) {
 	expect(t, raycast(P(20, -1), P(0, 0), P(10, 10)) == rayres{false, false})

@@ -18,5 +18,5 @@ func CircleRing(center Point, meters float64, segments int) *Ring {
 		i++
 	}
 	points[i] = points[0]
-	return NewRing2(points)
+	return NewRing(points)
 }
