@@ -2,18 +2,18 @@ package geom
 
 // Poly ...
 type Poly struct {
-	Exterior *Ring
-	Holes    []*Ring
+	Exterior Ring
+	Holes    []Ring
 }
 
 // NewPoly ...
 func NewPoly(exterior []Point, holes [][]Point) *Poly {
 	poly := new(Poly)
-	poly.Exterior = NewRing(exterior)
+	poly.Exterior = newRing(exterior)
 	if len(holes) > 0 {
-		poly.Holes = make([]*Ring, len(holes))
+		poly.Holes = make([]Ring, len(holes))
 		for i := range holes {
-			poly.Holes[i] = NewRing(holes[i])
+			poly.Holes[i] = newRing(holes[i])
 		}
 	}
 	return poly
@@ -31,12 +31,12 @@ func (poly *Poly) Rect() Rect {
 
 // ContainsPoint ...
 func (poly *Poly) ContainsPoint(point Point) bool {
-	if !poly.Exterior.ContainsPoint(point, true) {
+	if !ringContainsPoint(poly.Exterior, point, true) {
 		return false
 	}
 	contains := true
 	for _, hole := range poly.Holes {
-		if hole.ContainsPoint(point, false) {
+		if ringContainsPoint(hole, point, false) {
 			contains = false
 			break
 		}
@@ -72,17 +72,17 @@ func (poly *Poly) IntersectsLine(line *Line) bool {
 // ContainsPoly ...
 func (poly *Poly) ContainsPoly(other *Poly) bool {
 	// 1) other exterior must be fully contained inside of the poly exterior.
-	if !poly.Exterior.ContainsRing(other.Exterior, true) {
+	if !ringContainsRing(poly.Exterior, other.Exterior, true) {
 		return false
 	}
 	// 2) ring cannot intersect poly holes
 	contains := true
 	for _, polyHole := range poly.Holes {
-		if polyHole.IntersectsRing(other.Exterior, false) {
+		if ringIntersectsRing(polyHole, other.Exterior, false) {
 			contains = false
 			// 3) unless the poly hole is contain inside of a other hole
 			for _, otherHole := range other.Holes {
-				if otherHole.ContainsRing(polyHole, true) {
+				if ringContainsRing(otherHole, polyHole, true) {
 					contains = true
 					break
 				}
@@ -97,5 +97,5 @@ func (poly *Poly) ContainsPoly(other *Poly) bool {
 
 // IntersectsPoly ...
 func (poly *Poly) IntersectsPoly(other *Poly) bool {
-	return other.Exterior.IntersectsPoly(poly, true)
+	return ringIntersectsPoly(other.Exterior, poly, true)
 }

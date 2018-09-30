@@ -34,6 +34,21 @@ func MakeSeries(points []Point, copyPoints, closed bool) Series {
 	return series
 }
 
+func (series *Series) move(deltaX, deltaY float64) *Series {
+	points := make([]Point, len(series.points))
+	for i := 0; i < len(series.points); i++ {
+		points[i].X = series.points[i].X + deltaX
+		points[i].Y = series.points[i].Y + deltaY
+	}
+	nseries := MakeSeries(points, false, series.closed)
+	if series.tree != nil {
+		nseries.buildTree()
+	} else {
+		nseries.tree = nil
+	}
+	return &nseries
+}
+
 // Empty returns true if the series does not take up space.
 func (series *Series) Empty() bool {
 	return (series.closed && len(series.points) < 3) || len(series.points) < 2
@@ -59,7 +74,7 @@ func (series *Series) Points() []Point {
 	return series.points
 }
 
-// ForEachPoint iterates of points
+// ForEachPoint iterates over all points
 func (series *Series) ForEachPoint(iter func(point Point) bool) {
 	for _, point := range series.points {
 		if !iter(point) {

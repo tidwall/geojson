@@ -7,18 +7,18 @@ import (
 
 func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
 	poly := NewPoly(exterior, holes)
-	poly.Exterior.buildTree()
+	poly.Exterior.(*Series).buildTree()
 	for _, hole := range poly.Holes {
-		hole.buildTree()
+		hole.(*Series).buildTree()
 	}
 	return poly
 }
 
 func newPolySimple(exterior []Point, holes [][]Point) *Poly {
 	poly := NewPoly(exterior, holes)
-	poly.Exterior.tree = nil
+	poly.Exterior.(*Series).tree = nil
 	for _, hole := range poly.Holes {
-		hole.tree = nil
+		hole.(*Series).tree = nil
 	}
 	return poly
 }
@@ -41,7 +41,8 @@ func TestPolyVarious(t *testing.T) {
 	dualPolyTest(t, exterior, [][]Point{small},
 		func(t *testing.T, poly *Poly) {
 			expect(t, len(poly.Holes) == 1)
-			expect(t, reflect.DeepEqual(poly.Holes[0].Points(), small))
+			expect(t, reflect.DeepEqual(
+				poly.Holes[0].(*Series).Points(), small))
 			expect(t, !poly.ContainsPoint(P(0, 0)))
 			expect(t, poly.ContainsPoint(P(3, 3)))
 			expect(t, poly.ContainsPoint(P(4, 4)))
@@ -56,7 +57,7 @@ func TestPolyVarious(t *testing.T) {
 
 			// expect(t, !poly.ContainsRing(newRingSimple(small).move(10, 0)))
 			expect(t, !poly.ContainsPoly(newPolySimple(
-				newRingSimple2(small).move(10, 0).Points(), nil)))
+				newRingSimple2(small).(*Series).move(10, 0).Points(), nil)))
 
 		},
 	)
@@ -68,9 +69,12 @@ func TestPolyVarious(t *testing.T) {
 	ex5 := newRingSimple2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
 	// out5 := ex5.move(10, 0)
 
-	p1 := newPolySimple(ex1.Points(), [][]Point{ex4.Points()})
-	p2 := newPolySimple(ex2.Points(), [][]Point{ex3.Points()})
-	p3 := newPolySimple(ex2.Points(), [][]Point{ex5.Points()})
+	p1 := newPolySimple(ex1.(*Series).Points(),
+		[][]Point{ex4.(*Series).Points()})
+	p2 := newPolySimple(ex2.(*Series).Points(),
+		[][]Point{ex3.(*Series).Points()})
+	p3 := newPolySimple(ex2.(*Series).Points(),
+		[][]Point{ex5.(*Series).Points()})
 
 	expect(t, p1.ContainsPoly(p2))
 	expect(t, !p1.ContainsPoly(p3))

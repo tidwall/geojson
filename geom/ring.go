@@ -3,28 +3,21 @@ package geom
 import "math"
 
 // Ring ...
-type Ring struct {
-	Series
+type Ring interface {
+	Rect() Rect
+	Empty() bool
+	Convex() bool
+	ForEachPoint(iter func(point Point) bool)
+	ForEachSegment(iter func(seg Segment, idx int) bool)
+	Search(rect Rect, iter func(seg Segment, idx int) bool)
 }
 
-// NewRing ...
-func NewRing(points []Point) *Ring {
-	ring := new(Ring)
-	ring.Series = MakeSeries(points, true, true)
-	return ring
+func newRing(points []Point) Ring {
+	series := MakeSeries(points, true, true)
+	return &series
 }
 
-func (ring *Ring) move(deltaX, deltaY float64) *Ring {
-	points := make([]Point, len(ring.points))
-	for i := 0; i < len(ring.points); i++ {
-		points[i].X = ring.points[i].X + deltaX
-		points[i].Y = ring.points[i].Y + deltaY
-	}
-	return NewRing(points)
-}
-
-// ContainsPoint ...
-func (ring *Ring) ContainsPoint(point Point, allowOnEdge bool) bool {
+func ringContainsPoint(ring Ring, point Point, allowOnEdge bool) bool {
 	in := false
 	ring.Search(
 		Rect{Point{math.Inf(-1), point.Y}, Point{math.Inf(+1), point.Y}},
@@ -43,30 +36,26 @@ func (ring *Ring) ContainsPoint(point Point, allowOnEdge bool) bool {
 	return in
 }
 
-// IntersectsPoint ...
-func (ring *Ring) IntersectsPoint(point Point, allowOnEdge bool) bool {
-	return ring.ContainsPoint(point, allowOnEdge)
+func ringIntersectsPoint(ring Ring, point Point, allowOnEdge bool) bool {
+	return ringContainsPoint(ring, point, allowOnEdge)
 }
 
-// ContainsSegment ...
-func (ring *Ring) ContainsSegment(seg Segment, allowOnEdge bool) bool {
-	if !ring.ContainsPoint(seg.A, allowOnEdge) {
+func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
+	if !ringContainsPoint(ring, seg.A, allowOnEdge) {
 		return false
 	}
-	if !ring.ContainsPoint(seg.B, allowOnEdge) {
+	if !ringContainsPoint(ring, seg.B, allowOnEdge) {
 		return false
 	}
 	if !ring.Convex() {
-		if ring.IntersectsSegment(seg, false) {
+		if ringIntersectsSegment(ring, seg, false) {
 			return false
 		}
 	}
 	return true
-
 }
 
-// IntersectsSegment ...
-func (ring *Ring) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
+func ringIntersectsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	var intersects bool
 	ring.Search(seg.Rect(), func(other Segment, index int) bool {
 		if segmentsIntersect(seg.A, seg.B, other.A, other.B) {
@@ -87,32 +76,25 @@ func (ring *Ring) IntersectsSegment(seg Segment, allowOnEdge bool) bool {
 	return intersects
 }
 
-// ContainsRect ...
-func (ring *Ring) ContainsRect(rect Rect, allowOnEdge bool) bool {
-	points := rect.ringPoints()
-	rectRing := &Ring{MakeSeries(points[:], false, true)}
-	return ring.ContainsRing(rectRing, allowOnEdge)
+func ringIntersectsPoly(ring Ring, poly *Poly, allowOnEdge bool) bool {
+	// 1) ring must intersect poly exterior
+	if !ringIntersectsRing(poly.Exterior, ring, allowOnEdge) {
+		return false
+	}
+	// 2) ring cannot be contained by a poly hole
+	for _, polyHole := range poly.Holes {
+		if ringContainsRing(polyHole, ring, false) {
+			return false
+		}
+	}
+	return true
 }
 
-// IntersectsRect ...
-func (ring *Ring) IntersectsRect(rect Rect, allowOnEdge bool) bool {
-	points := rect.ringPoints()
-	rectRing := &Ring{MakeSeries(points[:], false, true)}
-	return ring.IntersectsRing(rectRing, allowOnEdge)
+func ringContainsPoly(ring Ring, poly *Poly, allowOnEdge bool) bool {
+	return ringContainsRing(ring, poly.Exterior, allowOnEdge)
 }
 
-// ContainsLine ...
-func (ring *Ring) ContainsLine(line *Line, allowOnEdge bool) bool {
-	panic("not ready")
-}
-
-// IntersectsLine ...
-func (ring *Ring) IntersectsLine(line *Line, allowOnEdge bool) bool {
-	panic("not ready")
-}
-
-// ContainsRing ...
-func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
+func ringContainsRing(ring, other Ring, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
 		return false
 	}
@@ -127,7 +109,7 @@ func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
 	// 2) test if points are inside
 	inside := true
 	inner.ForEachPoint(func(point Point) bool {
-		if !outer.ContainsPoint(point, allowOnEdge) {
+		if !ringContainsPoint(outer, point, allowOnEdge) {
 			// not contained, stop now
 			inside = false
 			return false
@@ -141,7 +123,7 @@ func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
 	if !outer.Convex() {
 		var intersects bool
 		inner.ForEachSegment(func(seg Segment, idx int) bool {
-			if outer.IntersectsSegment(seg, false) {
+			if ringIntersectsSegment(outer, seg, false) {
 				intersects = true
 				return false
 			}
@@ -154,8 +136,7 @@ func (ring *Ring) ContainsRing(other *Ring, allowOnEdge bool) bool {
 	return true
 }
 
-// IntersectsRing ...
-func (ring *Ring) IntersectsRing(other *Ring, allowOnEdge bool) bool {
+func ringIntersectsRing(ring, other Ring, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
 		return false
 	}
@@ -175,12 +156,12 @@ func (ring *Ring) IntersectsRing(other *Ring, allowOnEdge bool) bool {
 	// 3) test if points or segment intersection
 	var intersects bool
 	inner.ForEachSegment(func(seg Segment, idx int) bool {
-		if outer.ContainsPoint(seg.A, allowOnEdge) {
+		if ringContainsPoint(outer, seg.A, allowOnEdge) {
 			// point from inner is inside outer. they intersect, stop now
 			intersects = true
 			return false
 		}
-		if outer.IntersectsSegment(seg, allowOnEdge) {
+		if ringIntersectsSegment(outer, seg, allowOnEdge) {
 			// segment from inner intersects outer. they intersect, stop now
 			intersects = true
 			return false
@@ -190,22 +171,18 @@ func (ring *Ring) IntersectsRing(other *Ring, allowOnEdge bool) bool {
 	return intersects
 }
 
-// ContainsPoly ...
-func (ring *Ring) ContainsPoly(poly *Poly, allowOnEdge bool) bool {
-	return ring.ContainsRing(poly.Exterior, allowOnEdge)
+func ringContainsRect(ring Ring, rect Rect, allowOnEdge bool) bool {
+	return ringContainsRing(ring, rect, allowOnEdge)
 }
 
-// IntersectsPoly ...
-func (ring *Ring) IntersectsPoly(poly *Poly, allowOnEdge bool) bool {
-	// 1) ring must intersect poly exterior
-	if !poly.Exterior.IntersectsRing(ring, allowOnEdge) {
-		return false
-	}
-	// 2) ring cannot be contained by a poly hole
-	for _, polyHole := range poly.Holes {
-		if polyHole.ContainsRing(ring, false) {
-			return false
-		}
-	}
-	return true
+func ringIntersectsRect(ring Ring, rect Rect, allowOnEdge bool) bool {
+	return ringIntersectsRing(ring, rect, allowOnEdge)
+}
+
+func ringContainsLine(ring Ring, line *Line, allowOnEdge bool) bool {
+	panic("not ready")
+}
+
+func ringIntersectsLine(ring Ring, line *Line, allowOnEdge bool) bool {
+	panic("not ready")
 }

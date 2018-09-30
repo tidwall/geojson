@@ -15,20 +15,52 @@ func (rect Rect) Area() float64 {
 	return (rect.Max.X - rect.Min.X) * (rect.Max.Y - rect.Min.Y)
 }
 
-func (rect Rect) ringPoints() [5]Point {
-	return [5]Point{
+// ForEachPoint ...
+func (rect Rect) ForEachPoint(iter func(point Point) bool) {
+	points := [5]Point{
 		{rect.Min.X, rect.Min.Y},
 		{rect.Max.X, rect.Min.Y},
 		{rect.Max.X, rect.Max.Y},
 		{rect.Min.X, rect.Max.Y},
 		{rect.Min.X, rect.Min.Y},
 	}
+	for _, point := range points {
+		if !iter(point) {
+			return
+		}
+	}
 }
 
-func (rect Rect) ring() *Ring {
-	points := rect.ringPoints()
-	series := Series{closed: true, convex: true, rect: rect, points: points[:]}
-	return &Ring{series}
+// ForEachSegment ...
+func (rect Rect) ForEachSegment(iter func(seg Segment, idx int) bool) {
+	segs := [4]Segment{
+		{Point{rect.Min.X, rect.Min.Y}, Point{rect.Max.X, rect.Min.Y}},
+		{Point{rect.Max.X, rect.Min.Y}, Point{rect.Max.X, rect.Max.Y}},
+		{Point{rect.Max.X, rect.Max.Y}, Point{rect.Min.X, rect.Max.Y}},
+		{Point{rect.Min.X, rect.Max.Y}, Point{rect.Min.X, rect.Min.Y}},
+	}
+	for i, seg := range segs {
+		if !iter(seg, i) {
+			return
+		}
+	}
+}
+
+// Search ...
+func (rect Rect) Search(target Rect, iter func(seg Segment, idx int) bool) {
+	segs := [4]Segment{
+		{Point{rect.Min.X, rect.Min.Y}, Point{rect.Max.X, rect.Min.Y}},
+		{Point{rect.Max.X, rect.Min.Y}, Point{rect.Max.X, rect.Max.Y}},
+		{Point{rect.Max.X, rect.Max.Y}, Point{rect.Min.X, rect.Max.Y}},
+		{Point{rect.Min.X, rect.Max.Y}, Point{rect.Min.X, rect.Min.Y}},
+	}
+	for i, seg := range segs {
+		if seg.Rect().IntersectsRect(rect) {
+			if !iter(seg, i) {
+				return
+			}
+		}
+	}
 }
 
 // Empty ...
@@ -39,6 +71,11 @@ func (rect Rect) Empty() bool {
 // Rect ...
 func (rect Rect) Rect() Rect {
 	return rect
+}
+
+// Convex ...
+func (rect Rect) Convex() bool {
+	return true
 }
 
 // ContainsPoint ...
@@ -81,7 +118,7 @@ func (rect Rect) ContainsLine(line *Line) bool {
 
 // IntersectsLine ...
 func (rect Rect) IntersectsLine(line *Line) bool {
-	return rect.ring().IntersectsLine(line, true)
+	return ringIntersectsLine(rect, line, true)
 }
 
 // ContainsPoly ...
@@ -91,6 +128,5 @@ func (rect Rect) ContainsPoly(poly *Poly) bool {
 
 // IntersectsPoly ...
 func (rect Rect) IntersectsPoly(poly *Poly) bool {
-	// TODO: optimize
-	return rect.ring().IntersectsPoly(poly, true)
+	return ringIntersectsPoly(rect, poly, true)
 }
