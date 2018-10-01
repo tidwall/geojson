@@ -32,4 +32,6 @@ func TestPoint(t *testing.T) {
 	expect(t, !P(5, 5).IntersectsPoly(NewPoly(octagon, [][]Point{
 		{P(4, 4), P(6, 4), P(6, 6), P(4, 6)},
 	})))
+
+	expect(t, !P(0, 0).Empty())
 }
