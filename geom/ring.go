@@ -2,33 +2,12 @@ package geom
 
 import "math"
 
-// Ring ...
-type Ring interface {
-	Rect() Rect
-	Empty() bool
-	Convex() bool
-	NumPoints() int
-	// NumSegments() int
-	// PointAt(index int) Point
-	// SegmentAt(index int) Segment
-
-	ForEachPoint(iter func(point Point) bool)
-	ForEachSegment(iter func(seg Segment, idx int) bool)
-	Search(rect Rect, iter func(seg Segment, index int) bool)
-}
+// Ring is a closed series of points
+type Ring = Series
 
 func newRing(points []Point) Ring {
-	series := MakeSeries(points, true, true)
+	series := makeSeries(points, true, true)
 	return &series
-}
-
-func ringCopyPoints(ring Ring) []Point {
-	var points []Point
-	ring.ForEachPoint(func(point Point) bool {
-		points = append(points, point)
-		return true
-	})
-	return points
 }
 
 func ringContainsPoint(ring Ring, point Point, allowOnEdge bool) bool {
@@ -120,7 +99,7 @@ func ringContainsRing(ring, other Ring, allowOnEdge bool) bool {
 	}
 	// 2) test if points are inside
 	inside := true
-	inner.ForEachPoint(func(point Point) bool {
+	seriesForEachPoint(inner, func(point Point) bool {
 		if !ringContainsPoint(outer, point, allowOnEdge) {
 			// not contained, stop now
 			inside = false
@@ -134,7 +113,7 @@ func ringContainsRing(ring, other Ring, allowOnEdge bool) bool {
 	// 3) check intersecting segments if outer is convex
 	if !outer.Convex() {
 		var intersects bool
-		inner.ForEachSegment(func(seg Segment, idx int) bool {
+		seriesForEachSegment(inner, func(seg Segment) bool {
 			if ringIntersectsSegment(outer, seg, false) {
 				intersects = true
 				return false
@@ -167,7 +146,7 @@ func ringIntersectsRing(ring, other Ring, allowOnEdge bool) bool {
 	}
 	// 3) test if points or segment intersection
 	var intersects bool
-	inner.ForEachSegment(func(seg Segment, idx int) bool {
+	seriesForEachSegment(inner, func(seg Segment) bool {
 		if ringContainsPoint(outer, seg.A, allowOnEdge) {
 			// point from inner is inside outer. they intersect, stop now
 			intersects = true
@@ -200,7 +179,7 @@ func ringContainsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 	}
 	contains := true
 	if ring.Convex() {
-		line.ForEachPoint(func(point Point) bool {
+		seriesForEachPoint(line, func(point Point) bool {
 			if !ringContainsPoint(ring, point, true) {
 				contains = false
 				return false
@@ -208,7 +187,7 @@ func ringContainsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 			return true
 		})
 	} else {
-		line.ForEachSegment(func(seg Segment, _ int) bool {
+		seriesForEachSegment(line, func(seg Segment) bool {
 			if !ringContainsSegment(ring, seg, true) {
 				contains = false
 				return false
@@ -227,7 +206,7 @@ func ringIntersectsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 		return false
 	}
 	var intersects bool
-	line.ForEachSegment(func(seg Segment, idx int) bool {
+	seriesForEachSegment(line, func(seg Segment) bool {
 		if ringIntersectsSegment(ring, seg, allowOnEdge) {
 			intersects = true
 			return false

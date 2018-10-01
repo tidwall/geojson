@@ -7,18 +7,18 @@ import (
 
 func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
 	poly := NewPoly(exterior, holes)
-	poly.Exterior.(*Series).buildTree()
+	poly.Exterior.(*baseSeries).buildTree()
 	for _, hole := range poly.Holes {
-		hole.(*Series).buildTree()
+		hole.(*baseSeries).buildTree()
 	}
 	return poly
 }
 
 func newPolySimple(exterior []Point, holes [][]Point) *Poly {
 	poly := NewPoly(exterior, holes)
-	poly.Exterior.(*Series).tree = nil
+	poly.Exterior.(*baseSeries).tree = nil
 	for _, hole := range poly.Holes {
-		hole.(*Series).tree = nil
+		hole.(*baseSeries).tree = nil
 	}
 	return poly
 }
@@ -42,7 +42,7 @@ func TestPolyVarious(t *testing.T) {
 		func(t *testing.T, poly *Poly) {
 			expect(t, len(poly.Holes) == 1)
 			expect(t, reflect.DeepEqual(
-				ringCopyPoints(poly.Holes[0]), small))
+				seriesCopyPoints(poly.Holes[0]), small))
 			expect(t, !poly.ContainsPoint(P(0, 0)))
 			expect(t, poly.ContainsPoint(P(3, 3)))
 			expect(t, poly.ContainsPoint(P(4, 4)))
@@ -57,7 +57,7 @@ func TestPolyVarious(t *testing.T) {
 
 			// expect(t, !poly.ContainsRing(newRingSimple(small).move(10, 0)))
 			expect(t, !poly.ContainsPoly(newPolySimple(
-				ringCopyPoints(newRingSimple2(small).(*Series).move(10, 0)),
+				seriesCopyPoints(newRingSimple2(small).(*baseSeries).move(10, 0)),
 				nil)))
 
 		},
@@ -70,12 +70,12 @@ func TestPolyVarious(t *testing.T) {
 	ex5 := newRingSimple2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
 	// out5 := ex5.move(10, 0)
 
-	p1 := newPolySimple(ringCopyPoints(ex1),
-		[][]Point{ringCopyPoints(ex4)})
-	p2 := newPolySimple(ringCopyPoints(ex2),
-		[][]Point{ringCopyPoints(ex3)})
-	p3 := newPolySimple(ringCopyPoints(ex2),
-		[][]Point{ringCopyPoints(ex5)})
+	p1 := newPolySimple(seriesCopyPoints(ex1),
+		[][]Point{seriesCopyPoints(ex4)})
+	p2 := newPolySimple(seriesCopyPoints(ex2),
+		[][]Point{seriesCopyPoints(ex3)})
+	p3 := newPolySimple(seriesCopyPoints(ex2),
+		[][]Point{seriesCopyPoints(ex5)})
 
 	expect(t, p1.ContainsPoly(p2))
 	expect(t, !p1.ContainsPoly(p3))

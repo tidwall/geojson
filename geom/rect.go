@@ -20,6 +20,29 @@ func (rect Rect) NumPoints() int {
 	return 5
 }
 
+// NumSegments ...
+func (rect Rect) NumSegments() int {
+	return 4
+}
+
+// PointAt ...
+func (rect Rect) PointAt(index int) Point {
+	switch index {
+	default:
+		return []Point{}[0]
+	case 0:
+		return Point{rect.Min.X, rect.Min.Y}
+	case 1:
+		return Point{rect.Max.X, rect.Min.Y}
+	case 2:
+		return Point{rect.Max.X, rect.Max.Y}
+	case 3:
+		return Point{rect.Min.X, rect.Max.Y}
+	case 4:
+		return Point{rect.Min.X, rect.Min.Y}
+	}
+}
+
 // ForEachPoint ...
 func (rect Rect) ForEachPoint(iter func(point Point) bool) {
 	points := [5]Point{
@@ -32,6 +55,34 @@ func (rect Rect) ForEachPoint(iter func(point Point) bool) {
 	for _, point := range points {
 		if !iter(point) {
 			return
+		}
+	}
+}
+
+// SegmentAt ...
+func (rect Rect) SegmentAt(index int) Segment {
+	switch index {
+	default:
+		return []Segment{}[0]
+	case 0:
+		return Segment{
+			Point{rect.Min.X, rect.Min.Y},
+			Point{rect.Max.X, rect.Min.Y},
+		}
+	case 1:
+		return Segment{
+			Point{rect.Max.X, rect.Min.Y},
+			Point{rect.Max.X, rect.Max.Y},
+		}
+	case 2:
+		return Segment{
+			Point{rect.Max.X, rect.Max.Y},
+			Point{rect.Min.X, rect.Max.Y},
+		}
+	case 3:
+		return Segment{
+			Point{rect.Min.X, rect.Max.Y},
+			Point{rect.Min.X, rect.Min.Y},
 		}
 	}
 }

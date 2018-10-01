@@ -2,14 +2,53 @@ package geom
 
 import "github.com/tidwall/boxtree/d2"
 
+// Series is just a series of points with utilities for efficiently accessing
+// segments from rectangle queries, making stuff like point-in-polygon lookups
+// very quick.
+type Series interface {
+	Rect() Rect
+	Empty() bool
+	Convex() bool
+	NumPoints() int
+	NumSegments() int
+	PointAt(index int) Point
+	SegmentAt(index int) Segment
+	Search(rect Rect, iter func(seg Segment, index int) bool)
+}
+
+func seriesForEachSegment(ring Ring, iter func(seg Segment) bool) {
+	n := ring.NumSegments()
+	for i := 0; i < n; i++ {
+		if !iter(ring.SegmentAt(i)) {
+			return
+		}
+	}
+}
+
+func seriesForEachPoint(ring Ring, iter func(point Point) bool) {
+	n := ring.NumPoints()
+	for i := 0; i < n; i++ {
+		if !iter(ring.PointAt(i)) {
+			return
+		}
+	}
+}
+
+func seriesCopyPoints(series Series) []Point {
+	var points []Point
+	seriesForEachPoint(series, func(point Point) bool {
+		points = append(points, point)
+		return true
+	})
+	return points
+}
+
 // minTreePoints are the minumum number of points required before it makes
 // sense to index an the segments in it's own rtree.
 const minTreePoints = 32
 
-// Series is just a series of points with utilities for efficiently accessing
-// segments from rectangle queries, making stuff like point-in-polygon lookups
-// very quick.
-type Series struct {
+// baseSeries is a concrete type containing all that is needed to make a Series.
+type baseSeries struct {
 	closed bool        // points create a closed shape
 	convex bool        // points create a convex shape
 	rect   Rect        // minumum bounding rectangle
@@ -17,9 +56,9 @@ type Series struct {
 	tree   *d2.BoxTree // segment tree
 }
 
-// MakeSeries returns a new Series.
-func MakeSeries(points []Point, copyPoints, closed bool) Series {
-	var series Series
+// makeSeries returns a processed baseSeries.
+func makeSeries(points []Point, copyPoints, closed bool) baseSeries {
+	var series baseSeries
 	series.closed = closed
 	if copyPoints {
 		series.points = make([]Point, len(points))
@@ -34,13 +73,13 @@ func MakeSeries(points []Point, copyPoints, closed bool) Series {
 	return series
 }
 
-func (series *Series) move(deltaX, deltaY float64) *Series {
+func (series *baseSeries) move(deltaX, deltaY float64) *baseSeries {
 	points := make([]Point, len(series.points))
 	for i := 0; i < len(series.points); i++ {
 		points[i].X = series.points[i].X + deltaX
 		points[i].Y = series.points[i].Y + deltaY
 	}
-	nseries := MakeSeries(points, false, series.closed)
+	nseries := makeSeries(points, false, series.closed)
 	if series.tree != nil {
 		nseries.buildTree()
 	} else {
@@ -50,50 +89,47 @@ func (series *Series) move(deltaX, deltaY float64) *Series {
 }
 
 // Empty returns true if the series does not take up space.
-func (series *Series) Empty() bool {
+func (series *baseSeries) Empty() bool {
 	return (series.closed && len(series.points) < 3) || len(series.points) < 2
 }
 
 // Rect returns the series rectangle
-func (series *Series) Rect() Rect {
+func (series *baseSeries) Rect() Rect {
 	return series.rect
 }
 
 // Convex returns true if the points create a convex loop or linestring
-func (series *Series) Convex() bool {
+func (series *baseSeries) Convex() bool {
 	return series.convex
 }
 
 // Closed return true if the shape is closed
-func (series *Series) Closed() bool {
+func (series *baseSeries) Closed() bool {
 	return series.closed
 }
 
 // NumPoints returns the number of points in the series
-func (series *Series) NumPoints() int {
+func (series *baseSeries) NumPoints() int {
 	return len(series.points)
 }
 
-// ForEachPoint iterates over all points
-func (series *Series) ForEachPoint(iter func(point Point) bool) {
-	for _, point := range series.points {
-		if !iter(point) {
-			return
-		}
-	}
+// PointAt returns the point at index
+func (series *baseSeries) PointAt(index int) Point {
+	return series.points[index]
 }
 
 // Search finds a searches for segments that intersect the provided rectangle
-func (series *Series) Search(rect Rect, iter func(seg Segment, idx int) bool) {
+func (series *baseSeries) Search(rect Rect, iter func(seg Segment, idx int) bool) {
 	if series.tree == nil {
-		series.ForEachSegment(func(seg Segment, idx int) bool {
+		n := series.NumSegments()
+		for i := 0; i < n; i++ {
+			seg := series.SegmentAt(i)
 			if seg.Rect().IntersectsRect(rect) {
-				if !iter(seg, idx) {
-					return false
+				if !iter(seg, i) {
+					return
 				}
 			}
-			return true
-		})
+		}
 	} else {
 		series.tree.Search(
 			[]float64{rect.Min.X, rect.Min.Y},
@@ -116,38 +152,36 @@ func (series *Series) Search(rect Rect, iter func(seg Segment, idx int) bool) {
 	}
 }
 
-// ForEachSegment all segments in series
-func (series *Series) ForEachSegment(iter func(seg Segment, idx int) bool) {
-	var count int
+// NumSegments ...
+func (series *baseSeries) NumSegments() int {
 	if series.closed {
 		if len(series.points) < 3 {
-			return
+			return 0
 		}
-		count = len(series.points)
-	} else {
-		if len(series.points) < 2 {
-			return
+		if series.points[len(series.points)-1] == series.points[0] {
+			return len(series.points) - 1
 		}
-		count = len(series.points) - 1
+		return len(series.points)
 	}
-	for i := 0; i < count; i++ {
-		var seg Segment
-		seg.A = series.points[i]
-		if series.closed && i == len(series.points)-1 {
-			if seg.A == series.points[0] {
-				break
-			}
-			seg.B = series.points[0]
-		} else {
-			seg.B = series.points[i+1]
-		}
-		if !iter(seg, i) {
-			return
-		}
+	if len(series.points) < 2 {
+		return 0
 	}
+	return len(series.points) - 1
 }
 
-func (series *Series) buildTree() {
+// SegmentAt ...
+func (series *baseSeries) SegmentAt(index int) Segment {
+	var seg Segment
+	seg.A = series.points[index]
+	if index == len(series.points)-1 {
+		seg.B = series.points[0]
+	} else {
+		seg.B = series.points[index+1]
+	}
+	return seg
+}
+
+func (series *baseSeries) buildTree() {
 	if series.tree == nil {
 		series.tree = new(d2.BoxTree)
 		processPoints(series.points, series.closed, series.tree)

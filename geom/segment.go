@@ -188,3 +188,8 @@ func (seg Segment) IntersectsSegment(other Segment) bool {
 	return true
 
 }
+
+// ContainsSegment returns true if segment contains other segment
+func (seg Segment) ContainsSegment(other Segment) bool {
+	return seg.Raycast(other.A).On && seg.Raycast(other.B).On
+}

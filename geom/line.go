@@ -2,13 +2,13 @@ package geom
 
 // Line ...
 type Line struct {
-	Series
+	baseSeries
 }
 
 // NewLine ...
 func NewLine(points []Point) *Line {
 	line := new(Line)
-	line.Series = MakeSeries(points, true, false)
+	line.baseSeries = makeSeries(points, true, false)
 	return line
 }
 
@@ -50,63 +50,47 @@ func (line *Line) IntersectsRect(rect Rect) bool {
 	return rect.IntersectsLine(line)
 }
 
-func lineInsideLine(line, other *Line) bool {
+// ContainsLine ...
+func (line *Line) ContainsLine(other *Line) bool {
 	if line.Empty() || other.Empty() {
 		return false
 	}
-	panic("123")
-	// // locate the first "other" segment that contains the first "line" segment.
-
-	// segIdx := -1
-	// for i
-	// for j := 0; j < len(other)-1; j++ {
-	// 	if segmentOnSegment(line[0], line[1], other[j], other[j+1]) {
-	// 		segIdx = j
-	// 		break
-	// 	}
-	// }
-	// if segIdx == -1 {
-	// 	return false
-	// }
-	// for i := 1; i < len(line)-1; i++ {
-	// 	if segmentOnSegment(line[i], line[i+1], other[segIdx], other[segIdx+1]) {
-	// 		continue
-	// 	}
-	// 	if line[i] == other[segIdx] {
-	// 		// reverse it
-	// 		if segIdx == 0 {
-	// 			return false
-	// 		}
-	// 		segIdx--
-	// 		i--
-	// 	} else if line[i] == other[segIdx+1] {
-	// 		// forward it
-	// 		if segIdx == len(other)-2 {
-	// 			return false
-	// 		}
-	// 		segIdx++
-	// 		i--
-	// 	}
-	// }
-	// return true
-}
-
-// ContainsLine ...
-func (line *Line) ContainsLine(other *Line) bool {
-	// if line.Empty() || other.Empty() {
-	// 	return false
-	// }
-	// if !line.Rect().ContainsRect(other.Rect()) {
-	// 	return false
-	// }
-	// other.ForEachSegment(func(segA Segment, idx int) bool {
-	// 	contains
-	// 	line.Search(segA.Rect(), func(segB Segment, idx int) bool {
-	// 		return true
-	// 	})
-	// 	return true
-	// })
-	panic("not ready")
+	// locate the first "other" segment that contains the first "line" segment.
+	lineNumSegments := line.NumSegments()
+	segIdx := -1
+	for j := 0; j < lineNumSegments; j++ {
+		if line.SegmentAt(j).ContainsSegment(other.SegmentAt(0)) {
+			segIdx = j
+			break
+		}
+	}
+	if segIdx == -1 {
+		return false
+	}
+	otherNumSegments := other.NumSegments()
+	for i := 1; i < otherNumSegments; i++ {
+		lineSeg := line.SegmentAt(segIdx)
+		otherSeg := other.SegmentAt(i)
+		if lineSeg.ContainsSegment(otherSeg) {
+			continue
+		}
+		if otherSeg.A == lineSeg.A {
+			// reverse it
+			if segIdx == 0 {
+				return false
+			}
+			segIdx--
+			i--
+		} else if otherSeg.A == lineSeg.B {
+			// forward it
+			if segIdx == lineNumSegments-1 {
+				return false
+			}
+			segIdx++
+			i--
+		}
+	}
+	return true
 }
 
 // ContainsSegment ...
@@ -134,7 +118,7 @@ func (line *Line) IntersectsLine(other *Line) bool {
 		line, other = other, line
 	}
 	var intersects bool
-	line.ForEachSegment(func(segA Segment, _ int) bool {
+	seriesForEachSegment(line, func(segA Segment) bool {
 		other.Search(segA.Rect(), func(segB Segment, _ int) bool {
 			if segA.IntersectsSegment(segB) {
 				intersects = true
