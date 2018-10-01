@@ -8,9 +8,13 @@ type Ring interface {
 	Empty() bool
 	Convex() bool
 	NumPoints() int
+	// NumSegments() int
+	// PointAt(index int) Point
+	// SegmentAt(index int) Segment
+
 	ForEachPoint(iter func(point Point) bool)
 	ForEachSegment(iter func(seg Segment, idx int) bool)
-	Search(rect Rect, iter func(seg Segment, idx int) bool)
+	Search(rect Rect, iter func(seg Segment, index int) bool)
 }
 
 func newRing(points []Point) Ring {
@@ -195,13 +199,23 @@ func ringContainsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 		return false
 	}
 	contains := true
-	line.ForEachPoint(func(point Point) bool {
-		if !ringContainsPoint(ring, point, true) {
-			contains = false
-			return false
-		}
-		return true
-	})
+	if ring.Convex() {
+		line.ForEachPoint(func(point Point) bool {
+			if !ringContainsPoint(ring, point, true) {
+				contains = false
+				return false
+			}
+			return true
+		})
+	} else {
+		line.ForEachSegment(func(seg Segment, _ int) bool {
+			if !ringContainsSegment(ring, seg, true) {
+				contains = false
+				return false
+			}
+			return true
+		})
+	}
 	return contains
 }
 

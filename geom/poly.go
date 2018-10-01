@@ -51,22 +51,32 @@ func (poly *Poly) IntersectsPoint(point Point) bool {
 
 // ContainsRect ...
 func (poly *Poly) ContainsRect(rect Rect) bool {
-	panic("not ready")
+	// convert rect into a polygon
+	return poly.ContainsPoly(&Poly{Exterior: rect})
 }
 
 // IntersectsRect ...
 func (poly *Poly) IntersectsRect(rect Rect) bool {
-	panic("not ready")
+	// convert rect into a polygon
+	return poly.IntersectsPoly(&Poly{Exterior: rect})
 }
 
 // ContainsLine ...
 func (poly *Poly) ContainsLine(line *Line) bool {
-	panic("not ready")
+	if !ringContainsLine(poly.Exterior, line, true) {
+		return false
+	}
+	for _, polyHole := range poly.Holes {
+		if ringIntersectsLine(polyHole, line, false) {
+			return false
+		}
+	}
+	return true
 }
 
 // IntersectsLine ...
 func (poly *Poly) IntersectsLine(line *Line) bool {
-	panic("not ready")
+	return ringIntersectsLine(poly.Exterior, line, true)
 }
 
 // ContainsPoly ...
