@@ -7,6 +7,7 @@ type Ring interface {
 	Rect() Rect
 	Empty() bool
 	Convex() bool
+	NumPoints() int
 	ForEachPoint(iter func(point Point) bool)
 	ForEachSegment(iter func(seg Segment, idx int) bool)
 	Search(rect Rect, iter func(seg Segment, idx int) bool)
@@ -17,17 +18,26 @@ func newRing(points []Point) Ring {
 	return &series
 }
 
+func ringCopyPoints(ring Ring) []Point {
+	var points []Point
+	ring.ForEachPoint(func(point Point) bool {
+		points = append(points, point)
+		return true
+	})
+	return points
+}
+
 func ringContainsPoint(ring Ring, point Point, allowOnEdge bool) bool {
 	in := false
 	ring.Search(
 		Rect{Point{math.Inf(-1), point.Y}, Point{math.Inf(+1), point.Y}},
 		func(seg Segment, index int) bool {
-			res := raycast(point, seg.A, seg.B)
-			if res.on {
+			res := seg.Raycast(point)
+			if res.On {
 				in = allowOnEdge
 				return false
 			}
-			if res.in {
+			if res.In {
 				in = !in
 			}
 			return true
@@ -58,12 +68,10 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 func ringIntersectsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	var intersects bool
 	ring.Search(seg.Rect(), func(other Segment, index int) bool {
-		if segmentsIntersect(seg.A, seg.B, other.A, other.B) {
+		if seg.IntersectsSegment(other) {
 			if !allowOnEdge {
-				if raycast(seg.A, other.A, other.B).on ||
-					raycast(seg.B, other.A, other.B).on ||
-					raycast(other.A, seg.A, seg.B).on ||
-					raycast(other.B, seg.A, seg.B).on {
+				if other.Raycast(seg.A).On || other.Raycast(seg.B).On ||
+					seg.Raycast(other.A).On || seg.Raycast(other.B).On {
 					intersects = false
 					return false
 				}
@@ -180,9 +188,37 @@ func ringIntersectsRect(ring Ring, rect Rect, allowOnEdge bool) bool {
 }
 
 func ringContainsLine(ring Ring, line *Line, allowOnEdge bool) bool {
-	panic("not ready")
+	if ring.Empty() || line.Empty() {
+		return false
+	}
+	if !ring.Rect().ContainsRect(line.Rect()) {
+		return false
+	}
+	contains := true
+	line.ForEachPoint(func(point Point) bool {
+		if !ringContainsPoint(ring, point, true) {
+			contains = false
+			return false
+		}
+		return true
+	})
+	return contains
 }
 
 func ringIntersectsLine(ring Ring, line *Line, allowOnEdge bool) bool {
-	panic("not ready")
+	if ring.Empty() || line.Empty() {
+		return false
+	}
+	if !ring.Rect().IntersectsRect(line.Rect()) {
+		return false
+	}
+	var intersects bool
+	line.ForEachSegment(func(seg Segment, idx int) bool {
+		if ringIntersectsSegment(ring, seg, allowOnEdge) {
+			intersects = true
+			return false
+		}
+		return true
+	})
+	return intersects
 }

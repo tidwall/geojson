@@ -42,7 +42,7 @@ func TestPolyVarious(t *testing.T) {
 		func(t *testing.T, poly *Poly) {
 			expect(t, len(poly.Holes) == 1)
 			expect(t, reflect.DeepEqual(
-				poly.Holes[0].(*Series).Points(), small))
+				ringCopyPoints(poly.Holes[0]), small))
 			expect(t, !poly.ContainsPoint(P(0, 0)))
 			expect(t, poly.ContainsPoint(P(3, 3)))
 			expect(t, poly.ContainsPoint(P(4, 4)))
@@ -57,7 +57,8 @@ func TestPolyVarious(t *testing.T) {
 
 			// expect(t, !poly.ContainsRing(newRingSimple(small).move(10, 0)))
 			expect(t, !poly.ContainsPoly(newPolySimple(
-				newRingSimple2(small).(*Series).move(10, 0).Points(), nil)))
+				ringCopyPoints(newRingSimple2(small).(*Series).move(10, 0)),
+				nil)))
 
 		},
 	)
@@ -69,12 +70,12 @@ func TestPolyVarious(t *testing.T) {
 	ex5 := newRingSimple2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
 	// out5 := ex5.move(10, 0)
 
-	p1 := newPolySimple(ex1.(*Series).Points(),
-		[][]Point{ex4.(*Series).Points()})
-	p2 := newPolySimple(ex2.(*Series).Points(),
-		[][]Point{ex3.(*Series).Points()})
-	p3 := newPolySimple(ex2.(*Series).Points(),
-		[][]Point{ex5.(*Series).Points()})
+	p1 := newPolySimple(ringCopyPoints(ex1),
+		[][]Point{ringCopyPoints(ex4)})
+	p2 := newPolySimple(ringCopyPoints(ex2),
+		[][]Point{ringCopyPoints(ex3)})
+	p3 := newPolySimple(ringCopyPoints(ex2),
+		[][]Point{ringCopyPoints(ex5)})
 
 	expect(t, p1.ContainsPoly(p2))
 	expect(t, !p1.ContainsPoly(p3))

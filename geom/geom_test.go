@@ -58,12 +58,12 @@ func expect(t testing.TB, what bool) {
 // }
 
 func TestRaycastBounds(t *testing.T) {
-	expect(t, raycast(P(20, -1), P(0, 0), P(10, 10)) == rayres{false, false})
-	expect(t, raycast(P(-1, 20), P(10, 10), P(0, 0)) == rayres{false, false})
-	expect(t, raycast(P(0, 0), P(0, 0), P(0, 0)) == rayres{false, true})
-	expect(t, raycast(P(0, 1), P(0, 0), P(0, 0)) == rayres{false, false})
-	expect(t, raycast(P(1, 0), P(0, 0), P(1, 0)) == rayres{false, true})
-	expect(t, raycast(P(1, 0), P(1, 0), P(0, 0)) == rayres{false, true})
-	expect(t, raycast(P(0, 1), P(0, 1), P(0, 0)) == rayres{false, true})
-	expect(t, raycast(P(0, 1), P(0, 0), P(0, 1)) == rayres{false, true})
+	expect(t, S(0, 0, 10, 10).Raycast(P(20, -1)) == RaycastResult{false, false})
+	expect(t, S(10, 10, 0, 0).Raycast(P(-1, 20)) == RaycastResult{false, false})
+	expect(t, S(0, 0, 0, 0).Raycast(P(0, 0)) == RaycastResult{false, true})
+	expect(t, S(0, 0, 0, 0).Raycast(P(0, 1)) == RaycastResult{false, false})
+	expect(t, S(0, 0, 1, 0).Raycast(P(1, 0)) == RaycastResult{false, true})
+	expect(t, S(1, 0, 0, 0).Raycast(P(1, 0)) == RaycastResult{false, true})
+	expect(t, S(0, 1, 0, 0).Raycast(P(0, 1)) == RaycastResult{false, true})
+	expect(t, S(0, 0, 0, 1).Raycast(P(0, 1)) == RaycastResult{false, true})
 }

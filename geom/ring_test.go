@@ -210,7 +210,8 @@ func TestBigRandomPIP(t *testing.T) {
 func testBig(
 	t *testing.T, label string, points []Point, pointIn, pointOut Point,
 ) {
-	N := 10000
+	N, T := 100000, 4
+
 	simple := newRing(points)
 	simple.(*Series).tree = nil
 	tree := newRing(points)
@@ -231,27 +232,27 @@ func testBig(
 	if os.Getenv("PIPBENCH") == "1" {
 		lotsa.Output = os.Stderr
 		fmt.Printf(label + "/simp/in  ")
-		lotsa.Ops(N, 1, func(_, _ int) {
+		lotsa.Ops(N, T, func(_, _ int) {
 			ringContainsPoint(simple, pointIn, true)
 		})
 		fmt.Printf(label + "/tree/in  ")
-		lotsa.Ops(N, 1, func(_, _ int) {
+		lotsa.Ops(N, T, func(_, _ int) {
 			ringContainsPoint(tree, pointIn, true)
 		})
 		fmt.Printf(label + "/simp/on  ")
-		lotsa.Ops(N, 1, func(_, _ int) {
+		lotsa.Ops(N, T, func(_, _ int) {
 			ringContainsPoint(simple, pointOn, true)
 		})
 		fmt.Printf(label + "/tree/on  ")
-		lotsa.Ops(N, 1, func(_, _ int) {
+		lotsa.Ops(N, T, func(_, _ int) {
 			ringContainsPoint(tree, pointOn, true)
 		})
 		fmt.Printf(label + "/simp/out ")
-		lotsa.Ops(N, 1, func(_, _ int) {
+		lotsa.Ops(N, T, func(_, _ int) {
 			ringContainsPoint(simple, pointOut, true)
 		})
 		fmt.Printf(label + "/tree/out ")
-		lotsa.Ops(N, 1, func(_, _ int) {
+		lotsa.Ops(N, T, func(_, _ int) {
 			ringContainsPoint(tree, pointOut, true)
 		})
 	}
@@ -266,7 +267,7 @@ func TestBigTexas(t *testing.T) {
 }
 
 func TestBigCircle(t *testing.T) {
-	circle := CircleRing(P(-100.1, 31.2), 660000, 10000).(*Series).Points()
+	circle := ringCopyPoints(CircleRing(P(-100.1, 31.2), 660000, 10000))
 	if false {
 		s := `{"type":"Polygon","coordinates":[[`
 		for i, p := range circle {
@@ -279,7 +280,7 @@ func TestBigCircle(t *testing.T) {
 		println(s)
 	}
 	testBig(t, "circ", circle, P(-98.52, 29.363), P(-107.8857, 31.5410))
-	circle = CircleRing(P(-100.1, 31.2), 660000, 2).(*Series).Points()
+	circle = ringCopyPoints(CircleRing(P(-100.1, 31.2), 660000, 2))
 	expect(t, len(circle) == 4)
 }
 
@@ -415,7 +416,7 @@ func TestRingVarious(t *testing.T) {
 	expect(t, ringIntersectsRing(small, ring, true))
 	expect(t, ringIntersectsRing(ring, small, true))
 
-	expect(t, raycast(P(0, 0), P(0, 0), P(0, 0)).on)
+	expect(t, S(0, 0, 0, 0).Raycast(P(0, 0)).On)
 
 	ring1 := newRing(octagon)
 	ring1.(*Series).tree = nil
@@ -525,19 +526,18 @@ func TestRingIntersectsPoly(t *testing.T) {
 }
 
 func TestSegmentsIntersect(t *testing.T) {
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(11, 0), P(21, 10)))
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(-11, 0), P(-21, 10)))
-	expect(t, !segmentsIntersect(P(10, 10), P(0, 10), P(11, 0), P(21, 10)))
-	expect(t, !segmentsIntersect(P(10, 10), P(0, 10), P(-11, 0), P(-21, 10)))
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(0, 11), P(10, 21)))
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(0, -11), P(10, -21)))
-	expect(t, !segmentsIntersect(P(10, 10), P(0, 0), P(0, 11), P(10, 21)))
-	expect(t, !segmentsIntersect(P(10, 10), P(0, 0), P(0, -11), P(10, -21)))
-
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(11, 0), P(21, 0)))
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(0, 1), P(10, 1)))
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 0), P(0, -1), P(10, -1)))
-	expect(t, !segmentsIntersect(P(0, 0), P(10, 10), P(1, 0), P(11, 10)))
+	expect(t, !S(0, 0, 10, 10).IntersectsSegment(S(11, 0, 21, 10)))
+	expect(t, !S(0, 0, 10, 10).IntersectsSegment(S(-11, 0, -21, 10)))
+	expect(t, !S(10, 10, 0, 10).IntersectsSegment(S(11, 0, 21, 10)))
+	expect(t, !S(10, 10, 0, 10).IntersectsSegment(S(-11, 0, -21, 10)))
+	expect(t, !S(0, 0, 10, 10).IntersectsSegment(S(0, 11, 10, 21)))
+	expect(t, !S(0, 0, 10, 10).IntersectsSegment(S(0, -11, 10, -21)))
+	expect(t, !S(10, 10, 0, 0).IntersectsSegment(S(0, 11, 10, 21)))
+	expect(t, !S(10, 10, 0, 0).IntersectsSegment(S(0, -11, 10, -21)))
+	expect(t, !S(0, 0, 10, 0).IntersectsSegment(S(11, 0, 21, 0)))
+	expect(t, !S(0, 0, 10, 0).IntersectsSegment(S(0, 1, 10, 1)))
+	expect(t, !S(0, 0, 10, 0).IntersectsSegment(S(0, -1, 10, -1)))
+	expect(t, !S(0, 0, 10, 10).IntersectsSegment(S(1, 0, 11, 10)))
 
 }
 

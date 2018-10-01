@@ -69,9 +69,9 @@ func (series *Series) Closed() bool {
 	return series.closed
 }
 
-// Points returns the original points
-func (series *Series) Points() []Point {
-	return series.points
+// NumPoints returns the number of points in the series
+func (series *Series) NumPoints() int {
+	return len(series.points)
 }
 
 // ForEachPoint iterates over all points

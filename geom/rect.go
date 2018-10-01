@@ -15,6 +15,11 @@ func (rect Rect) Area() float64 {
 	return (rect.Max.X - rect.Min.X) * (rect.Max.Y - rect.Min.Y)
 }
 
+// NumPoints ...
+func (rect Rect) NumPoints() int {
+	return 5
+}
+
 // ForEachPoint ...
 func (rect Rect) ForEachPoint(iter func(point Point) bool) {
 	points := [5]Point{
@@ -48,19 +53,14 @@ func (rect Rect) ForEachSegment(iter func(seg Segment, idx int) bool) {
 
 // Search ...
 func (rect Rect) Search(target Rect, iter func(seg Segment, idx int) bool) {
-	segs := [4]Segment{
-		{Point{rect.Min.X, rect.Min.Y}, Point{rect.Max.X, rect.Min.Y}},
-		{Point{rect.Max.X, rect.Min.Y}, Point{rect.Max.X, rect.Max.Y}},
-		{Point{rect.Max.X, rect.Max.Y}, Point{rect.Min.X, rect.Max.Y}},
-		{Point{rect.Min.X, rect.Max.Y}, Point{rect.Min.X, rect.Min.Y}},
-	}
-	for i, seg := range segs {
+	rect.ForEachSegment(func(seg Segment, idx int) bool {
 		if seg.Rect().IntersectsRect(rect) {
-			if !iter(seg, i) {
-				return
+			if !iter(seg, idx) {
+				return false
 			}
 		}
-	}
+		return true
+	})
 }
 
 // Empty ...

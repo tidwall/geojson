@@ -42,12 +42,12 @@ func testScanSeries(
 
 func TestSeriesBasic(t *testing.T) {
 	series := MakeSeries(octagon, true, true)
-	expect(t, reflect.DeepEqual(series.Points(), octagon))
+	expect(t, reflect.DeepEqual(ringCopyPoints(&series), octagon))
 	expect(t, series.Convex())
 	expect(t, series.Rect() == R(0, 0, 10, 10))
 	expect(t, series.Closed())
 	series = MakeSeries(octagon, false, true)
-	expect(t, reflect.DeepEqual(series.Points(), octagon))
+	expect(t, reflect.DeepEqual(ringCopyPoints(&series), octagon))
 
 	series = MakeSeries(ri, true, true)
 	testScanSeries(t, &series, true, len(ri)-1, false)
