@@ -1,6 +1,9 @@
 package geom
 
-import "math"
+import (
+	"math"
+	"strconv"
+)
 
 // Ring is a closed series of points
 type Ring = Series
@@ -8,6 +11,30 @@ type Ring = Series
 func newRing(points []Point) Ring {
 	series := makeSeries(points, true, true)
 	return &series
+}
+
+func ringString(ring Ring) string {
+	var buf []byte
+	buf = append(buf, '[')
+	n := ring.NumPoints()
+	for i := 0; i < n; i++ {
+		if i == 0 {
+			buf = append(buf, '\n')
+		}
+		pt := ring.PointAt(i)
+		buf = append(buf, '\t', '[')
+		buf = strconv.AppendFloat(buf, pt.X, 'f', -1, 64)
+		buf = append(buf, ',')
+		buf = strconv.AppendFloat(buf, pt.Y, 'f', -1, 64)
+		buf = append(buf, ']')
+		if i < n-1 {
+			buf = append(buf, ',')
+		}
+		buf = append(buf, '\n')
+	}
+
+	buf = append(buf, ']')
+	return string(buf)
 }
 
 func ringContainsPoint(ring Ring, point Point, allowOnEdge bool) bool {
@@ -48,6 +75,8 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	return true
 }
 
+// ringIntersectsSegment detect if the segment intersects the ring, but
+// returns false when the segment is contained inside of the ring
 func ringIntersectsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	var intersects bool
 	ring.Search(seg.Rect(), func(other Segment, index int) bool {
@@ -129,6 +158,7 @@ func ringContainsRing(ring, other Ring, allowOnEdge bool) bool {
 
 func ringIntersectsRing(ring, other Ring, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
+		// println(1)
 		return false
 	}
 	outer, inner := ring, other
@@ -137,6 +167,7 @@ func ringIntersectsRing(ring, other Ring, allowOnEdge bool) bool {
 	// 1) check if the rects intersect each other
 	if !outerRect.IntersectsRect(innerRect) {
 		// they do not intersect so stop now
+		// println(2)
 		return false
 	}
 	// 2) make sure the outer rect area is greater or equal to inner rect area
@@ -146,19 +177,27 @@ func ringIntersectsRing(ring, other Ring, allowOnEdge bool) bool {
 	}
 	// 3) test if points or segment intersection
 	var intersects bool
+	println(3)
 	seriesForEachSegment(inner, func(seg Segment) bool {
+		if ringContainsSegment(outer, seg, allowOnEdge) {
+			intersects = true
+			return false
+		}
 		if ringContainsPoint(outer, seg.A, allowOnEdge) {
 			// point from inner is inside outer. they intersect, stop now
+			// println(4)
 			intersects = true
 			return false
 		}
 		if ringIntersectsSegment(outer, seg, allowOnEdge) {
 			// segment from inner intersects outer. they intersect, stop now
+			// println(5)
 			intersects = true
 			return false
 		}
 		return true
 	})
+	// println(6)
 	return intersects
 }
 
@@ -207,6 +246,11 @@ func ringIntersectsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 	}
 	var intersects bool
 	seriesForEachSegment(line, func(seg Segment) bool {
+		if ringContainsPoint(ring, seg.A, allowOnEdge) ||
+			ringContainsPoint(ring, seg.B, allowOnEdge) {
+			intersects = true
+			return true
+		}
 		if ringIntersectsSegment(ring, seg, allowOnEdge) {
 			intersects = true
 			return false

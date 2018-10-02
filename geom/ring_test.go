@@ -137,6 +137,11 @@ func TestRingIntersectsSegment(t *testing.T) {
 }
 
 func TestRingIntersectsRing(t *testing.T) {
+	small1 := newRing([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
+	small2 := newRing([]Point{{5, 4}, {7, 4}, {7, 6}, {5, 6}, {5, 4}})
+	expect(t, ringIntersectsRing(small1, small2, true))
+	expect(t, ringIntersectsRing(small1, small2, false))
+
 	simple := newRing(concave1)
 	simple.(*baseSeries).tree = nil
 	tree := newRing(concave1)
@@ -309,8 +314,9 @@ func TestRingContainsRing(t *testing.T) {
 	expect(t, !ringContainsRing(tree, small, true))
 
 	for x := 1.0; x <= 4; x++ {
-		expect(t, ringContainsRing(simple, small.(*baseSeries).Move(x, 0), true))
-		expect(t, ringContainsRing(tree, small.(*baseSeries).Move(x, 0), true))
+		smallMoved := small.(*baseSeries).Move(x, 0)
+		expect(t, ringContainsRing(simple, smallMoved, true))
+		expect(t, ringContainsRing(tree, smallMoved, true))
 	}
 	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(4, 0), false))
 	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(4, 0), false))

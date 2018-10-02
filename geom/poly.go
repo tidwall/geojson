@@ -109,22 +109,34 @@ func (poly *Poly) ContainsPoly(other *Poly) bool {
 		return false
 	}
 	// 2) ring cannot intersect poly holes
+	println(1)
 	contains := true
 	for _, polyHole := range poly.Holes {
+		println(2)
+
+		println(ringString(polyHole))
+		println(ringString(other.Exterior))
+
+		println("--", ringIntersectsRing(polyHole, other.Exterior, false))
+		println("--", ringIntersectsRing(polyHole, other.Exterior, true))
 		if ringIntersectsRing(polyHole, other.Exterior, false) {
 			contains = false
+			println(3)
 			// 3) unless the poly hole is contain inside of a other hole
 			for _, otherHole := range other.Holes {
 				if ringContainsRing(otherHole, polyHole, true) {
 					contains = true
+					println(4)
 					break
 				}
 			}
 			if !contains {
+				println(5)
 				break
 			}
 		}
 	}
+	println(6)
 	return contains
 }
 
