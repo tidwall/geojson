@@ -5,6 +5,14 @@ type Rect struct {
 	Min, Max Point
 }
 
+// Move ...
+func (rect Rect) Move(deltaX, deltaY float64) Rect {
+	return Rect{
+		Min: Point{X: rect.Min.X + deltaX, Y: rect.Min.Y + deltaY},
+		Max: Point{X: rect.Max.X + deltaX, Y: rect.Max.Y + deltaY},
+	}
+}
+
 // Center ...
 func (rect Rect) Center() Point {
 	return Point{(rect.Max.X + rect.Min.X) / 2, (rect.Max.Y + rect.Min.Y) / 2}
@@ -43,22 +51,6 @@ func (rect Rect) PointAt(index int) Point {
 	}
 }
 
-// ForEachPoint ...
-func (rect Rect) ForEachPoint(iter func(point Point) bool) {
-	points := [5]Point{
-		{rect.Min.X, rect.Min.Y},
-		{rect.Max.X, rect.Min.Y},
-		{rect.Max.X, rect.Max.Y},
-		{rect.Min.X, rect.Max.Y},
-		{rect.Min.X, rect.Min.Y},
-	}
-	for _, point := range points {
-		if !iter(point) {
-			return
-		}
-	}
-}
-
 // SegmentAt ...
 func (rect Rect) SegmentAt(index int) Segment {
 	switch index {
@@ -87,29 +79,16 @@ func (rect Rect) SegmentAt(index int) Segment {
 	}
 }
 
-// ForEachSegment ...
-func (rect Rect) ForEachSegment(iter func(seg Segment, idx int) bool) {
-	segs := [4]Segment{
-		{Point{rect.Min.X, rect.Min.Y}, Point{rect.Max.X, rect.Min.Y}},
-		{Point{rect.Max.X, rect.Min.Y}, Point{rect.Max.X, rect.Max.Y}},
-		{Point{rect.Max.X, rect.Max.Y}, Point{rect.Min.X, rect.Max.Y}},
-		{Point{rect.Min.X, rect.Max.Y}, Point{rect.Min.X, rect.Min.Y}},
-	}
-	for i, seg := range segs {
-		if !iter(seg, i) {
-			return
-		}
-	}
-}
-
 // Search ...
 func (rect Rect) Search(target Rect, iter func(seg Segment, idx int) bool) {
-	rect.ForEachSegment(func(seg Segment, idx int) bool {
-		if seg.Rect().IntersectsRect(rect) {
+	var idx int
+	seriesForEachSegment(rect, func(seg Segment) bool {
+		if seg.Rect().IntersectsRect(target) {
 			if !iter(seg, idx) {
 				return false
 			}
 		}
+		idx++
 		return true
 	})
 }

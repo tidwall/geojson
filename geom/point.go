@@ -5,6 +5,11 @@ type Point struct {
 	X, Y float64
 }
 
+// Move ...
+func (point Point) Move(deltaX, deltaY float64) Point {
+	return Point{X: point.X + deltaX, Y: point.Y + deltaY}
+}
+
 // Empty ...
 func (point Point) Empty() bool {
 	return false

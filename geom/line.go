@@ -12,13 +12,11 @@ func NewLine(points []Point) *Line {
 	return line
 }
 
-func (line *Line) move(deltaX, deltaY float64) *Line {
-	points := make([]Point, len(line.points))
-	for i := 0; i < len(line.points); i++ {
-		points[i].X = line.points[i].X + deltaX
-		points[i].Y = line.points[i].Y + deltaY
-	}
-	return NewLine(points)
+// Move ...
+func (line *Line) Move(deltaX, deltaY float64) *Line {
+	nline := new(Line)
+	nline.baseSeries = *line.baseSeries.Move(deltaX, deltaY).(*baseSeries)
+	return nline
 }
 
 // ContainsPoint ...

@@ -161,31 +161,31 @@ func TestRingIntersectsRing(t *testing.T) {
 	}
 
 	expect(t, intersects(small))
-	expect(t, intersects(small.(*baseSeries).move(-6, 0)))
-	expect(t, intersects(small.(*baseSeries).move(6, 0)))
-	expect(t, !intersects(small.(*baseSeries).move(-7, 0)))
-	expect(t, !intersects(small.(*baseSeries).move(7, 0)))
-	expect(t, intersects(small.(*baseSeries).move(1, 1)))
-	expect(t, intersects(small.(*baseSeries).move(-1, -1)))
-	expect(t, intersects(small.(*baseSeries).move(2, 2)))
-	expect(t, !intersects(small.(*baseSeries).move(-2, -2)))
-	expect(t, intersects(small.(*baseSeries).move(0, -6)))
-	expect(t, intersects(small.(*baseSeries).move(0, 6)))
-	expect(t, !intersects(small.(*baseSeries).move(0, -7)))
-	expect(t, !intersects(small.(*baseSeries).move(0, 7)))
+	expect(t, intersects(small.(*baseSeries).Move(-6, 0)))
+	expect(t, intersects(small.(*baseSeries).Move(6, 0)))
+	expect(t, !intersects(small.(*baseSeries).Move(-7, 0)))
+	expect(t, !intersects(small.(*baseSeries).Move(7, 0)))
+	expect(t, intersects(small.(*baseSeries).Move(1, 1)))
+	expect(t, intersects(small.(*baseSeries).Move(-1, -1)))
+	expect(t, intersects(small.(*baseSeries).Move(2, 2)))
+	expect(t, !intersects(small.(*baseSeries).Move(-2, -2)))
+	expect(t, intersects(small.(*baseSeries).Move(0, -6)))
+	expect(t, intersects(small.(*baseSeries).Move(0, 6)))
+	expect(t, !intersects(small.(*baseSeries).Move(0, -7)))
+	expect(t, !intersects(small.(*baseSeries).Move(0, 7)))
 
-	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).move(-5, 0)))
-	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).move(5, 0)))
-	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).move(0, -5)))
-	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).move(0, 5)))
+	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(-5, 0)))
+	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(5, 0)))
+	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(0, -5)))
+	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(0, 5)))
 
-	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).move(-6, 0)))
-	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).move(6, 0)))
-	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).move(0, -6)))
-	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).move(0, 6)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(-6, 0)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(6, 0)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(0, -6)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(0, 6)))
 
-	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).move(1, 1)))
-	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).move(-1, -1)))
+	expect(t, intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(1, 1)))
+	expect(t, !intersectsOnEdgeNotAllowed(small.(*baseSeries).Move(-1, -1)))
 
 }
 
@@ -217,6 +217,8 @@ func testBig(
 	tree := newRing(points)
 	tree.(*baseSeries).buildTree()
 	pointOn := points[len(points)/2]
+
+	// ioutil.WriteFile(label+".svg", []byte(tools.SVG(tree.(*baseSeries).tree)), 0666)
 
 	expect(t, ringContainsPoint(simple, pointIn, true))
 	expect(t, ringContainsPoint(tree, pointIn, true))
@@ -307,49 +309,49 @@ func TestRingContainsRing(t *testing.T) {
 	expect(t, !ringContainsRing(tree, small, true))
 
 	for x := 1.0; x <= 4; x++ {
-		expect(t, ringContainsRing(simple, small.(*baseSeries).move(x, 0), true))
-		expect(t, ringContainsRing(tree, small.(*baseSeries).move(x, 0), true))
+		expect(t, ringContainsRing(simple, small.(*baseSeries).Move(x, 0), true))
+		expect(t, ringContainsRing(tree, small.(*baseSeries).Move(x, 0), true))
 	}
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(4, 0), false))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(4, 0), false))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(4, 0), false))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(4, 0), false))
 	for y := 1.0; y <= 4; y++ {
-		expect(t, ringContainsRing(simple, small.(*baseSeries).move(0, y), true))
-		expect(t, ringContainsRing(tree, small.(*baseSeries).move(0, y), true))
+		expect(t, ringContainsRing(simple, small.(*baseSeries).Move(0, y), true))
+		expect(t, ringContainsRing(tree, small.(*baseSeries).Move(0, y), true))
 	}
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(0, 4), false))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(0, 4), false))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(0, 4), false))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(0, 4), false))
 
 	for x := -1.0; x >= -4; x-- {
-		expect(t, !ringContainsRing(simple, small.(*baseSeries).move(x, 0), true))
-		expect(t, !ringContainsRing(tree, small.(*baseSeries).move(x, 0), true))
+		expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(x, 0), true))
+		expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(x, 0), true))
 	}
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(-4, 0), false))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(-4, 0), false))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(-4, 0), false))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(-4, 0), false))
 	for y := -1.0; y >= -4; y-- {
-		expect(t, !ringContainsRing(simple, small.(*baseSeries).move(0, y), true))
-		expect(t, !ringContainsRing(tree, small.(*baseSeries).move(0, y), true))
+		expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(0, y), true))
+		expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(0, y), true))
 	}
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(0, -4), false))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(0, -4), false))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(0, -4), false))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(0, -4), false))
 
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(1, 0), false))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(1, 0), false))
-	expect(t, ringContainsRing(simple, small.(*baseSeries).move(2, 0), false))
-	expect(t, ringContainsRing(tree, small.(*baseSeries).move(2, 0), false))
-	expect(t, ringContainsRing(simple, small.(*baseSeries).move(2, 2), false))
-	expect(t, ringContainsRing(tree, small.(*baseSeries).move(2, 2), false))
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(-2, -2), false))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(-2, -2), false))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(1, 0), false))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(1, 0), false))
+	expect(t, ringContainsRing(simple, small.(*baseSeries).Move(2, 0), false))
+	expect(t, ringContainsRing(tree, small.(*baseSeries).Move(2, 0), false))
+	expect(t, ringContainsRing(simple, small.(*baseSeries).Move(2, 2), false))
+	expect(t, ringContainsRing(tree, small.(*baseSeries).Move(2, 2), false))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(-2, -2), false))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(-2, -2), false))
 
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(5, 0), true))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(5, 0), true))
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(-5, 0), true))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(-5, 0), true))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(5, 0), true))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(5, 0), true))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(-5, 0), true))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(-5, 0), true))
 
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(0, 5), true))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(0, 5), true))
-	expect(t, !ringContainsRing(simple, small.(*baseSeries).move(0, -5), true))
-	expect(t, !ringContainsRing(tree, small.(*baseSeries).move(0, -5), true))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(0, 5), true))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(0, 5), true))
+	expect(t, !ringContainsRing(simple, small.(*baseSeries).Move(0, -5), true))
+	expect(t, !ringContainsRing(tree, small.(*baseSeries).Move(0, -5), true))
 
 }
 func TestBowtie(t *testing.T) {
@@ -509,12 +511,12 @@ func TestRingContainsPoly(t *testing.T) {
 	expect(t, !ringContainsPoly(newRingIndexed2(octagon), NewPoly(octagon, nil), false))
 }
 func TestRingIntersectsPoly(t *testing.T) {
-	expect(t, ringIntersectsPoly(newRingSimple2(octagon).(*baseSeries).move(5, 0), NewPoly(octagon, nil), true))
-	expect(t, ringIntersectsPoly(newRingIndexed2(octagon).(*baseSeries).move(5, 0), NewPoly(octagon, nil), true))
-	expect(t, ringIntersectsPoly(newRingSimple2(octagon).(*baseSeries).move(10, 0), NewPoly(octagon, nil), true))
-	expect(t, ringIntersectsPoly(newRingIndexed2(octagon).(*baseSeries).move(10, 0), NewPoly(octagon, nil), true))
-	expect(t, !ringIntersectsPoly(newRingSimple2(octagon).(*baseSeries).move(10, 0), NewPoly(octagon, nil), false))
-	expect(t, !ringIntersectsPoly(newRingIndexed2(octagon).(*baseSeries).move(10, 0), NewPoly(octagon, nil), false))
+	expect(t, ringIntersectsPoly(newRingSimple2(octagon).(*baseSeries).Move(5, 0), NewPoly(octagon, nil), true))
+	expect(t, ringIntersectsPoly(newRingIndexed2(octagon).(*baseSeries).Move(5, 0), NewPoly(octagon, nil), true))
+	expect(t, ringIntersectsPoly(newRingSimple2(octagon).(*baseSeries).Move(10, 0), NewPoly(octagon, nil), true))
+	expect(t, ringIntersectsPoly(newRingIndexed2(octagon).(*baseSeries).Move(10, 0), NewPoly(octagon, nil), true))
+	expect(t, !ringIntersectsPoly(newRingSimple2(octagon).(*baseSeries).Move(10, 0), NewPoly(octagon, nil), false))
+	expect(t, !ringIntersectsPoly(newRingIndexed2(octagon).(*baseSeries).Move(10, 0), NewPoly(octagon, nil), false))
 
 	expect(t, !ringIntersectsPoly(newRingIndexed2(
 		[]Point{P(4, 4), P(6, 4), P(6, 6), P(4, 6), P(4, 4)},

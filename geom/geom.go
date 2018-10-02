@@ -1,6 +1,7 @@
 package geom
 
-type validGeometry interface {
+// Geometry is a standard geometry
+type Geometry interface {
 	Rect() Rect
 	Empty() bool
 	ContainsPoint(point Point) bool
@@ -14,4 +15,4 @@ type validGeometry interface {
 }
 
 // require conformance
-var _ = []validGeometry{Point{}, Rect{}, &Line{}, &Poly{}}
+var _ = []Geometry{Point{}, Rect{}, &Line{}, &Poly{}}

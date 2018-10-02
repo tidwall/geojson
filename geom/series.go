@@ -43,6 +43,18 @@ func seriesCopyPoints(series Series) []Point {
 	return points
 }
 
+func seriesMovePoints(series Series, deltaX, deltaY float64) []Point {
+	var points []Point
+	seriesForEachPoint(series, func(point Point) bool {
+		points = append(points, Point{
+			X: point.X + deltaX,
+			Y: point.Y + deltaY,
+		})
+		return true
+	})
+	return points
+}
+
 // minTreePoints are the minumum number of points required before it makes
 // sense to index an the segments in it's own rtree.
 const minTreePoints = 32
@@ -73,7 +85,7 @@ func makeSeries(points []Point, copyPoints, closed bool) baseSeries {
 	return series
 }
 
-func (series *baseSeries) move(deltaX, deltaY float64) *baseSeries {
+func (series *baseSeries) Move(deltaX, deltaY float64) Series {
 	points := make([]Point, len(series.points))
 	for i := 0; i < len(series.points); i++ {
 		points[i].X = series.points[i].X + deltaX
@@ -81,9 +93,13 @@ func (series *baseSeries) move(deltaX, deltaY float64) *baseSeries {
 	}
 	nseries := makeSeries(points, false, series.closed)
 	if series.tree != nil {
-		nseries.buildTree()
+		if nseries.tree == nil {
+			nseries.buildTree()
+		}
 	} else {
-		nseries.tree = nil
+		if nseries.tree != nil {
+			nseries.tree = nil
+		}
 	}
 	return &nseries
 }

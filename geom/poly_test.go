@@ -57,7 +57,7 @@ func TestPolyVarious(t *testing.T) {
 
 			// expect(t, !poly.ContainsRing(newRingSimple(small).move(10, 0)))
 			expect(t, !poly.ContainsPoly(newPolySimple(
-				seriesCopyPoints(newRingSimple2(small).(*baseSeries).move(10, 0)),
+				seriesCopyPoints(newRingSimple2(small).(*baseSeries).Move(10, 0)),
 				nil)))
 
 		},

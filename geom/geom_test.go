@@ -25,8 +25,12 @@ func R(minX, minY, maxX, maxY float64) Rect {
 func P(x, y float64) Point {
 	return Point{x, y}
 }
+func L(points ...Point) *Line {
+	return NewLine(points)
+}
 
 var (
+	// rings
 	rectangle = []Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}}
 	pentagon  = []Point{{2, 2}, {8, 0}, {10, 6}, {5, 10}, {0, 6}, {2, 2}}
 	triangle  = []Point{{0, 0}, {10, 0}, {5, 10}, {0, 0}}
@@ -41,6 +45,17 @@ var (
 	concave4  = []Point{{0, 0}, {10, 0}, {10, 10}, {5, 10}, {5, 5}, {0, 5}, {0, 0}}
 	bowtie    = []Point{{0, 0}, {5, 4}, {10, 0}, {10, 10}, {5, 6}, {0, 10}, {0, 0}}
 	notClosed = []Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}}
+
+	// lines
+	u1 = []Point{{0, 10}, {0, 0}, {10, 0}, {10, 10}}
+	u2 = []Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}}
+	u3 = []Point{{10, 0}, {10, 10}, {0, 10}, {0, 0}}
+	u4 = []Point{{10, 10}, {0, 10}, {0, 0}, {10, 0}}
+
+	v1 = []Point{{0, 10}, {5, 0}, {10, 10}}
+	v2 = []Point{{0, 0}, {10, 5}, {0, 10}}
+	v3 = []Point{{10, 0}, {5, 10}, {0, 0}}
+	v4 = []Point{{10, 10}, {0, 5}, {10, 0}}
 )
 
 func expect(t testing.TB, what bool) {

@@ -29,6 +29,29 @@ func (poly *Poly) Rect() Rect {
 	return poly.Exterior.Rect()
 }
 
+// Move the polygon by delta. Returns a new polygon
+func (poly *Poly) Move(deltaX, deltaY float64) *Poly {
+	npoly := new(Poly)
+	if series, ok := poly.Exterior.(*baseSeries); ok {
+		npoly.Exterior = Ring(series.Move(deltaX, deltaY))
+	} else {
+		nseries := makeSeries(seriesCopyPoints(poly.Exterior), false, true)
+		npoly.Exterior = Ring(nseries.Move(deltaX, deltaY))
+	}
+	if len(poly.Holes) > 0 {
+		npoly.Holes = make([]Ring, len(poly.Holes))
+		for i, hole := range poly.Holes {
+			if series, ok := hole.(*baseSeries); ok {
+				npoly.Holes[i] = Ring(series.Move(deltaX, deltaY))
+			} else {
+				nseries := makeSeries(seriesCopyPoints(hole), false, true)
+				npoly.Holes[i] = Ring(nseries.Move(deltaX, deltaY))
+			}
+		}
+	}
+	return npoly
+}
+
 // ContainsPoint ...
 func (poly *Poly) ContainsPoint(point Point) bool {
 	if !ringContainsPoint(poly.Exterior, point, true) {

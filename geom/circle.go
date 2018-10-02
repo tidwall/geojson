@@ -1,9 +1,5 @@
 package geom
 
-import (
-	"github.com/tidwall/geojson/geo"
-)
-
 // CircleRing ...
 func CircleRing(center Point, meters float64, segments int) Ring {
 	if segments < 3 {
@@ -13,7 +9,7 @@ func CircleRing(center Point, meters float64, segments int) Ring {
 	step := 360.0 / float64(segments)
 	i := 0
 	for deg := 360.0; deg > 0; deg -= step {
-		lat, lon := geo.DestinationPoint(center.Y, center.X, meters, deg)
+		lat, lon := DestinationPoint(center.Y, center.X, meters, deg)
 		points[i] = Point{X: lon, Y: lat}
 		i++
 	}
