@@ -1,11 +1,11 @@
 package geom
 
-// Line ...
+// Line is a open series of points
 type Line struct {
 	baseSeries
 }
 
-// NewLine ...
+// NewLine creates a new Line
 func NewLine(points []Point) *Line {
 	line := new(Line)
 	line.baseSeries = makeSeries(points, true, false)
