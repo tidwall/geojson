@@ -19,6 +19,11 @@ func (line *Line) Move(deltaX, deltaY float64) *Line {
 	return nline
 }
 
+// Clockwise ...
+func (line *Line) Clockwise() bool {
+	return line.Clockwise()
+}
+
 // ContainsPoint ...
 func (line *Line) ContainsPoint(point Point) bool {
 	contains := false

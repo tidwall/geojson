@@ -13,6 +13,11 @@ func (rect Rect) Move(deltaX, deltaY float64) Rect {
 	}
 }
 
+// Clockwise ...
+func (rect Rect) Clockwise() bool {
+	return false
+}
+
 // Center ...
 func (rect Rect) Center() Point {
 	return Point{(rect.Max.X + rect.Min.X) / 2, (rect.Max.Y + rect.Min.Y) / 2}

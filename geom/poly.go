@@ -19,6 +19,11 @@ func NewPoly(exterior []Point, holes [][]Point) *Poly {
 	return poly
 }
 
+// Clockwise ...
+func (poly *Poly) Clockwise() bool {
+	return poly.Exterior.Clockwise()
+}
+
 // Empty ...
 func (poly *Poly) Empty() bool {
 	return poly.Exterior.Empty()

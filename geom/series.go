@@ -1,6 +1,8 @@
 package geom
 
-import "github.com/tidwall/boxtree/d2"
+import (
+	"github.com/tidwall/boxtree/d2"
+)
 
 // Series is just a series of points with utilities for efficiently accessing
 // segments from rectangle queries, making stuff like point-in-polygon lookups
@@ -9,6 +11,7 @@ type Series interface {
 	Rect() Rect
 	Empty() bool
 	Convex() bool
+	Clockwise() bool
 	NumPoints() int
 	NumSegments() int
 	PointAt(index int) Point
@@ -61,11 +64,12 @@ const minTreePoints = 32
 
 // baseSeries is a concrete type containing all that is needed to make a Series.
 type baseSeries struct {
-	closed bool        // points create a closed shape
-	convex bool        // points create a convex shape
-	rect   Rect        // minumum bounding rectangle
-	points []Point     // original points
-	tree   *d2.BoxTree // segment tree
+	closed    bool        // points create a closed shape
+	clockwise bool        // points move clockwise
+	convex    bool        // points create a convex shape
+	rect      Rect        // minumum bounding rectangle
+	points    []Point     // original points
+	tree      *d2.BoxTree // segment tree
 }
 
 // makeSeries returns a processed baseSeries.
@@ -81,8 +85,14 @@ func makeSeries(points []Point, copyPoints, closed bool) baseSeries {
 	if len(points) >= minTreePoints {
 		series.tree = new(d2.BoxTree)
 	}
-	series.convex, series.rect = processPoints(points, closed, series.tree)
+	series.convex, series.rect, series.clockwise =
+		processPoints(points, closed, series.tree)
 	return series
+}
+
+// Clockwise ...
+func (series *baseSeries) Clockwise() bool {
+	return series.clockwise
 }
 
 func (series *baseSeries) Move(deltaX, deltaY float64) Series {
@@ -207,7 +217,7 @@ func (series *baseSeries) buildTree() {
 // processPoints tests if the ring is convex, calculates the outer
 // rectangle, and inserts segments into a boxtree in one pass.
 func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
-	convex bool, rect Rect,
+	convex bool, rect Rect, clockwise bool,
 ) {
 	if (closed && len(points) < 3) || len(points) < 2 {
 		return
@@ -216,6 +226,7 @@ func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 	var dir int
 	var a, b, c Point
 	var segCount int
+	var cwc float64
 	if closed {
 		segCount = len(points)
 	} else {
@@ -257,10 +268,7 @@ func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 			}
 		}
 
-		// process the convex calculation
-		if concave {
-			continue
-		}
+		// gather some point positions for concave and clockwise detection
 		a = points[i]
 		if i == len(points)-1 {
 			b = points[0]
@@ -272,11 +280,16 @@ func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 			b = points[i+1]
 			c = points[i+2]
 		}
-		dx1 := b.X - a.X
-		dy1 := b.Y - a.Y
-		dx2 := c.X - b.X
-		dy2 := c.Y - b.Y
-		zCrossProduct := dx1*dy2 - dy1*dx2
+
+		// process the clockwise detection
+		cwc += (b.X - a.X) * (b.Y + a.Y)
+
+		// process the convex calculation
+		if concave {
+			continue
+		}
+
+		zCrossProduct := (b.X-a.X)*(c.Y-b.Y) - (b.Y-a.Y)*(c.X-b.X)
 		if dir == 0 {
 			if zCrossProduct < 0 {
 				dir = -1
@@ -293,5 +306,5 @@ func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 			}
 		}
 	}
-	return !concave, rect
+	return !concave, rect, cwc > 0
 }

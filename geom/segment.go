@@ -7,6 +7,14 @@ type Segment struct {
 	A, B Point
 }
 
+// Move a segment by delta
+func (seg Segment) Move(deltaX, deltaY float64) Segment {
+	return Segment{
+		A: Point{X: seg.A.X + deltaX, Y: seg.A.Y + deltaY},
+		B: Point{X: seg.B.X + deltaX, Y: seg.B.Y + deltaY},
+	}
+}
+
 // Rect is the outer boundaries of the segment.
 func (seg Segment) Rect() Rect {
 	var rect Rect

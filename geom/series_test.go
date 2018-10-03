@@ -5,6 +5,34 @@ import (
 	"testing"
 )
 
+func TestSeriesClockwise(t *testing.T) {
+	var series baseSeries
+	series = makeSeries([]Point{
+		P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0),
+	}, true, true)
+	expect(t, !series.Clockwise())
+	series = makeSeries([]Point{
+		P(0, 0), P(10, 0), P(10, 10), P(0, 10),
+	}, true, true)
+	expect(t, !series.Clockwise())
+	series = makeSeries([]Point{
+		P(0, 0), P(10, 0), P(10, 10),
+	}, true, true)
+	expect(t, !series.Clockwise())
+	series = makeSeries([]Point{
+		P(0, 0), P(0, 10), P(10, 10), P(10, 0), P(0, 0),
+	}, true, true)
+	expect(t, series.Clockwise())
+	series = makeSeries([]Point{
+		P(0, 0), P(0, 10), P(10, 10), P(10, 0),
+	}, true, true)
+	expect(t, series.Clockwise())
+	series = makeSeries([]Point{
+		P(0, 0), P(0, 10), P(10, 10),
+	}, true, true)
+	expect(t, series.Clockwise())
+}
+
 func testScanSeries(
 	t *testing.T, series *baseSeries, index bool,
 	expectSegmentCount int, expectedEmpty bool,
