@@ -40,28 +40,67 @@ func TestSeriesConvex(t *testing.T) {
 		}, true, true)
 		expect(t, series.Convex())
 	})
-
 	t.Run("2", func(t *testing.T) {
 		series := makeSeries([]Point{
-			P(0, 0), P(4, 0), P(4, 4),
-			P(3, 4), P(1, 4),
-			P(0, 4), P(0, 0),
+			P(0, 0), P(4, 0), P(4, 4), P(3, 4), P(1, 4), P(0, 4), P(0, 0),
 		}, true, true)
 		expect(t, series.Convex())
 	})
 	t.Run("3", func(t *testing.T) {
 		series := makeSeries([]Point{
-			P(0, 0), P(4, 0), P(4, 4),
-			P(3, 4), P(2, 5), P(1, 4),
-			P(0, 4), P(0, 0),
+			P(0, 0), P(4, 0), P(4, 4), P(2, 5), P(0, 4), P(0, 0),
 		}, true, true)
 		expect(t, series.Convex())
 	})
 	t.Run("4", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(4, 0), P(4, 4),
+			P(3, 4), P(2, 5), P(1, 4),
+			P(0, 4), P(0, 0),
+		}, true, true)
+		expect(t, !series.Convex())
+	})
+	t.Run("5", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4),
 			P(3, 4), P(2, 3), P(1, 4),
 			P(0, 4), P(0, 0),
+		}, true, true)
+		expect(t, !series.Convex())
+	})
+	t.Run("5", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4), P(0, 4),
+			P(-1, 2), P(0, 0),
+		}, true, true)
+		expect(t, series.Convex())
+	})
+	t.Run("6", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4), P(0, 4), P(0, 3),
+			P(-1, 2), P(0, 0),
+		}, true, true)
+		expect(t, !series.Convex())
+	})
+	t.Run("6", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4), P(0, 4),
+			P(-1, 2), P(0, 1), P(0, 0),
+		}, true, true)
+		expect(t, !series.Convex())
+	})
+	t.Run("7", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4),
+			P(3, 3), P(2, 5), P(1, 3), P(0, 4),
+			P(0, 0),
+		}, true, true)
+		expect(t, !series.Convex())
+	})
+	t.Run("8", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(0, 4), P(1, 3), P(4, 4), P(2, 5), P(3, 3), P(4, 0),
+			P(0, 0),
 		}, true, true)
 		expect(t, !series.Convex())
 	})

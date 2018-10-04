@@ -764,6 +764,10 @@ func TestRingXContainsSegment(t *testing.T) {
 }
 
 func TestRingXContainsRing(t *testing.T) {
+	t.Run("Empty", func(t *testing.T) {
+		expect(t, !ringxContainsRing(newRingX(nil), R(0, 0, 1, 1), true))
+		expect(t, !ringxContainsRing(R(0, 0, 1, 1), newRingX(nil), true))
+	})
 	t.Run("Cases", func(t *testing.T) {
 		// concave
 		ring := newRingX([]Point{
@@ -796,7 +800,6 @@ func TestRingXContainsRing(t *testing.T) {
 			P(3, 4), P(2, 5), P(1, 4),
 			P(0, 4), P(0, 0),
 		})
-		println(ring.Convex())
 		t.Run("6", func(t *testing.T) {
 			expect(t, ringxContainsRing(ring, R(1, 2, 3, 3), true))
 			expect(t, ringxContainsRing(ring, R(1, 2, 3, 3), false))
@@ -814,8 +817,150 @@ func TestRingXContainsRing(t *testing.T) {
 				P(0, 0), P(2, 0), P(4, 0), P(4, 4), P(3, 4),
 				P(2, 5), P(1, 4), P(0, 4), P(0, 0),
 			})
-			expect(t, ringxContainsRing(ring, R(1, 0, 1, 3), true))
-			expect(t, !ringxContainsRing(ring, R(1, 0, 1, 3), false))
+			expect(t, ringxContainsRing(ring, R(1, 0, 3, 1), true))
+			expect(t, !ringxContainsRing(ring, R(1, 0, 3, 1), false))
+		})
+		t.Run("10", func(t *testing.T) {
+			ring = newRingX([]Point{
+				P(0, 0), P(4, 0), P(4, 3), P(2, 4),
+				P(0, 3), P(0, 0),
+			})
+			expect(t, ringxContainsRing(ring, R(1, 1, 3, 2), true))
+			expect(t, ringxContainsRing(ring, R(1, 1, 3, 2), false))
+		})
+		ring = newRingX([]Point{
+			P(0, 0), P(4, 0), P(4, 3), P(3, 4), P(1, 4), P(0, 3), P(0, 0),
+		})
+		t.Run("11", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(1, 1, 3, 2), true))
+			expect(t, ringxContainsRing(ring, R(1, 1, 3, 2), false))
+		})
+		t.Run("12", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(0, 1, 2, 2), true))
+			expect(t, !ringxContainsRing(ring, R(0, 1, 2, 2), false))
+		})
+		t.Run("13", func(t *testing.T) {
+			expect(t, !ringxContainsRing(ring, R(-1, 1, 1, 2), true))
+			expect(t, !ringxContainsRing(ring, R(-1, 1, 1, 2), false))
+		})
+		t.Run("14", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(0.5, 2.5, 2.5, 3.5), true))
+			expect(t, !ringxContainsRing(ring, R(0.5, 2.5, 2.5, 3.5), false))
+		})
+		t.Run("15", func(t *testing.T) {
+			expect(t, !ringxContainsRing(ring, R(0.25, 2.75, 2.25, 3.75), true))
+			expect(t, !ringxContainsRing(ring, R(0.25, 2.75, 2.25, 3.75), false))
+		})
+	})
+}
+
+func TestRingXIntersectsRing(t *testing.T) {
+	intersectsBothWays := func(ringA, ringB RingX, allowOnEdge bool) bool {
+		t1 := ringxIntersectsRing(ringA, ringB, allowOnEdge)
+		t2 := ringxIntersectsRing(ringB, ringA, allowOnEdge)
+		if t1 != t2 {
+			panic("mismatch")
+		}
+		return t1
+	}
+	t.Run("Empty", func(t *testing.T) {
+		expect(t, !intersectsBothWays(newRingX(nil), R(0, 0, 1, 1), true))
+		expect(t, !intersectsBothWays(R(0, 0, 1, 1), newRingX(nil), true))
+	})
+	t.Run("Cases", func(t *testing.T) {
+		// concave
+		ring := newRingX([]Point{
+			P(0, 0), P(4, 0), P(4, 4), P(3, 4),
+			P(2, 3), P(1, 4), P(0, 4), P(0, 0),
+		})
+		t.Run("1", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), true))
+			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), false))
+		})
+		t.Run("2", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(0, 0, 2, 1), true))
+			expect(t, intersectsBothWays(ring, R(0, 0, 2, 1), false))
+		})
+		t.Run("3", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(-1.5, 1, 1.5, 2), true))
+			expect(t, intersectsBothWays(ring, R(-1.5, 1, 1.5, 2), false))
+		})
+		t.Run("4", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(1, 2.5, 3, 3.5), true))
+			expect(t, intersectsBothWays(ring, R(1, 2.5, 3, 3.5), false))
+		})
+		t.Run("5", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(1, 2, 3, 3), true))
+			expect(t, intersectsBothWays(ring, R(1, 2, 3, 3), false))
+		})
+		// convex
+		ring = newRingX([]Point{
+			P(0, 0), P(4, 0), P(4, 4),
+			P(3, 4), P(2, 5), P(1, 4),
+			P(0, 4), P(0, 0),
+		})
+		t.Run("6", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(1, 2, 3, 3), true))
+			expect(t, intersectsBothWays(ring, R(1, 2, 3, 3), false))
+		})
+		t.Run("7", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(1, 3, 3, 4), true))
+			expect(t, intersectsBothWays(ring, R(1, 3, 3, 4), false))
+		})
+		t.Run("8", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(1, 3.5, 3, 4.5), true))
+			expect(t, intersectsBothWays(ring, R(1, 3.5, 3, 4.5), false))
+		})
+		t.Run("9", func(t *testing.T) {
+			ring = newRingX([]Point{
+				P(0, 0), P(2, 0), P(4, 0), P(4, 4), P(3, 4),
+				P(2, 5), P(1, 4), P(0, 4), P(0, 0),
+			})
+			expect(t, intersectsBothWays(ring, R(1, 0, 3, 1), true))
+			expect(t, intersectsBothWays(ring, R(1, 0, 3, 1), false))
+		})
+		t.Run("10", func(t *testing.T) {
+			ring = newRingX([]Point{
+				P(0, 0), P(4, 0), P(4, 3), P(2, 4),
+				P(0, 3), P(0, 0),
+			})
+			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), true))
+			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), false))
+		})
+		ring = newRingX([]Point{
+			P(0, 0), P(4, 0), P(4, 3), P(3, 4), P(1, 4), P(0, 3), P(0, 0),
+		})
+		t.Run("11", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), true))
+			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), false))
+		})
+		t.Run("12", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(0, 1, 2, 2), true))
+			expect(t, intersectsBothWays(ring, R(0, 1, 2, 2), false))
+		})
+		t.Run("13", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(-1, 1, 1, 2), true))
+			expect(t, intersectsBothWays(ring, R(-1, 1, 1, 2), false))
+		})
+		t.Run("14", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(0.5, 2.5, 2.5, 3.5), true))
+			expect(t, intersectsBothWays(ring, R(0.5, 2.5, 2.5, 3.5), false))
+		})
+		t.Run("15", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(0.25, 2.75, 2.25, 3.75), true))
+			expect(t, intersectsBothWays(ring, R(0.25, 2.75, 2.25, 3.75), false))
+		})
+		t.Run("16", func(t *testing.T) {
+			expect(t, !intersectsBothWays(ring, R(-2, 1, -1, 2), true))
+			expect(t, !intersectsBothWays(ring, R(-2, 1, -1, 2), false))
+		})
+		t.Run("17", func(t *testing.T) {
+			expect(t, intersectsBothWays(ring, R(-0.5, 3.5, 0.5, 4.5), true))
+			expect(t, !intersectsBothWays(ring, R(-0.5, 3.5, 0.5, 4.5), false))
+		})
+		t.Run("18", func(t *testing.T) {
+			expect(t, !intersectsBothWays(ring, R(-0.75, 3.75, 0.25, 4.75), true))
+			expect(t, !intersectsBothWays(ring, R(-0.74, 3.75, 0.25, 4.75), false))
 		})
 	})
 }

@@ -298,16 +298,13 @@ func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 			}
 		} else if zCrossProduct < 0 {
 			if dir == 1 {
-				println(2)
 				concave = true
 			}
 		} else if zCrossProduct > 0 {
 			if dir == -1 {
-				println(1)
 				concave = true
 			}
 		}
 	}
-	println(concave)
 	return !concave, rect, cwc > 0
 }

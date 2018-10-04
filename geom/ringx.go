@@ -205,10 +205,8 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
 		return false
 	}
-	ringRect := ring.Rect()
-	otherRect := other.Rect()
 	// test if the inner rect does not contain the outer rect
-	if !ringRect.ContainsRect(otherRect) {
+	if !ring.Rect().ContainsRect(other.Rect()) {
 		// not contained so it's not possible for the outer ring to contain
 		// the inner ring
 		return false
@@ -236,6 +234,25 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 	return true
 }
 
+func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
+	if ring.Empty() || other.Empty() {
+		return false
+	}
+	if !ring.Rect().IntersectsRect(other.Rect()) {
+		return false
+	}
+	if other.NumSegments() > ring.NumSegments() {
+		ring, other = other, ring
+	}
+	otherNumSegments := other.NumSegments()
+	for i := 0; i < otherNumSegments; i++ {
+		if ringxIntersectsSegment(ring, other.SegmentAt(i), allowOnEdge) {
+			return true
+		}
+	}
+	return false
+}
+
 func ringxContainsRect(ring RingX, rect Rect, allowOnEdge bool) bool {
 	panic("not ready")
 }
@@ -249,10 +266,6 @@ func ringxContainsLine(line *Line, allowOnEdge bool) bool {
 }
 
 func ringxIntersectsLine(line *Line, allowOnEdge bool) bool {
-	panic("not ready")
-}
-
-func ringxIntersectsRing(line *Line, allowOnEdge bool) bool {
 	panic("not ready")
 }
 
