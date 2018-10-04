@@ -81,14 +81,14 @@ func TestLineContainsLine(t *testing.T) {
 	expect(t, !R(0, 0, 30, 30).ContainsLine(L()))
 }
 
-func TestLineContainsSegment(t *testing.T) {
-	line := NewLine(v1)
-	expect(t, line.ContainsSegment(S(0, 10, 5, 0)))
-	expect(t, line.ContainsSegment(S(1.25, 7.5, 5, 0)))
-	expect(t, line.ContainsSegment(S(1.25, 7.5, 3.75, 2.5)))
-	expect(t, !line.ContainsSegment(S(2.25, 7.5, 4.75, 2.5)))
-	expect(t, !line.ContainsSegment(S(-1.25, 12.5, 5, 0)))
-}
+// func TestLineContainsSegment(t *testing.T) {
+// 	line := NewLine(v1)
+// 	expect(t, line.ContainsSegment(S(0, 10, 5, 0)))
+// 	expect(t, line.ContainsSegment(S(1.25, 7.5, 5, 0)))
+// 	expect(t, line.ContainsSegment(S(1.25, 7.5, 3.75, 2.5)))
+// 	expect(t, !line.ContainsSegment(S(2.25, 7.5, 4.75, 2.5)))
+// 	expect(t, !line.ContainsSegment(S(-1.25, 12.5, 5, 0)))
+// }
 
 func TestLineIntersectsLine(t *testing.T) {
 	lns := [][]Point{u1, u2, u3, u4, v1, v2, v3, v4}

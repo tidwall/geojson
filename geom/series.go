@@ -19,7 +19,7 @@ type Series interface {
 	Search(rect Rect, iter func(seg Segment, index int) bool)
 }
 
-func seriesForEachSegment(ring Ring, iter func(seg Segment) bool) {
+func seriesForEachSegment(ring RingX, iter func(seg Segment) bool) {
 	n := ring.NumSegments()
 	for i := 0; i < n; i++ {
 		if !iter(ring.SegmentAt(i)) {
@@ -28,7 +28,7 @@ func seriesForEachSegment(ring Ring, iter func(seg Segment) bool) {
 	}
 }
 
-func seriesForEachPoint(ring Ring, iter func(point Point) bool) {
+func seriesForEachPoint(ring RingX, iter func(point Point) bool) {
 	n := ring.NumPoints()
 	for i := 0; i < n; i++ {
 		if !iter(ring.PointAt(i)) {

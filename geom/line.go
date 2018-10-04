@@ -96,21 +96,21 @@ func (line *Line) ContainsLine(other *Line) bool {
 	return true
 }
 
-// ContainsSegment ...
-func (line *Line) ContainsSegment(seg Segment) bool {
-	// is the function needed?
-	// TODO: convert segment into Line and to line.ContainsLine(other)
-	panic("needed?")
-	var contains bool
-	line.Search(seg.Rect(), func(other Segment, index int) bool {
-		if other.Raycast(seg.A).On && other.Raycast(seg.B).On {
-			contains = true
-			return false
-		}
-		return true
-	})
-	return contains
-}
+// // ContainsSegment ...
+// func (line *Line) ContainsSegment(seg Segment) bool {
+// 	// is the function needed?
+// 	// TODO: convert segment into Line and to line.ContainsLine(other)
+// 	panic("needed?")
+// 	// var contains bool
+// 	// line.Search(seg.Rect(), func(other Segment, index int) bool {
+// 	// 	if other.Raycast(seg.A).On && other.Raycast(seg.B).On {
+// 	// 		contains = true
+// 	// 		return false
+// 	// 	}
+// 	// 	return true
+// 	// })
+// 	// return contains
+// }
 
 // IntersectsLine ...
 func (line *Line) IntersectsLine(other *Line) bool {
@@ -146,8 +146,12 @@ func (line *Line) ContainsPoly(poly *Poly) bool {
 	if rect.Min.X != rect.Max.X && rect.Min.Y != rect.Max.Y {
 		return false
 	}
-
-	return line.ContainsSegment(Segment{A: rect.Min, B: rect.Max})
+	// polygon can fit in a straight (vertial or horizontal) line
+	points := [2]Point{rect.Min, rect.Max}
+	var other Line
+	other.baseSeries.points = points[:]
+	other.baseSeries.rect = rect
+	return line.ContainsLine(&other)
 }
 
 // IntersectsPoly ...

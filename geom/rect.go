@@ -153,7 +153,7 @@ func (rect Rect) ContainsLine(line *Line) bool {
 
 // IntersectsLine ...
 func (rect Rect) IntersectsLine(line *Line) bool {
-	return ringIntersectsLine(rect, line, true)
+	return ringxIntersectsLine(rect, line, true)
 }
 
 // ContainsPoly ...
@@ -163,5 +163,5 @@ func (rect Rect) ContainsPoly(poly *Poly) bool {
 
 // IntersectsPoly ...
 func (rect Rect) IntersectsPoly(poly *Poly) bool {
-	return ringIntersectsPoly(rect, poly, true)
+	return ringxIntersectsPoly(rect, poly, true)
 }

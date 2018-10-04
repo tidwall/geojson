@@ -2,7 +2,10 @@ package geom
 
 import (
 	"math"
+	"strconv"
 )
+
+const complexRingMinPoints = 16
 
 // RingX ...
 type RingX = Series
@@ -10,6 +13,30 @@ type RingX = Series
 func newRingX(points []Point) RingX {
 	series := makeSeries(points, true, true)
 	return &series
+}
+
+func ringxString(ring RingX) string {
+	var buf []byte
+	buf = append(buf, '[')
+	n := ring.NumPoints()
+	for i := 0; i < n; i++ {
+		if i == 0 {
+			buf = append(buf, '\n')
+		}
+		pt := ring.PointAt(i)
+		buf = append(buf, '\t', '[')
+		buf = strconv.AppendFloat(buf, pt.X, 'f', -1, 64)
+		buf = append(buf, ',')
+		buf = strconv.AppendFloat(buf, pt.Y, 'f', -1, 64)
+		buf = append(buf, ']')
+		if i < n-1 {
+			buf = append(buf, ',')
+		}
+		buf = append(buf, '\n')
+	}
+
+	buf = append(buf, ']')
+	return string(buf)
 }
 
 type ringxResult struct {
@@ -192,7 +219,27 @@ func ringxIntersectsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 	// are on the outside and are passing over segments. If the segment passes
 	// over at least two ring segments then it's intersecting.
 	var count int
+	var segAOn bool
+	var segBOn bool
 	ring.Search(seg.Rect(), func(seg2 Segment, index int) bool {
+		if !allowOnEdge {
+			if !segAOn {
+				if seg.A == seg2.A || seg.A == seg2.B {
+					segAOn = true
+					return true
+				}
+			}
+			if !segBOn {
+				if seg.B == seg2.A || seg.B == seg2.B {
+					segBOn = true
+					return true
+				}
+			}
+			// if seg2.A == seg.A || seg2.B == seg.A ||
+			// 	seg2.A == seg.B || seg2.B == seg.B {
+			// 	return true
+			// }
+		}
 		if seg.IntersectsSegment(seg2) {
 			count++
 		}
@@ -205,12 +252,20 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
 		return false
 	}
+	if other.NumPoints() >= complexRingMinPoints {
+		// inner ring has a lot of points, let just check if the rect ring is
+		// fully contained before we do the complicated stuff.
+		if ringxContainsRect(ring, other.Rect(), allowOnEdge) {
+			return true
+		}
+	}
 	// test if the inner rect does not contain the outer rect
 	if !ring.Rect().ContainsRect(other.Rect()) {
 		// not contained so it's not possible for the outer ring to contain
 		// the inner ring
 		return false
 	}
+
 	if ring.Convex() {
 		// outer ring is convex so test that all inner points are inside of
 		// the outer ring
@@ -254,25 +309,29 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 }
 
 func ringxContainsRect(ring RingX, rect Rect, allowOnEdge bool) bool {
-	panic("not ready")
+	return ringxContainsRing(ring, rect, allowOnEdge)
 }
 
-func ringxIntersectsRect(rect Rect, allowOnEdge bool) bool {
-	panic("not ready")
+func ringxIntersectsRect(ring RingX, rect Rect, allowOnEdge bool) bool {
+	return ringxIntersectsRect(ring, rect, allowOnEdge)
 }
 
-func ringxContainsLine(line *Line, allowOnEdge bool) bool {
-	panic("not ready")
+func ringxContainsLine(ring RingX, line *Line, allowOnEdge bool) bool {
+	// shares the same logic as rings, do a lightweight conversion of the
+	// line to a ring
+	return ringxContainsRing(ring, RingX(&line.baseSeries), allowOnEdge)
 }
 
-func ringxIntersectsLine(line *Line, allowOnEdge bool) bool {
-	panic("not ready")
+func ringxIntersectsLine(ring RingX, line *Line, allowOnEdge bool) bool {
+	// shares the same logic as rings, do a lightweight conversion of the
+	// line to a ring
+	return ringxIntersectsRing(ring, RingX(&line.baseSeries), allowOnEdge)
 }
 
-func ringxContainsPoly(line *Line, allowOnEdge bool) bool {
-	panic("not ready")
+func ringxContainsPoly(ring RingX, poly *Poly, allowOnEdge bool) bool {
+	return ringxContainsRing(ring, poly.Exterior, allowOnEdge)
 }
 
-func ringxIntersectsPoly(line *Line, allowOnEdge bool) bool {
-	panic("not ready")
+func ringxIntersectsPoly(ring RingX, poly *Poly, allowOnEdge bool) bool {
+	return ringxIntersectsRing(ring, poly.Exterior, allowOnEdge)
 }
