@@ -98,6 +98,9 @@ func (line *Line) ContainsLine(other *Line) bool {
 
 // ContainsSegment ...
 func (line *Line) ContainsSegment(seg Segment) bool {
+	// is the function needed?
+	// TODO: convert segment into Line and to line.ContainsLine(other)
+	panic("needed?")
 	var contains bool
 	line.Search(seg.Rect(), func(other Segment, index int) bool {
 		if other.Raycast(seg.A).On && other.Raycast(seg.B).On {

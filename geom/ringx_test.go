@@ -735,6 +735,87 @@ func TestRingXContainsSegment(t *testing.T) {
 			expect(t, ringxContainsSegment(ring, S(1.5, 3.5, 1.5, 2), true))
 			expect(t, !ringxContainsSegment(ring, S(1.5, 3.5, 1.5, 2), false))
 		})
+		t.Run("13", func(t *testing.T) {
+			ring := newRingX([]Point{
+				P(0, 0), P(2, 0), P(4, 0), P(4, 4), P(3, 4),
+				P(2, 3), P(1, 4), P(0, 4), P(0, 0),
+			})
+			expect(t, ringxContainsSegment(ring, S(1, 0, 3, 0), true))
+			expect(t, !ringxContainsSegment(ring, S(1, 0, 3, 0), false))
+		})
+		t.Run("14", func(t *testing.T) {
+			ring := newRingX([]Point{
+				P(0, 0), P(4, 0), P(2, 2), P(0, 4), P(0, 0),
+			})
+			expect(t, ringxContainsSegment(ring, S(1, 3, 3, 1), true))
+			expect(t, ringxContainsSegment(ring, S(3, 1, 1, 3), true))
+			expect(t, !ringxContainsSegment(ring, S(1, 3, 3, 1), false))
+			expect(t, !ringxContainsSegment(ring, S(3, 1, 1, 3), false))
+		})
+		t.Run("15", func(t *testing.T) {
+			expect(t, ringxContainsSegment(ring, S(1, 3, 3, 3), true))
+			expect(t, !ringxContainsSegment(ring, S(1, 3, 3, 3), false))
+		})
+		t.Run("16", func(t *testing.T) {
+			expect(t, ringxContainsSegment(ring, S(1, 3, 2, 3), true))
+			expect(t, !ringxContainsSegment(ring, S(1, 3, 2, 3), false))
+		})
 	})
+}
 
+func TestRingXContainsRing(t *testing.T) {
+	t.Run("Cases", func(t *testing.T) {
+		// concave
+		ring := newRingX([]Point{
+			P(0, 0), P(4, 0), P(4, 4), P(3, 4),
+			P(2, 3), P(1, 4), P(0, 4), P(0, 0),
+		})
+		t.Run("1", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(1, 1, 3, 2), true))
+			expect(t, ringxContainsRing(ring, R(1, 1, 3, 2), false))
+		})
+		t.Run("2", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(0, 0, 2, 1), true))
+			expect(t, !ringxContainsRing(ring, R(0, 0, 2, 1), false))
+		})
+		t.Run("3", func(t *testing.T) {
+			expect(t, !ringxContainsRing(ring, R(-1.5, 1, 1.5, 2), true))
+			expect(t, !ringxContainsRing(ring, R(-1.5, 1, 1.5, 2), false))
+		})
+		t.Run("4", func(t *testing.T) {
+			expect(t, !ringxContainsRing(ring, R(1, 2.5, 3, 3.5), true))
+			expect(t, !ringxContainsRing(ring, R(1, 2.5, 3, 3.5), false))
+		})
+		t.Run("5", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(1, 2, 3, 3), true))
+			expect(t, !ringxContainsRing(ring, R(1, 2, 3, 3), false))
+		})
+		// convex
+		ring = newRingX([]Point{
+			P(0, 0), P(4, 0), P(4, 4),
+			P(3, 4), P(2, 5), P(1, 4),
+			P(0, 4), P(0, 0),
+		})
+		println(ring.Convex())
+		t.Run("6", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(1, 2, 3, 3), true))
+			expect(t, ringxContainsRing(ring, R(1, 2, 3, 3), false))
+		})
+		t.Run("7", func(t *testing.T) {
+			expect(t, ringxContainsRing(ring, R(1, 3, 3, 4), true))
+			expect(t, !ringxContainsRing(ring, R(1, 3, 3, 4), false))
+		})
+		t.Run("8", func(t *testing.T) {
+			expect(t, !ringxContainsRing(ring, R(1, 3.5, 3, 4.5), true))
+			expect(t, !ringxContainsRing(ring, R(1, 3.5, 3, 4.5), false))
+		})
+		t.Run("9", func(t *testing.T) {
+			ring = newRingX([]Point{
+				P(0, 0), P(2, 0), P(4, 0), P(4, 4), P(3, 4),
+				P(2, 5), P(1, 4), P(0, 4), P(0, 0),
+			})
+			expect(t, ringxContainsRing(ring, R(1, 0, 1, 3), true))
+			expect(t, !ringxContainsRing(ring, R(1, 0, 1, 3), false))
+		})
+	})
 }

@@ -19,12 +19,12 @@ type ringxResult struct {
 
 func ringxContainsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
 	var idx = -1
-	// 1) Find all intersecting segments on the y-axis
+	// find all intersecting segments on the y-axis
 	var in bool
 	ring.Search(
 		Rect{Point{math.Inf(-1), point.Y}, Point{math.Inf(+1), point.Y}},
 		func(seg Segment, index int) bool {
-			// 2) perform a raycast operation on the segments
+			// perform a raycast operation on the segments
 			res := seg.Raycast(point)
 			if res.On {
 				in = allowOnEdge
@@ -37,13 +37,19 @@ func ringxContainsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
 			return true
 		},
 	)
-
 	return ringxResult{hit: in, idx: idx}
 }
 
 func ringxIntersectsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
 	return ringxContainsPoint(ring, point, allowOnEdge)
 }
+
+// func segmentsIntersects(seg, other Segment, allowOnEdge bool) bool {
+// 	if seg.IntersectsSegment(other) {
+
+// 	}
+// 	return false
+// }
 
 func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 	// Test that segment points are contained in the ring.
@@ -144,26 +150,29 @@ func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 			})
 			return !intersects
 		}
-		// case (5)
+		// case (5) (15)
 		var intersects bool
 		ring.Search(seg.Rect(), func(seg2 Segment, index int) bool {
 			if seg.IntersectsSegment(seg2) {
-
-				intersects = true
-				return false
+				if !seg.Raycast(seg2.A).On && !seg.Raycast(seg2.B).On {
+					intersects = true
+					return false
+				}
 			}
 			return true
 		})
 		return !intersects
 	}
-	// not allow on edge
+
+	// allowOnEdge is false. (not allow on edge)
 	var intersects bool
 	ring.Search(seg.Rect(), func(seg2 Segment, index int) bool {
 		if seg.IntersectsSegment(seg2) {
-			if !seg.Raycast(seg2.A).On || seg.Raycast(seg2.B).On {
-				intersects = true
-				return false
-			}
+			// if seg.Raycast(seg2.A).On || seg.Raycast(seg2.B).On {
+			intersects = true
+			// 	return false
+			// }
+			return false
 		}
 		return true
 	})
@@ -192,11 +201,42 @@ func ringxIntersectsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 	return count >= 2
 }
 
-func ringxContainsRing(ring RingX, other RingX, allowOnEdge bool) bool {
-	panic("not ready")
+func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
+	if ring.Empty() || other.Empty() {
+		return false
+	}
+	ringRect := ring.Rect()
+	otherRect := other.Rect()
+	// test if the inner rect does not contain the outer rect
+	if !ringRect.ContainsRect(otherRect) {
+		// not contained so it's not possible for the outer ring to contain
+		// the inner ring
+		return false
+	}
+	if ring.Convex() {
+		// outer ring is convex so test that all inner points are inside of
+		// the outer ring
+		otherNumPoints := other.NumPoints()
+		for i := 0; i < otherNumPoints; i++ {
+			if !ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
+				// point is on the outside the outer ring
+				return false
+			}
+		}
+	} else {
+		// outer ring is concave so let's make sure that all inner segments are
+		// fully contained inside of the outer ring.
+		otherNumSegments := other.NumSegments()
+		for i := 0; i < otherNumSegments; i++ {
+			if !ringxContainsSegment(ring, other.SegmentAt(i), allowOnEdge) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
-func ringxContainsRect(rect Rect, allowOnEdge bool) bool {
+func ringxContainsRect(ring RingX, rect Rect, allowOnEdge bool) bool {
 	panic("not ready")
 }
 

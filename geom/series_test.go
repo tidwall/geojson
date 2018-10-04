@@ -33,6 +33,40 @@ func TestSeriesClockwise(t *testing.T) {
 	expect(t, series.Clockwise())
 }
 
+func TestSeriesConvex(t *testing.T) {
+	t.Run("1", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4), P(0, 4), P(0, 0),
+		}, true, true)
+		expect(t, series.Convex())
+	})
+
+	t.Run("2", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4),
+			P(3, 4), P(1, 4),
+			P(0, 4), P(0, 0),
+		}, true, true)
+		expect(t, series.Convex())
+	})
+	t.Run("3", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4),
+			P(3, 4), P(2, 5), P(1, 4),
+			P(0, 4), P(0, 0),
+		}, true, true)
+		expect(t, series.Convex())
+	})
+	t.Run("4", func(t *testing.T) {
+		series := makeSeries([]Point{
+			P(0, 0), P(4, 0), P(4, 4),
+			P(3, 4), P(2, 3), P(1, 4),
+			P(0, 4), P(0, 0),
+		}, true, true)
+		expect(t, !series.Convex())
+	})
+}
+
 func testScanSeries(
 	t *testing.T, series *baseSeries, index bool,
 	expectSegmentCount int, expectedEmpty bool,
