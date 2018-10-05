@@ -882,6 +882,15 @@ func TestRingXContainsRing(t *testing.T) {
 		expect(t, !ringxContainsRing(newRingX(nil), R(0, 0, 1, 1), true))
 		expect(t, !ringxContainsRing(R(0, 0, 1, 1), newRingX(nil), true))
 	})
+
+	t.Run("Exact", func(t *testing.T) {
+		expect(t, ringxContainsRing(R(0, 0, 1, 1), R(0, 0, 1, 1), true))
+		expect(t, !ringxContainsRing(R(0, 0, 1, 1), R(0, 0, 1, 1), false))
+		expect(t, ringxContainsRing(newRingX(concave1), newRingX(concave1), true))
+		expect(t, !ringxContainsRing(newRingX(concave1), newRingX(concave1), false))
+		expect(t, ringxContainsRing(newRingX(octagon), newRingX(octagon), true))
+		expect(t, !ringxContainsRing(newRingX(octagon), newRingX(octagon), false))
+	})
 	t.Run("Cases", func(t *testing.T) {
 		// concave
 		ring := newRingX([]Point{

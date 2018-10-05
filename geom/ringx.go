@@ -306,7 +306,7 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 		// swap the rings so that the inner ring is smaller than the outer ring
 		ring, other = other, ring
 	}
-	if ring.Convex() {
+	if ring.Convex() && allowOnEdge {
 		// outer ring is convex so test that any inner points are inside of
 		// the outer ring
 		otherNumPoints := other.NumPoints()

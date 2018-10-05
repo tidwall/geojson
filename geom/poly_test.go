@@ -138,7 +138,6 @@ func TestPolyContainsPoly(t *testing.T) {
 	poly2 := NewPoly(octagon, holes2)
 
 	expect(t, !poly1.ContainsPoly(NewPoly(holes2[0], nil)))
-
 	expect(t, !poly1.ContainsPoly(poly2))
 
 	dualPolyTest(t, octagon, holes1, func(t *testing.T, poly *Poly) {
