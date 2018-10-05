@@ -1,7 +1,6 @@
 package geom
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 )
@@ -46,24 +45,24 @@ type ringxResult struct {
 }
 
 func ringxContainsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
-	println("A")
+	// println("A")
 	var idx = -1
 	// find all intersecting segments on the y-axis
 	var in bool
 	ring.Search(
 		Rect{Point{math.Inf(-1), point.Y}, Point{math.Inf(+1), point.Y}},
 		func(seg Segment, index int) bool {
-			fmt.Printf("%v %v\n", point, seg)
+			// fmt.Printf("%v %v\n", point, seg)
 			// perform a raycast operation on the segments
 			res := seg.Raycast(point)
 			if res.On {
-				println(1)
+				// println(1)
 				in = allowOnEdge
 				idx = index
 				return false
 			}
 			if res.In {
-				println(2)
+				// println(2)
 				in = !in
 			}
 			return true
@@ -275,10 +274,8 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 	if ring.Convex() {
 		// outer ring is convex so test that all inner points are inside of
 		// the outer ring
-		fmt.Printf("%v\n", ringxString(ring))
 		otherNumPoints := other.NumPoints()
 		for i := 0; i < otherNumPoints; i++ {
-			fmt.Printf("%v\n", other.PointAt(i))
 			if !ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
 				// point is on the outside the outer ring
 				return false
@@ -309,17 +306,23 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 		// swap the rings so that the inner ring is smaller than the outer ring
 		ring, other = other, ring
 	}
-	// check if any points are inside ring
-	otherNumPoints := other.NumPoints()
-	for i := 0; i < otherNumPoints; i++ {
-		if ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
-			return true
+	if ring.Convex() {
+		// outer ring is convex so test that any inner points are inside of
+		// the outer ring
+		otherNumPoints := other.NumPoints()
+		for i := 0; i < otherNumPoints; i++ {
+			if ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
+				return true
+			}
 		}
-	}
-	otherNumSegments := other.NumSegments()
-	for i := 0; i < otherNumSegments; i++ {
-		if ringxIntersectsSegment(ring, other.SegmentAt(i), allowOnEdge) {
-			return true
+	} else {
+		// outer ring is concave so let's make sure that all inner segments are
+		// fully contained inside of the outer ring.
+		otherNumSegments := other.NumSegments()
+		for i := 0; i < otherNumSegments; i++ {
+			if ringxIntersectsSegment(ring, other.SegmentAt(i), allowOnEdge) {
+				return true
+			}
 		}
 	}
 	return false
@@ -331,7 +334,25 @@ func ringxContainsLine(ring RingX, line *Line, allowOnEdge bool) bool {
 }
 
 func ringxIntersectsLine(ring RingX, line *Line, allowOnEdge bool) bool {
-
-	panic("not ready")
-	//return ringxIntersectsRing(ring, RingX(&line.baseSeries), allowOnEdge)
+	if ring.Empty() || line.Empty() {
+		return false
+	}
+	// check outer and innter rects intersection first
+	if !ring.Rect().IntersectsRect(line.Rect()) {
+		return false
+	}
+	// check if any points are inside ring
+	lineNumPoints := line.NumPoints()
+	for i := 0; i < lineNumPoints; i++ {
+		if ringxContainsPoint(ring, line.PointAt(i), allowOnEdge).hit {
+			return true
+		}
+	}
+	lineNumSegments := line.NumSegments()
+	for i := 0; i < lineNumSegments; i++ {
+		if ringxIntersectsSegment(ring, line.SegmentAt(i), allowOnEdge) {
+			return true
+		}
+	}
+	return false
 }

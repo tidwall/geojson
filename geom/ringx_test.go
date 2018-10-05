@@ -30,27 +30,33 @@ func testDualRingX(t *testing.T, points []Point, do func(t *testing.T, ring Ring
 }
 
 func TestRingXContainsPoint(t *testing.T) {
-	// testDualRingX(t, octagon, func(t *testing.T, ring RingX) {
-	// 	expect(t, !ringxContainsPoint(ring, P(0, 0), true).hit)
-	// 	expect(t, ringxContainsPoint(ring, P(0, 5), true).hit)
-	// 	expect(t, !ringxContainsPoint(ring, P(0, 5), false).hit)
-	// 	expect(t, ringxContainsPoint(ring, P(4, 4), true).hit)
-	// 	expect(t, !ringxContainsPoint(ring, P(1.4, 1.4), true).hit)
-	// 	expect(t, ringxContainsPoint(ring, P(1.5, 1.5), true).hit)
-	// 	expect(t, !ringxContainsPoint(ring, P(1.5, 1.5), false).hit)
-	// })
+	testDualRingX(t, octagon, func(t *testing.T, ring RingX) {
+		expect(t, !ringxContainsPoint(ring, P(0, 0), true).hit)
+		expect(t, ringxContainsPoint(ring, P(0, 5), true).hit)
+		expect(t, !ringxContainsPoint(ring, P(0, 5), false).hit)
+		expect(t, ringxContainsPoint(ring, P(4, 4), true).hit)
+		expect(t, !ringxContainsPoint(ring, P(1.4, 1.4), true).hit)
+		expect(t, ringxContainsPoint(ring, P(1.5, 1.5), true).hit)
+		expect(t, !ringxContainsPoint(ring, P(1.5, 1.5), false).hit)
+	})
 	shape := []Point{
 		P(0, 0), P(4, 0), P(4, 3),
 		P(3, 4), P(1, 4),
 		P(0, 3), P(0, 0),
 	}
 	ring := newRingX(shape)
-	//expect(t, !insideshpext(P(4, 3.5), shape))
+	expect(t, !ringxContainsPoint(ring, P(0, 3.5), true).hit)
+	expect(t, !ringxContainsPoint(ring, P(0.4, 3.5), true).hit)
+	expect(t, ringxContainsPoint(ring, P(0.5, 3.5), true).hit)
+	expect(t, ringxContainsPoint(ring, P(0.6, 3.5), true).hit)
+	expect(t, ringxContainsPoint(ring, P(1, 3.5), true).hit)
+	expect(t, ringxContainsPoint(ring, P(3, 3.5), true).hit)
+	expect(t, ringxContainsPoint(ring, P(3.4, 3.5), true).hit)
+	expect(t, ringxContainsPoint(ring, P(3.5, 3.5), true).hit)
+	expect(t, !ringxContainsPoint(ring, P(3.9, 3.5), true).hit)
 	expect(t, !ringxContainsPoint(ring, P(4, 3.5), true).hit)
+	expect(t, !ringxContainsPoint(ring, P(4.1, 3.5), true).hit)
 
-	// testDualRingX(t, ring, func(t *testing.T, ring RingX) {
-	// 	expect(t, !ringxContainsPoint(ring, P(4, 3.5), true).hit)
-	// })
 }
 
 func TestRingXIntersectsPoint(t *testing.T) {
@@ -1134,7 +1140,7 @@ func TestRingXContainsLine(t *testing.T) {
 		})
 		t.Run("7", func(t *testing.T) {
 			expect(t, !ringxContainsLine(ring, makeLine(P(2, 1.5)), true))
-			//expect(t, !ringxContainsLine(ring, makeLine(P(2, 1.5)), false))
+			expect(t, !ringxContainsLine(ring, makeLine(P(2, 1.5)), false))
 		})
 		t.Run("8", func(t *testing.T) {
 			expect(t, ringxContainsLine(ring, makeLine(P(2, 1)), true))
@@ -1164,10 +1170,148 @@ func TestRingXContainsLine(t *testing.T) {
 			expect(t, !ringxContainsLine(ring, makeLine(P(3, 1)), true))
 			expect(t, !ringxContainsLine(ring, makeLine(P(3, 1)), false))
 		})
-		// t.Run("15", func(t *testing.T) {
-		// 	line := L(P(-1,-1),P(-1,2),P(2,2),P(2,
-		// 	expect(t, !ringxContainsLine(ring, line, true))
-		// 	expect(t, !ringxContainsLine(ring, line, false))
-		// })
+		t.Run("15", func(t *testing.T) {
+			line := L(P(-1, -1), P(-1, 2), P(2, 2), P(2, 5), P(5, 5))
+			expect(t, !ringxContainsLine(ring, line, true))
+			expect(t, !ringxContainsLine(ring, line, false))
+		})
+		t.Run("16", func(t *testing.T) {
+			line := L(P(0, -1), P(0, 1), P(3, 3), P(5, 3))
+			expect(t, !ringxContainsLine(ring, line, true))
+			expect(t, !ringxContainsLine(ring, line, false))
+		})
+		t.Run("17", func(t *testing.T) {
+			line := L(P(-1, 2), P(2, 1), P(5, 2))
+			expect(t, !ringxContainsLine(ring, line, true))
+			expect(t, !ringxContainsLine(ring, line, false))
+		})
+		t.Run("18", func(t *testing.T) {
+			line := L(P(1, -1), P(3, 2), P(2, 5))
+			expect(t, !ringxContainsLine(ring, line, true))
+			expect(t, !ringxContainsLine(ring, line, false))
+		})
+		t.Run("19", func(t *testing.T) {
+			line := L(P(3.5, 4.5), P(3.5, 3.5), P(5, 3.5), P(5, 2.5))
+			expect(t, !ringxContainsLine(ring, line, true))
+			expect(t, !ringxContainsLine(ring, line, false))
+		})
+		t.Run("20", func(t *testing.T) {
+			line := L(P(4, 5), P(4, 4), P(5, 4), P(5, 3))
+			expect(t, !ringxContainsLine(ring, line, true))
+			expect(t, !ringxContainsLine(ring, line, false))
+		})
+		t.Run("21", func(t *testing.T) {
+			line := L(P(1, -1), P(1, -2), P(2, -2), P(2, -3))
+			expect(t, !ringxContainsLine(ring, line, true))
+			expect(t, !ringxContainsLine(ring, line, false))
+		})
+	})
+}
+
+func TestRingXIntersectsLine(t *testing.T) {
+	t.Run("Cases", func(t *testing.T) {
+		// convex
+		ring := newRingX([]Point{
+			P(0, 0), P(4, 0), P(4, 3),
+			P(3, 4), P(1, 4),
+			P(0, 3), P(0, 0),
+		})
+		makeLine := func(start Point) *Line {
+			return NewLine([]Point{
+				start, start.Move(0, 1), start.Move(1, 1),
+				start.Move(1, 2), start.Move(2, 2),
+			})
+		}
+		t.Run("1", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1, 1)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1, 1)), false))
+		})
+		t.Run("2", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 1)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 1)), false))
+		})
+		t.Run("3", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(-0.5, 1)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(-0.5, 1)), false))
+		})
+		t.Run("4", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 2)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 2)), false))
+		})
+		t.Run("5", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 2.5)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 2.5)), false))
+		})
+		t.Run("6", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 2)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 2)), false))
+		})
+		t.Run("7", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 1.5)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 1.5)), false))
+		})
+		t.Run("8", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 1)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 1)), false))
+		})
+		t.Run("9", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 0)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(2, 0)), false))
+		})
+		t.Run("10", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1.5, 0)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1.5, 0)), false))
+		})
+		t.Run("11", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1, -1)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1, -1)), false))
+		})
+		t.Run("12", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1.5, -0.5)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(1.5, -0.5)), false))
+		})
+		t.Run("13", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 0)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(0, 0)), false))
+		})
+		t.Run("14", func(t *testing.T) {
+			expect(t, ringxIntersectsLine(ring, makeLine(P(3, 1)), true))
+			expect(t, ringxIntersectsLine(ring, makeLine(P(3, 1)), false))
+		})
+		t.Run("15", func(t *testing.T) {
+			line := L(P(-1, -1), P(-1, 2), P(2, 2), P(2, 5), P(5, 5))
+			expect(t, ringxIntersectsLine(ring, line, true))
+			expect(t, ringxIntersectsLine(ring, line, false))
+		})
+		t.Run("16", func(t *testing.T) {
+			line := L(P(0, -1), P(0, 1), P(3, 3), P(5, 3))
+			expect(t, ringxIntersectsLine(ring, line, true))
+			expect(t, ringxIntersectsLine(ring, line, false))
+		})
+		t.Run("17", func(t *testing.T) {
+			line := L(P(-1, 2), P(2, 1), P(5, 2))
+			expect(t, ringxIntersectsLine(ring, line, true))
+			expect(t, ringxIntersectsLine(ring, line, false))
+		})
+		t.Run("18", func(t *testing.T) {
+			line := L(P(1, -1), P(3, 2), P(2, 5))
+			expect(t, ringxIntersectsLine(ring, line, true))
+			expect(t, ringxIntersectsLine(ring, line, false))
+		})
+		t.Run("19", func(t *testing.T) {
+			line := L(P(3.5, 4.5), P(3.5, 3.5), P(5, 3.5), P(5, 2.5))
+			expect(t, ringxIntersectsLine(ring, line, true))
+			expect(t, !ringxIntersectsLine(ring, line, false))
+		})
+		t.Run("20", func(t *testing.T) {
+			line := L(P(4, 5), P(4, 4), P(5, 4), P(5, 3))
+			expect(t, !ringxIntersectsLine(ring, line, true))
+			expect(t, !ringxIntersectsLine(ring, line, false))
+		})
+		t.Run("21", func(t *testing.T) {
+			line := L(P(1, -1), P(1, -2), P(2, -2), P(2, -3))
+			expect(t, !ringxIntersectsLine(ring, line, true))
+			expect(t, !ringxIntersectsLine(ring, line, false))
+		})
 	})
 }

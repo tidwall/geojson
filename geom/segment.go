@@ -1,6 +1,8 @@
 package geom
 
-import "math"
+import (
+	"math"
+)
 
 // Segment is a two point line
 type Segment struct {
@@ -49,7 +51,8 @@ func (seg Segment) ContainsPoint(point Point) bool {
 
 // RaycastResult holds the results of the Raycast operation
 type RaycastResult struct {
-	In, On bool
+	In bool // point on the left
+	On bool // point is directly on top of
 }
 
 // Raycast performs the raycast operation
@@ -116,17 +119,17 @@ func (seg Segment) Raycast(point Point) RaycastResult {
 		}
 	}
 	if a.X > b.X {
-		if p.X > a.X {
+		if p.X >= a.X {
 			return RaycastResult{false, false}
 		}
-		if p.X < b.X {
+		if p.X <= b.X {
 			return RaycastResult{true, false}
 		}
 	} else {
-		if p.X > b.X {
+		if p.X >= b.X {
 			return RaycastResult{false, false}
 		}
-		if p.X < a.X {
+		if p.X <= a.X {
 			return RaycastResult{true, false}
 		}
 	}

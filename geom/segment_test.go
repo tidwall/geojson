@@ -5,59 +5,236 @@ import (
 )
 
 func TestSegmentRaycastPoint(t *testing.T) {
+	rr := func(in, on bool) RaycastResult {
+		return RaycastResult{In: in, On: on}
+	}
+	t.Run("Angle", func(t *testing.T) {
+		t.Run("1", func(t *testing.T) {
+			t.Run("LRBT", func(t *testing.T) {
+				// angled segment from left to right, bottom to top
+				s := S(0, 3, 1, 4)
+				t.Run("CrossoverAbove", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.0, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.1, 4.1)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 4.1)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 4.1)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverTop", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.0, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.1, 4)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 4)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 4)) == rr(false, true))
+						expect(t, s.Raycast(P(1.1, 4)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverMiddle", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(0.0, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(0.1, 3.5)) == rr(true, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(0.5, 3.5)) == rr(false, true))
+						expect(t, s.Raycast(P(0.6, 3.5)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 3.5)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverBottom", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 3)) == rr(true, false))
+						expect(t, s.Raycast(P(0.0, 3)) == rr(false, true))
+						expect(t, s.Raycast(P(0.1, 3)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 3)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 3)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverBelow", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.0, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.1, 2.9)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 2.9)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 2.9)) == rr(false, false))
+					})
+				})
+			})
+			t.Run("RLBT", func(t *testing.T) {
+				// angled segment from right to left, bottom to top
+				s := S(1, 4, 0, 3)
+				t.Run("CrossoverAbove", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.0, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.1, 4.1)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 4.1)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 4.1)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 4.1)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverTop", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.0, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.1, 4)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 4)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 4)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 4)) == rr(false, true))
+						expect(t, s.Raycast(P(1.1, 4)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverMiddle", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(0.0, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(0.1, 3.5)) == rr(true, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(0.5, 3.5)) == rr(false, true))
+						expect(t, s.Raycast(P(0.6, 3.5)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 3.5)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverBottom", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 3)) == rr(true, false))
+						expect(t, s.Raycast(P(0.0, 3)) == rr(false, true))
+						expect(t, s.Raycast(P(0.1, 3)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 3)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 3)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 3)) == rr(false, false))
+					})
+				})
+				t.Run("CrossoverBelow", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(-0.1, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.0, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.1, 2.9)) == rr(false, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.4, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.5, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(0.6, 2.9)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(0.9, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(1.0, 2.9)) == rr(false, false))
+						expect(t, s.Raycast(P(1.1, 2.9)) == rr(false, false))
+					})
+				})
 
-	// // fmt.Printf("%+v\n", S(0, 0, 0, 1).Raycast(P(-2, 0.5)))
-	// // fmt.Printf("%+v\n", S(0, 0, 0, 1).Raycast(P(2, 0.5)))
-	// // fmt.Printf("%+v\n", S(0, 1, 0, 0).Raycast(P(-2, 0.5)))
-	// // fmt.Printf("%+v\n", S(0, 1, 0, 0).Raycast(P(2, 0.5)))
-
-	// // fmt.Printf("%+v\n", S(0, 0, 1, 1).Raycast(P(-2, 0.5)))
-	// // fmt.Printf("%+v\n", S(0, 0, 1, 1).Raycast(P(2, 0.5)))
-	// // fmt.Printf("%+v\n", S(1, 1, 0, 0).Raycast(P(-2, 0.5)))
-	// // fmt.Printf("%+v\n", S(1, 1, 0, 0).Raycast(P(2, 0.5)))
-
-	// // return
-	// res := func(in, on bool) RaycastResult {
-	// 	return RaycastResult{In: in, On: on}
-	// }
-	// t.Run("Vertical", func(t *testing.T) {
-	// 	// vertial segment
-
-	// 	seg := S(0, 0, 0, 1)
-	// 	for i := 0; i < 2; i++ {
-	// 		var name string
-	// 		if i == 0 {
-	// 			name = "Forwards"
-	// 		} else {
-	// 			name = "Backwards"
-	// 			seg.A, seg.B = seg.B, seg.A
-	// 		}
-	// 		t.Run(name, func(t *testing.T) {
-	// 			t.Run("Collinear", func(t *testing.T) {
-	// 				expect(t, seg.Raycast(P(0, -0.5)) == res(false, false))
-	// 				expect(t, seg.Raycast(P(0, 0)) == res(false, true))
-	// 				expect(t, seg.Raycast(P(0, 0.5)) == res(false, true))
-	// 				expect(t, seg.Raycast(P(0, 1)) == res(false, true))
-	// 				expect(t, seg.Raycast(P(0, 1.5)) == res(false, false))
-	// 			})
-	// 			t.Run("Left", func(t *testing.T) {
-	// 				expect(t, seg.Raycast(P(-0.5, -0.5)) == res(false, false))
-	// 				expect(t, seg.Raycast(P(-0.5, 0)) == res(true, false))
-	// 				expect(t, seg.Raycast(P(-0.5, 0.5)) == res(true, false))
-	// 				expect(t, seg.Raycast(P(-0.5, 1)) == res(true, false))
-	// 				expect(t, seg.Raycast(P(-0.5, 1.5)) == res(false, false))
-	// 			})
-	// 			t.Run("Right", func(t *testing.T) {
-	// 				expect(t, seg.Raycast(P(0.5, -0.5)) == res(false, false))
-	// 				expect(t, seg.Raycast(P(0.5, 0)) == res(false, false))
-	// 				expect(t, seg.Raycast(P(0.5, 0.5)) == res(false, false))
-	// 				expect(t, seg.Raycast(P(0.5, 1)) == res(false, false))
-	// 				expect(t, seg.Raycast(P(0.5, 1.5)) == res(false, false))
-	// 			})
-	// 		})
-	// 	}
-	// })
-	// // expect(t, S(1, 4, 0, 3).Raycast(P(4, 3.5)) == RaycastResult{true, false})
+			})
+		})
+		t.Run("2", func(t *testing.T) {
+			t.Run("LRTB", func(t *testing.T) {
+				// angled segment from left to right, top to bottom
+				s := S(3, 4, 4, 3)
+				t.Run("CrossoverMiddle", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(2.9, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(3.0, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(3.1, 3.5)) == rr(true, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(3.4, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(3.5, 3.5)) == rr(false, true))
+						expect(t, s.Raycast(P(3.6, 3.5)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(3.9, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(4.0, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(4.1, 3.5)) == rr(false, false))
+					})
+				})
+			})
+			t.Run("LRBT", func(t *testing.T) {
+				// angled segment from left to right, bottom to top
+				s := S(4, 3, 3, 4)
+				t.Run("CrossoverMiddle", func(t *testing.T) {
+					t.Run("Left", func(t *testing.T) {
+						expect(t, s.Raycast(P(2.9, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(3.0, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(3.1, 3.5)) == rr(true, false))
+					})
+					t.Run("Center", func(t *testing.T) {
+						expect(t, s.Raycast(P(3.4, 3.5)) == rr(true, false))
+						expect(t, s.Raycast(P(3.5, 3.5)) == rr(false, true))
+						expect(t, s.Raycast(P(3.6, 3.5)) == rr(false, false))
+					})
+					t.Run("Right", func(t *testing.T) {
+						expect(t, s.Raycast(P(3.9, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(4.0, 3.5)) == rr(false, false))
+						expect(t, s.Raycast(P(4.1, 3.5)) == rr(false, false))
+					})
+				})
+			})
+		})
+	})
 }
 
 func TestSegmentContainsPoint(t *testing.T) {
