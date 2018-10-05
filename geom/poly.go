@@ -109,44 +109,52 @@ func (poly *Poly) IntersectsLine(line *Line) bool {
 
 // ContainsPoly ...
 func (poly *Poly) ContainsPoly(other *Poly) bool {
-	println(0)
+	// println(0)
 	// 1) other exterior must be fully contained inside of the poly exterior.
 	if !ringxContainsRing(poly.Exterior, other.Exterior, true) {
 		return false
 	}
 	// 2) ring cannot intersect poly holes
-	println(1)
+	// println(1)
 	contains := true
 	for _, polyHole := range poly.Holes {
-		println(2)
+		// println(2)
 
 		// println(ringxString(polyHole))
 		// println(ringxString(other.Exterior))
 
-		println("--", ringxIntersectsRing(polyHole, other.Exterior, false))
-		println("--", ringxIntersectsRing(polyHole, other.Exterior, true))
+		// println("--", ringxIntersectsRing(polyHole, other.Exterior, false))
+		// println("--", ringxIntersectsRing(polyHole, other.Exterior, true))
 		if ringxIntersectsRing(polyHole, other.Exterior, false) {
 			contains = false
-			println(3)
+			// println(3)
 			// 3) unless the poly hole is contain inside of a other hole
 			for _, otherHole := range other.Holes {
 				if ringxContainsRing(otherHole, polyHole, true) {
 					contains = true
-					println(4)
+					// println(4)
 					break
 				}
 			}
 			if !contains {
-				println(5)
+				// println(5)
 				break
 			}
 		}
 	}
-	println(6)
+	// println(6)
 	return contains
 }
 
 // IntersectsPoly ...
 func (poly *Poly) IntersectsPoly(other *Poly) bool {
-	return ringxIntersectsPoly(other.Exterior, poly, true)
+	if !ringxIntersectsRing(other.Exterior, poly.Exterior, true) {
+		return false
+	}
+	for _, hole := range poly.Holes {
+		if ringxContainsRing(hole, other.Exterior, false) {
+			return false
+		}
+	}
+	return true
 }

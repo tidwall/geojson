@@ -163,5 +163,5 @@ func (rect Rect) ContainsPoly(poly *Poly) bool {
 
 // IntersectsPoly ...
 func (rect Rect) IntersectsPoly(poly *Poly) bool {
-	return ringxIntersectsPoly(rect, poly, true)
+	return poly.IntersectsRect(rect)
 }

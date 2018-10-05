@@ -29,6 +29,24 @@ func (seg Segment) Rect() Rect {
 	return rect
 }
 
+// CollinearPoint ...
+func (seg Segment) CollinearPoint(point Point) bool {
+	cmpx, cmpy := point.X-seg.A.X, point.Y-seg.A.Y
+	rx, ry := seg.B.X-seg.A.X, seg.B.Y-seg.A.Y
+	cmpxr := cmpx*ry - cmpy*rx
+	return cmpxr == 0
+}
+
+// ContainsPoint ...
+func (seg Segment) ContainsPoint(point Point) bool {
+	return seg.Raycast(point).On
+}
+
+// // Angle ...
+// func (seg Segment) Angle() float64 {
+// 	return math.Atan2(seg.B.Y-seg.A.Y, seg.B.X-seg.A.X)
+// }
+
 // RaycastResult holds the results of the Raycast operation
 type RaycastResult struct {
 	In, On bool
@@ -36,6 +54,7 @@ type RaycastResult struct {
 
 // Raycast performs the raycast operation
 func (seg Segment) Raycast(point Point) RaycastResult {
+
 	p, a, b := point, seg.A, seg.B
 	// make sure that the point is inside the segment bounds
 	if a.Y < b.Y && (p.Y < a.Y || p.Y > b.Y) {
@@ -169,6 +188,11 @@ func (seg Segment) IntersectsSegment(other Segment) bool {
 			}
 		}
 	}
+	if seg.A == other.A || seg.A == other.B ||
+		seg.B == other.A || seg.B == other.B {
+		return true
+	}
+
 	// the following code is from http://ideone.com/PnPJgb
 	cmpx, cmpy := c.X-a.X, c.Y-a.Y
 	rx, ry := b.X-a.X, b.Y-a.Y

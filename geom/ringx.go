@@ -1,6 +1,7 @@
 package geom
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -45,20 +46,24 @@ type ringxResult struct {
 }
 
 func ringxContainsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
+	println("A")
 	var idx = -1
 	// find all intersecting segments on the y-axis
 	var in bool
 	ring.Search(
 		Rect{Point{math.Inf(-1), point.Y}, Point{math.Inf(+1), point.Y}},
 		func(seg Segment, index int) bool {
+			fmt.Printf("%v %v\n", point, seg)
 			// perform a raycast operation on the segments
 			res := seg.Raycast(point)
 			if res.On {
+				println(1)
 				in = allowOnEdge
 				idx = index
 				return false
 			}
 			if res.In {
+				println(2)
 				in = !in
 			}
 			return true
@@ -222,26 +227,28 @@ func ringxIntersectsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 	var segAOn bool
 	var segBOn bool
 	ring.Search(seg.Rect(), func(seg2 Segment, index int) bool {
-		if !allowOnEdge {
-			if !segAOn {
-				if seg.A == seg2.A || seg.A == seg2.B {
-					segAOn = true
-					return true
-				}
-			}
-			if !segBOn {
-				if seg.B == seg2.A || seg.B == seg2.B {
-					segBOn = true
-					return true
-				}
-			}
-			// if seg2.A == seg.A || seg2.B == seg.A ||
-			// 	seg2.A == seg.B || seg2.B == seg.B {
-			// 	return true
-			// }
-		}
 		if seg.IntersectsSegment(seg2) {
-			count++
+			if !allowOnEdge {
+				// for segments that are not allowed on the edge, extra care
+				// must be taken.
+				if !(seg.CollinearPoint(seg2.A) && seg.CollinearPoint(seg2.B)) {
+					if !segAOn {
+						if seg.A == seg2.A || seg.A == seg2.B {
+							segAOn = true
+							return true
+						}
+					}
+					if !segBOn {
+						if seg.B == seg2.A || seg.B == seg2.B {
+							segBOn = true
+							return true
+						}
+					}
+					count++
+				}
+			} else {
+				count++
+			}
 		}
 		return count < 2
 	})
@@ -253,9 +260,9 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 		return false
 	}
 	if other.NumPoints() >= complexRingMinPoints {
-		// inner ring has a lot of points, let just check if the rect ring is
-		// fully contained before we do the complicated stuff.
-		if ringxContainsRect(ring, other.Rect(), allowOnEdge) {
+		// inner ring has a lot of points, and is convex, so let just check if
+		// the rect ring is fully contained before we do the complicated stuff.
+		if ringxContainsRing(ring, other.Rect(), allowOnEdge) {
 			return true
 		}
 	}
@@ -265,12 +272,13 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 		// the inner ring
 		return false
 	}
-
 	if ring.Convex() {
 		// outer ring is convex so test that all inner points are inside of
 		// the outer ring
+		fmt.Printf("%v\n", ringxString(ring))
 		otherNumPoints := other.NumPoints()
 		for i := 0; i < otherNumPoints; i++ {
+			fmt.Printf("%v\n", other.PointAt(i))
 			if !ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
 				// point is on the outside the outer ring
 				return false
@@ -293,11 +301,20 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
 		return false
 	}
+	// check outer and innter rects intersection first
 	if !ring.Rect().IntersectsRect(other.Rect()) {
 		return false
 	}
-	if other.NumSegments() > ring.NumSegments() {
+	if other.Rect().Area() > ring.Rect().Area() {
+		// swap the rings so that the inner ring is smaller than the outer ring
 		ring, other = other, ring
+	}
+	// check if any points are inside ring
+	otherNumPoints := other.NumPoints()
+	for i := 0; i < otherNumPoints; i++ {
+		if ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
+			return true
+		}
 	}
 	otherNumSegments := other.NumSegments()
 	for i := 0; i < otherNumSegments; i++ {
@@ -308,30 +325,13 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 	return false
 }
 
-func ringxContainsRect(ring RingX, rect Rect, allowOnEdge bool) bool {
-	return ringxContainsRing(ring, rect, allowOnEdge)
-}
-
-func ringxIntersectsRect(ring RingX, rect Rect, allowOnEdge bool) bool {
-	return ringxIntersectsRect(ring, rect, allowOnEdge)
-}
-
 func ringxContainsLine(ring RingX, line *Line, allowOnEdge bool) bool {
-	// shares the same logic as rings, do a lightweight conversion of the
-	// line to a ring
+	// shares the same logic
 	return ringxContainsRing(ring, RingX(&line.baseSeries), allowOnEdge)
 }
 
 func ringxIntersectsLine(ring RingX, line *Line, allowOnEdge bool) bool {
-	// shares the same logic as rings, do a lightweight conversion of the
-	// line to a ring
-	return ringxIntersectsRing(ring, RingX(&line.baseSeries), allowOnEdge)
-}
 
-func ringxContainsPoly(ring RingX, poly *Poly, allowOnEdge bool) bool {
-	return ringxContainsRing(ring, poly.Exterior, allowOnEdge)
-}
-
-func ringxIntersectsPoly(ring RingX, poly *Poly, allowOnEdge bool) bool {
-	return ringxIntersectsRing(ring, poly.Exterior, allowOnEdge)
+	panic("not ready")
+	//return ringxIntersectsRing(ring, RingX(&line.baseSeries), allowOnEdge)
 }
