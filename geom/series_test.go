@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+func seriesForEachSegment(ring RingX, iter func(seg Segment) bool) {
+	n := ring.NumSegments()
+	for i := 0; i < n; i++ {
+		if !iter(ring.SegmentAt(i)) {
+			return
+		}
+	}
+}
+
+func seriesForEachPoint(ring RingX, iter func(point Point) bool) {
+	n := ring.NumPoints()
+	for i := 0; i < n; i++ {
+		if !iter(ring.PointAt(i)) {
+			return
+		}
+	}
+}
+
 func TestSeriesClockwise(t *testing.T) {
 	var series baseSeries
 	series = makeSeries([]Point{
@@ -331,4 +349,23 @@ func checkSegsDups(a, b []Segment) bool {
 		}
 	}
 	return true
+}
+
+func TestSeriesMove(t *testing.T) {
+	shapes := [][]Point{ri, octagon}
+	for _, shape := range shapes {
+		series := makeSeries(shape, true, true)
+		series.tree = nil
+		series2 := series.Move(60, 70)
+		expect(t, series2.NumPoints() == len(shape))
+		for i := 0; i < len(shape); i++ {
+			expect(t, series2.PointAt(i) == shape[i].Move(60, 70))
+		}
+		series.buildTree()
+		series2 = series.Move(60, 70)
+		expect(t, series2.NumPoints() == len(shape))
+		for i := 0; i < len(shape); i++ {
+			expect(t, series2.PointAt(i) == shape[i].Move(60, 70))
+		}
+	}
 }

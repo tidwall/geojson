@@ -1,5 +1,7 @@
 package geom
 
+// https://github.com/unitedstates/districts
+
 // func stringifyPoints(name string, points []Point) string {
 // 	out := "var " + name + " = []Point{\n"
 // 	for i := 0; i < len(points); i++ {

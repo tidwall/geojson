@@ -159,3 +159,7 @@ func TestRectIntersectsPoly(t *testing.T) {
 	expect(t, !R(0, 0, 10, 10).IntersectsPoly(oct.Move(-11, 0)))
 	expect(t, !R(0, 0, 10, 10).IntersectsPoly(NewPoly(nil, nil)))
 }
+
+func TestRectClockwise(t *testing.T) {
+	expect(t, !R(10, 11, 12, 13).Clockwise())
+}

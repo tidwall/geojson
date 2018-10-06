@@ -1,7 +1,7 @@
 package geom
 
-// CircleRing ...
-func CircleRing(center Point, meters float64, segments int) RingX {
+// NewCircle returns a circle polygon
+func NewCircle(center Point, meters float64, segments int) *Poly {
 	if segments < 3 {
 		segments = 3
 	}
@@ -14,5 +14,5 @@ func CircleRing(center Point, meters float64, segments int) RingX {
 		i++
 	}
 	points[i] = points[0]
-	return newRingX(points)
+	return NewPoly(points, nil)
 }

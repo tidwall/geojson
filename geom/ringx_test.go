@@ -474,6 +474,13 @@ func TestRingXIntersectsSegment(t *testing.T) {
 }
 
 func TestRingXContainsSegment(t *testing.T) {
+	expect(t, ringxContainsSegment(R(0, 0, 10, 10), S(5, 5, 5, 5), true))
+	expect(t, ringxContainsSegment(R(0, 0, 10, 10), S(5, 5, 5, 5), false))
+	expect(t, ringxContainsSegment(R(0, 0, 10, 10), S(0, 0, 0, 0), true))
+	expect(t, !ringxContainsSegment(R(0, 0, 10, 10), S(0, 0, 0, 0), false))
+	expect(t, ringxContainsSegment(R(0, 0, 10, 10), S(10, 10, 10, 10), true))
+	expect(t, !ringxContainsSegment(R(0, 0, 10, 10), S(10, 10, 10, 10), false))
+
 	// convex shape
 	t.Run("Octagon", func(t *testing.T) {
 		shape := octagon
@@ -992,6 +999,28 @@ func TestRingXContainsRing(t *testing.T) {
 		})
 
 	})
+	t.Run("Identical", func(t *testing.T) {
+		shapes := []RingX{
+			R(0, 0, 10, 10),
+			newRingX(octagon),
+			newRingX(concave1), newRingX(concave2),
+			newRingX(concave3), newRingX(concave4),
+			newRingX(ri),
+		}
+		for i, shape := range shapes {
+			t.Run(fmt.Sprintf("Shape%d", i), func(t *testing.T) {
+				expect(t, ringxContainsRing(shape, shape, true))
+			})
+		}
+	})
+
+	t.Run("Big", func(t *testing.T) {
+		// use rhode island
+		ring := newRingX(ri)
+		expect(t, ringxContainsRing(ring.Rect(), ring, true))
+		expect(t, ringxContainsRing(ring, ring, true))
+
+	})
 }
 
 func TestRingXIntersectsRing(t *testing.T) {
@@ -1218,6 +1247,16 @@ func TestRingXContainsLine(t *testing.T) {
 }
 
 func TestRingXIntersectsLine(t *testing.T) {
+	t.Run("Various", func(t *testing.T) {
+		expect(t, !ringxIntersectsLine(R(0, 0, 0, 0), L(), true))
+		expect(t, !ringxIntersectsLine(R(0, 0, 10, 10),
+			L(P(-1, -1), P(11, -1), P(11, 11), P(-1, 11)),
+			true))
+		expect(t, ringxIntersectsLine(R(0, 0, 10, 10),
+			L(P(-1, -1), P(11, -1), P(11, 11), P(-1, 11), P(5, -1)),
+			true))
+	})
+
 	t.Run("Cases", func(t *testing.T) {
 		// convex
 		ring := newRingX([]Point{

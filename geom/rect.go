@@ -87,15 +87,16 @@ func (rect Rect) SegmentAt(index int) Segment {
 // Search ...
 func (rect Rect) Search(target Rect, iter func(seg Segment, idx int) bool) {
 	var idx int
-	seriesForEachSegment(rect, func(seg Segment) bool {
+	rectNumSegments := rect.NumSegments()
+	for i := 0; i < rectNumSegments; i++ {
+		seg := rect.SegmentAt(i)
 		if seg.Rect().IntersectsRect(target) {
 			if !iter(seg, idx) {
-				return false
+				break
 			}
 		}
 		idx++
-		return true
-	})
+	}
 }
 
 // Empty ...

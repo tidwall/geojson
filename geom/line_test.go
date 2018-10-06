@@ -81,14 +81,12 @@ func TestLineContainsLine(t *testing.T) {
 	expect(t, !R(0, 0, 30, 30).ContainsLine(L()))
 }
 
-// func TestLineContainsSegment(t *testing.T) {
-// 	line := NewLine(v1)
-// 	expect(t, line.ContainsSegment(S(0, 10, 5, 0)))
-// 	expect(t, line.ContainsSegment(S(1.25, 7.5, 5, 0)))
-// 	expect(t, line.ContainsSegment(S(1.25, 7.5, 3.75, 2.5)))
-// 	expect(t, !line.ContainsSegment(S(2.25, 7.5, 4.75, 2.5)))
-// 	expect(t, !line.ContainsSegment(S(-1.25, 12.5, 5, 0)))
-// }
+func TestLineClockwise(t *testing.T) {
+	expect(t, L(P(0, 0), P(0, 10), P(10, 10), P(10, 0), P(0, 0)).Clockwise())
+	expect(t, !L(P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0)).Clockwise())
+	expect(t, L(P(0, 0), P(0, 10), P(10, 10)).Clockwise())
+	expect(t, !L(P(0, 0), P(10, 0), P(10, 10)).Clockwise())
+}
 
 func TestLineIntersectsLine(t *testing.T) {
 	lns := [][]Point{u1, u2, u3, u4, v1, v2, v3, v4}
@@ -104,7 +102,8 @@ func TestLineIntersectsLine(t *testing.T) {
 	expect(t, line.IntersectsLine(line.Move(5, 0)))
 	expect(t, line.IntersectsLine(line.Move(10, 0)))
 	expect(t, !line.IntersectsLine(line.Move(11, 0)))
-
+	expect(t, !L(v1...).IntersectsLine(L(v1...).Move(0, 1)))
+	expect(t, !L(v1...).IntersectsLine(L(v1...).Move(0, -1)))
 }
 
 func TestLineContainsPoly(t *testing.T) {

@@ -495,7 +495,6 @@ func TestSegmentIntersectsSegment(t *testing.T) {
 	if ms != "" {
 		t.Fatalf("\n%s", ms)
 	}
-
 }
 
 func TestSegmentMove(t *testing.T) {

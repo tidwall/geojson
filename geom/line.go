@@ -19,11 +19,6 @@ func (line *Line) Move(deltaX, deltaY float64) *Line {
 	return nline
 }
 
-// Clockwise ...
-func (line *Line) Clockwise() bool {
-	return line.Clockwise()
-}
-
 // ContainsPoint ...
 func (line *Line) ContainsPoint(point Point) bool {
 	contains := false
@@ -96,22 +91,6 @@ func (line *Line) ContainsLine(other *Line) bool {
 	return true
 }
 
-// // ContainsSegment ...
-// func (line *Line) ContainsSegment(seg Segment) bool {
-// 	// is the function needed?
-// 	// TODO: convert segment into Line and to line.ContainsLine(other)
-// 	panic("needed?")
-// 	// var contains bool
-// 	// line.Search(seg.Rect(), func(other Segment, index int) bool {
-// 	// 	if other.Raycast(seg.A).On && other.Raycast(seg.B).On {
-// 	// 		contains = true
-// 	// 		return false
-// 	// 	}
-// 	// 	return true
-// 	// })
-// 	// return contains
-// }
-
 // IntersectsLine ...
 func (line *Line) IntersectsLine(other *Line) bool {
 	if line.Empty() || other.Empty() {
@@ -123,8 +102,10 @@ func (line *Line) IntersectsLine(other *Line) bool {
 	if line.NumPoints() > other.NumPoints() {
 		line, other = other, line
 	}
-	var intersects bool
-	seriesForEachSegment(line, func(segA Segment) bool {
+	lineNumSegments := line.NumSegments()
+	for i := 0; i < lineNumSegments; i++ {
+		segA := line.SegmentAt(i)
+		var intersects bool
 		other.Search(segA.Rect(), func(segB Segment, _ int) bool {
 			if segA.IntersectsSegment(segB) {
 				intersects = true
@@ -132,9 +113,11 @@ func (line *Line) IntersectsLine(other *Line) bool {
 			}
 			return true
 		})
-		return !intersects
-	})
-	return intersects
+		if intersects {
+			return true
+		}
+	}
+	return false
 }
 
 // ContainsPoly ...

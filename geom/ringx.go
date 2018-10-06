@@ -2,7 +2,6 @@ package geom
 
 import (
 	"math"
-	"strconv"
 )
 
 const complexRingMinPoints = 16
@@ -15,29 +14,29 @@ func newRingX(points []Point) RingX {
 	return &series
 }
 
-func ringxString(ring RingX) string {
-	var buf []byte
-	buf = append(buf, '[')
-	n := ring.NumPoints()
-	for i := 0; i < n; i++ {
-		if i == 0 {
-			buf = append(buf, '\n')
-		}
-		pt := ring.PointAt(i)
-		buf = append(buf, '\t', '[')
-		buf = strconv.AppendFloat(buf, pt.X, 'f', -1, 64)
-		buf = append(buf, ',')
-		buf = strconv.AppendFloat(buf, pt.Y, 'f', -1, 64)
-		buf = append(buf, ']')
-		if i < n-1 {
-			buf = append(buf, ',')
-		}
-		buf = append(buf, '\n')
-	}
+// func ringxString(ring RingX) string {
+// 	var buf []byte
+// 	buf = append(buf, '[')
+// 	n := ring.NumPoints()
+// 	for i := 0; i < n; i++ {
+// 		if i == 0 {
+// 			buf = append(buf, '\n')
+// 		}
+// 		pt := ring.PointAt(i)
+// 		buf = append(buf, '\t', '[')
+// 		buf = strconv.AppendFloat(buf, pt.X, 'f', -1, 64)
+// 		buf = append(buf, ',')
+// 		buf = strconv.AppendFloat(buf, pt.Y, 'f', -1, 64)
+// 		buf = append(buf, ']')
+// 		if i < n-1 {
+// 			buf = append(buf, ',')
+// 		}
+// 		buf = append(buf, '\n')
+// 	}
 
-	buf = append(buf, ']')
-	return string(buf)
-}
+// 	buf = append(buf, ']')
+// 	return string(buf)
+// }
 
 type ringxResult struct {
 	hit bool // contains/intersects
@@ -83,11 +82,15 @@ func ringxIntersectsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult
 // }
 
 func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
+	// fmt.Printf("%v %v\n", seg.A, seg.B)
 	// Test that segment points are contained in the ring.
 	resA := ringxContainsPoint(ring, seg.A, allowOnEdge)
 	if !resA.hit {
 		// seg A is not inside ring
 		return false
+	}
+	if seg.B == seg.A {
+		return true
 	}
 	resB := ringxContainsPoint(ring, seg.B, allowOnEdge)
 	if !resB.hit {
@@ -98,6 +101,7 @@ func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 		// ring is convex so the segment must be contained
 		return true
 	}
+
 	// The ring is concave so it's possible that the segment crosses over the
 	// edge of the ring.
 	if allowOnEdge {
@@ -119,11 +123,21 @@ func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 				// ring segments and check if that ring winding order matches
 				// the winding order of the ring.
 				// -- create a ring
+
 				rSegA := ring.SegmentAt(resA.idx)
 				rSegB := ring.SegmentAt(resB.idx)
+				if rSegA.A == seg.A || rSegA.B == seg.A ||
+					rSegB.A == seg.A || rSegB.B == seg.A ||
+					rSegA.A == seg.B || rSegA.B == seg.B ||
+					rSegB.A == seg.B || rSegB.B == seg.B {
+					return true
+				}
+
+				// fix the order of the
 				if resB.idx < resA.idx {
 					rSegA, rSegB = rSegB, rSegA
 				}
+
 				pts := [5]Point{rSegA.A, rSegA.B, rSegB.A, rSegB.B, rSegA.A}
 				// -- calc winding order
 				var cwc float64
@@ -287,6 +301,7 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 		otherNumSegments := other.NumSegments()
 		for i := 0; i < otherNumSegments; i++ {
 			if !ringxContainsSegment(ring, other.SegmentAt(i), allowOnEdge) {
+				// fmt.Printf("%v %v\n", ring, other.SegmentAt(i))
 				return false
 			}
 		}

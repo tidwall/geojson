@@ -19,42 +19,11 @@ type Series interface {
 	Search(rect Rect, iter func(seg Segment, index int) bool)
 }
 
-func seriesForEachSegment(ring RingX, iter func(seg Segment) bool) {
-	n := ring.NumSegments()
-	for i := 0; i < n; i++ {
-		if !iter(ring.SegmentAt(i)) {
-			return
-		}
-	}
-}
-
-func seriesForEachPoint(ring RingX, iter func(point Point) bool) {
-	n := ring.NumPoints()
-	for i := 0; i < n; i++ {
-		if !iter(ring.PointAt(i)) {
-			return
-		}
-	}
-}
-
 func seriesCopyPoints(series Series) []Point {
-	var points []Point
-	seriesForEachPoint(series, func(point Point) bool {
-		points = append(points, point)
-		return true
-	})
-	return points
-}
-
-func seriesMovePoints(series Series, deltaX, deltaY float64) []Point {
-	var points []Point
-	seriesForEachPoint(series, func(point Point) bool {
-		points = append(points, Point{
-			X: point.X + deltaX,
-			Y: point.Y + deltaY,
-		})
-		return true
-	})
+	points := make([]Point, series.NumPoints())
+	for i := 0; i < len(points); i++ {
+		points[i] = series.PointAt(i)
+	}
 	return points
 }
 
