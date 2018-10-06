@@ -204,7 +204,8 @@ func (seg Segment) IntersectsSegment(other Segment) bool {
 		// Lines are collinear, and so intersect if they have any overlap
 		if !(((c.X-a.X <= 0) != (c.X-b.X <= 0)) ||
 			((c.Y-a.Y <= 0) != (c.Y-b.Y <= 0))) {
-			return false
+			return seg.Raycast(other.A).On || seg.Raycast(other.B).On
+			//return false
 		}
 		return true
 	}
