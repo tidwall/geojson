@@ -1,4 +1,8 @@
-package geom
+// Copyright 2018 Joshua J Baker. All rights reserved.
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+
+package geos
 
 // NewCircle returns a circle polygon
 func NewCircle(center Point, meters float64, segments int) *Poly {

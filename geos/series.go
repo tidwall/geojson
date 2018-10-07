@@ -1,8 +1,10 @@
-package geom
+// Copyright 2018 Joshua J Baker. All rights reserved.
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
 
-import (
-	"github.com/tidwall/boxtree/d2"
-)
+package geos
+
+import "github.com/tidwall/boxtree/d2"
 
 // Series is just a series of points with utilities for efficiently accessing
 // segments from rectangle queries, making stuff like point-in-polygon lookups
