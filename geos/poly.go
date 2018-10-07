@@ -23,6 +23,13 @@ func NewPoly(exterior []Point, holes [][]Point) *Poly {
 	return poly
 }
 
+// NewPolyRect ...
+func NewPolyRect(rect Rect) *Poly {
+	poly := new(Poly)
+	poly.Exterior = rect
+	return poly
+}
+
 // Clockwise ...
 func (poly *Poly) Clockwise() bool {
 	return poly.Exterior.Clockwise()

@@ -1,107 +1,121 @@
 package geojson
 
-import "github.com/tidwall/gjson"
+import "github.com/tidwall/geojson/geos"
 
-// Feature GeoJSON type
+// Feature ...
 type Feature struct {
-	BBox       BBox
-	Geometry   Object
-	ID         string
-	Properties string
+	base       Object
+	extra      *extra
+	id         string
+	properties string
 }
 
-// BBoxDefined return true if there is a defined GeoJSON "bbox" member
-func (g Feature) BBoxDefined() bool {
-	return g.BBox != nil && g.BBox.Defined()
-}
-
-// Rect returns the outer minimum bounding rectangle
-func (g Feature) Rect() Rect {
-	if g.BBox != nil {
-		return g.BBox.Rect()
+func (g *Feature) bbox() *geos.Rect {
+	if g.extra != nil {
+		return g.extra.bbox
 	}
-	return g.Geometry.Rect()
+	return nil
 }
 
-// Center returns the center position of the object
-func (g Feature) Center() Position {
+// Empty ...
+func (g *Feature) Empty() bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return false
+	}
+	return g.base.Empty()
+}
+
+// Rect ...
+func (g *Feature) Rect() geos.Rect {
+	if g.extra != nil && g.extra.bbox != nil {
+		return *g.extra.bbox
+	}
+	return g.base.Rect()
+}
+
+// Center ...
+func (g *Feature) Center() geos.Point {
 	return g.Rect().Center()
 }
 
-// AppendJSON appends the GeoJSON reprensentation to dst
-func (g Feature) AppendJSON(dst []byte) []byte {
-	dst = append(dst, `{"type":"Feature","geometry":`...)
-	dst = g.Geometry.AppendJSON(dst)
-	if g.BBox != nil && g.BBox.Defined() {
-		dst = append(dst, `,"bbox":`...)
-		dst = g.BBox.AppendJSON(dst)
-	}
-	if g.ID != "" {
-		dst = append(dst, `,"id":`...)
-		dst = append(dst, g.ID...)
-	}
-	if g.Properties != "" {
-		dst = append(dst, `,"properties":`...)
-		dst = append(dst, g.Properties...)
-	}
-	dst = append(dst, '}')
-	return dst
+// AppendJSON ...
+func (g *Feature) AppendJSON(dst []byte) []byte {
+	panic("not ready")
 }
 
-// ForEachChild iterates over child objects.
-func (g Feature) ForEachChild(iter func(child Object) bool) {
-	iter(g.Geometry)
+// Within ...
+func (g *Feature) Within(obj Object) bool {
+	return obj.Contains(g)
 }
 
-// Within is the inverse of contains
-func (g Feature) Within(other Object) bool {
-	return other.Contains(g)
+// Contains ...
+func (g *Feature) Contains(obj Object) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return obj.withinRect(*g.extra.bbox)
+	}
+	return obj.Within(g.base)
 }
 
-// Contains returns true if object contains other object
-func (g Feature) Contains(other Object) bool {
-	return collectionContains(g, other)
+func (g *Feature) withinRect(rect geos.Rect) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return rect.ContainsRect(*g.extra.bbox)
+	}
+	return g.base.withinRect(rect)
 }
 
-// Intersects returns true if object intersects other object
-func (g Feature) Intersects(other Object) bool {
-	return collectionIntersects(g, other)
+func (g *Feature) withinPoint(point geos.Point) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return point.ContainsRect(*g.extra.bbox)
+	}
+	return g.base.withinPoint(point)
 }
 
-// loadJSONFeature will return a valid GeoJSON object.
-func loadJSONFeature(data string) (Object, error) {
-	var g Feature
-	rgeometry := gjson.Get(data, "geometry")
-	if !rgeometry.Exists() {
-		return nil, errGeometryMissing
+func (g *Feature) withinLine(line *geos.Line) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return line.ContainsRect(*g.extra.bbox)
 	}
-	var err error
-	g.Geometry, err = Parse(rgeometry.Raw)
-	if err != nil {
-		return nil, err
+	return g.base.withinLine(line)
+}
+
+func (g *Feature) withinPoly(poly *geos.Poly) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return poly.ContainsRect(*g.extra.bbox)
 	}
-	g.BBox, err = loadBBox(data)
-	if err != nil {
-		return nil, err
+	return g.base.withinPoly(poly)
+}
+
+// Intersects ...
+func (g *Feature) Intersects(obj Object) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return obj.intersectsRect(*g.extra.bbox)
 	}
-	id := gjson.Get(data, "id").Raw
-	properties := gjson.Get(data, "properties").Raw
-	if len(id) > 0 || len(properties) > 0 {
-		combined := id + " " + properties
-		g.ID = combined[:len(id)]
-		g.Properties = combined[len(id)+1:]
+	return obj.Intersects(g.base)
+}
+
+func (g *Feature) intersectsPoint(point geos.Point) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsPoint(point)
 	}
-	if g.BBox == nil {
-		switch geometry := g.Geometry.(type) {
-		default:
-			g.BBox = bboxRect{g.Rect()}
-		case Position, Rect:
-			// ignore bbox generation for simple types
-		case Point:
-			if geometry.BBox != nil {
-				g.BBox = bboxRect{g.Rect()}
-			}
-		}
+	return g.base.intersectsPoint(point)
+}
+
+func (g *Feature) intersectsRect(rect geos.Rect) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsRect(rect)
 	}
-	return g, nil
+	return g.base.intersectsRect(rect)
+}
+
+func (g *Feature) intersectsLine(line *geos.Line) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsLine(line)
+	}
+	return g.base.intersectsLine(line)
+}
+
+func (g *Feature) intersectsPoly(poly *geos.Poly) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsPoly(poly)
+	}
+	return g.base.intersectsPoly(poly)
 }

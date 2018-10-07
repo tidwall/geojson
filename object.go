@@ -3,9 +3,9 @@ package geojson
 import (
 	"errors"
 	"fmt"
-	"unsafe"
+	"strconv"
 
-	"github.com/tidwall/geojson/poly"
+	"github.com/tidwall/geojson/geos"
 	"github.com/tidwall/gjson"
 )
 
@@ -26,32 +26,36 @@ var (
 	errMustBeALinearRing  = errors.New("invalid polygon")
 )
 
-// Object is a geo object
+// Object ...
 type Object interface {
-	// BBoxDefined return true if there is a defined GeoJSON "bbox" member
-	BBoxDefined() bool
-	// Rect returns the outer minimum bounding rectangle
-	Rect() Rect
-	// Center returns the center position of the object
-	Center() Position
-	// AppendJSON appends the GeoJSON reprensentation to dst
+	Empty() bool
+	Rect() geos.Rect
+	Center() geos.Point
 	AppendJSON(dst []byte) []byte
-	// ForEachChild iterates over child objects.
-	ForEachChild(func(child Object) bool)
-	// Contains returns true if object contains other object
 	Contains(other Object) bool
-	// Within is the inverse of contains
 	Within(other Object) bool
-	// Intersects returns true if object intersects with other object
 	Intersects(other Object) bool
+
+	withinRect(rect geos.Rect) bool
+	withinPoint(point geos.Point) bool
+	withinLine(line *geos.Line) bool
+	withinPoly(poly *geos.Poly) bool
+	intersectsRect(rect geos.Rect) bool
+	intersectsPoint(point geos.Point) bool
+	intersectsLine(line *geos.Line) bool
+	intersectsPoly(poly *geos.Poly) bool
 }
 
 var _ = []Object{
-	Position{}, Rect{},
-	Point{}, LineString{}, Polygon{},
-	MultiPoint{}, MultiLineString{}, MultiPolygon{},
-	GeometryCollection{},
-	Feature{}, FeatureCollection{},
+	&Point{}, &LineString{}, &Polygon{}, &Feature{},
+	&MultiPoint{},
+}
+
+type extra struct {
+	bbox      *geos.Rect
+	bboxExtra []float64
+	dims      int
+	values    []float64
 }
 
 // Parse a GeoJSON object
@@ -77,12 +81,12 @@ func Parse(data string) (Object, error) {
 			data = data[1:]
 			continue
 		case '{':
-			return loadJSON(data)
+			return parseJSON(data)
 		}
 	}
 }
 
-func loadJSON(data string) (Object, error) {
+func parseJSON(data string) (Object, error) {
 	if !gjson.Valid(data) {
 		return nil, errDataInvalid
 	}
@@ -97,126 +101,125 @@ func loadJSON(data string) (Object, error) {
 	default:
 		return nil, fmt.Errorf(fmtErrTypeIsUnknown, rtype.String())
 	case "Point":
-		return loadJSONPoint(data)
-	case "LineString":
-		return loadJSONLineString(data)
-	case "Polygon":
-		return loadJSONPolygon(data)
-	case "MultiPoint":
-		return loadJSONMultiPoint(data)
-	case "MultiLineString":
-		return loadJSONMultiLineString(data)
-	case "MultiPolygon":
-		return loadJSONMultiPolygon(data)
-	case "GeometryCollection":
-		return loadJSONGeometryCollection(data)
-	case "Feature":
-		return loadJSONFeature(data)
-	case "FeatureCollection":
-		return loadJSONFeatureCollection(data)
+		return parseJSONPoint(data)
+		// case "LineString":
+		// 	return loadJSONLineString(data)
+		// case "Polygon":
+		// 	return loadJSONPolygon(data)
+		// case "MultiPoint":
+		// 	return loadJSONMultiPoint(data)
+		// case "MultiLineString":
+		// 	return loadJSONMultiLineString(data)
+		// case "MultiPolygon":
+		// 	return loadJSONMultiPolygon(data)
+		// case "GeometryCollection":
+		// 	return loadJSONGeometryCollection(data)
+		// case "Feature":
+		// 	return loadJSONFeature(data)
+		// case "FeatureCollection":
+		// 	return loadJSONFeatureCollection(data)
 	}
 }
 
-func polyPoint(posn Position) poly.Point {
-	return *(*poly.Point)(unsafe.Pointer(&posn))
-}
-func polyRect(rect Rect) poly.Rect {
-	return *(*poly.Rect)(unsafe.Pointer(&rect))
-}
-func polyLine(line []Position) poly.Line {
-	return *(*poly.Line)(unsafe.Pointer(&line))
-}
-func polyPolygon(polygon [][]Position) poly.Polygon {
-	var newPoly poly.Polygon
-	if len(polygon) > 0 {
-		newPoly.Exterior = *(*poly.Ring)(unsafe.Pointer(&polygon[0]))
-		if len(polygon) > 1 {
-			newPoly.Holes = (*(*[]poly.Ring)(unsafe.Pointer(&polygon)))[1:]
-		}
+func parseBBox(data string) (bbox *geos.Rect, bboxExtra []float64, err error) {
+	rbbox := gjson.Get(data, "bbox")
+	if !rbbox.Exists() {
+		return nil, nil, nil
 	}
-	return newPoly
-}
-
-type primativeObject interface {
-	Object
-	primativeIntersects(other Object) bool
-	primativeContains(other Object) bool
-}
-
-func objectIntersects(g primativeObject, other Object) bool {
-	if g.BBoxDefined() {
-		return g.Rect().Intersects(other)
+	if !rbbox.IsArray() {
+		return nil, nil, errBBoxInvalid
 	}
-	if other.BBoxDefined() {
-		return other.Rect().Intersects(g)
-	}
-	if !g.Rect().IntersectsRect(other.Rect()) {
-		return false
-	}
-	if other, ok := other.(primativeObject); ok {
-		return g.primativeIntersects(other)
-	}
-	var intersects bool
-	other.ForEachChild(func(child Object) bool {
-		if g.Intersects(child) {
-			intersects = true
+	var count int
+	var nums [8]float64
+	rbbox.ForEach(func(key, value gjson.Result) bool {
+		if count == 8 {
 			return false
 		}
-		return true
-	})
-	return intersects
-}
-
-func objectContains(g primativeObject, other Object) bool {
-	if g.BBoxDefined() {
-		return g.Rect().Contains(other)
-	}
-	if other.BBoxDefined() {
-		other = other.Rect()
-	}
-	if !g.Rect().ContainsRect(other.Rect()) {
-		return false
-	}
-	if other, ok := other.(primativeObject); ok {
-		return g.primativeContains(other)
-	}
-	var contains bool
-	other.ForEachChild(func(child Object) bool {
-		if g.Contains(child) {
-			contains = true
+		if value.Type != gjson.Number {
+			err = errBBoxInvalid
 			return false
 		}
+		nums[count] = value.Float()
+		count++
 		return true
 	})
-	return contains
+	if err != nil {
+		return nil, nil, err
+	}
+	if count < 4 || count%2 == 1 {
+		return nil, nil, errBBoxInvalid
+	}
+	var rect geos.Rect
+	rect.Min.X = nums[0]
+	rect.Min.Y = nums[1]
+	rect.Max.X = nums[count/2]
+	rect.Max.Y = nums[count/2+1]
+	if count == 4 {
+		return &rect, nil, nil
+	}
+	if count == 6 {
+		bboxExtra = []float64{
+			nums[2],
+			nums[count/2+2],
+		}
+		return &rect, bboxExtra, nil
+	}
+	bboxExtra = []float64{
+		nums[2],
+		nums[3],
+		nums[count/2+2],
+		nums[count/2+3],
+	}
+	return &rect, bboxExtra, nil
 }
 
-func collectionContains(col, other Object) bool {
-	if col.BBoxDefined() {
-		return col.Rect().Contains(other)
-	}
-	var contains bool
-	col.ForEachChild(func(child Object) bool {
-		if child.Contains(other) {
-			contains = true
-			return false
+func appendJSONPoint(dst []byte, point geos.Point, ex *extra, idx int) []byte {
+	dst = append(dst, '[')
+	dst = strconv.AppendFloat(dst, point.X, 'f', -1, 64)
+	dst = append(dst, ',')
+	dst = strconv.AppendFloat(dst, point.Y, 'f', -1, 64)
+	if ex != nil {
+		dims := int(ex.dims)
+		for i := 0; i < dims; i++ {
+			dst = append(dst, ',')
+			dst = strconv.AppendFloat(
+				dst, ex.values[idx*dims+i], 'f', -1, 64,
+			)
 		}
-		return true
-	})
-	return contains
+	}
+	dst = append(dst, ']')
+	return dst
 }
 
-func collectionIntersects(col, other Object) bool {
-	if col.BBoxDefined() {
-		return col.Rect().Intersects(other)
-	}
-	var intersects bool
-	col.ForEachChild(func(child Object) bool {
-		if child.Intersects(other) {
-			intersects = true
-			return false
+func (ex *extra) appendJSONBBox(dst []byte) []byte {
+	if ex.bbox != nil {
+		dst = append(dst, `,"bbox":[`...)
+		dst = strconv.AppendFloat(dst, ex.bbox.Min.X, 'f', -1, 64)
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bbox.Min.Y, 'f', -1, 64)
+		if len(ex.bboxExtra) == 2 {
+			dst = append(dst, ',')
+			dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
+		} else if len(ex.bboxExtra) == 4 {
+			dst = append(dst, ',')
+			dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
+			dst = append(dst, ',')
+			dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
 		}
-		return true
-	})
-	return intersects
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bbox.Max.X, 'f', -1, 64)
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bbox.Max.Y, 'f', -1, 64)
+		if len(ex.bboxExtra) == 2 {
+			dst = append(dst, ',')
+			dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
+		} else if len(ex.bboxExtra) == 4 {
+			dst = append(dst, ',')
+			dst = strconv.AppendFloat(dst, ex.bboxExtra[3], 'f', -1, 64)
+			dst = append(dst, ',')
+			dst = strconv.AppendFloat(dst, ex.bboxExtra[4], 'f', -1, 64)
+		}
+		dst = append(dst, ']')
+	}
+	return dst
 }

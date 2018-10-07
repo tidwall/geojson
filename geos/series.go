@@ -6,6 +6,11 @@ package geos
 
 import "github.com/tidwall/boxtree/d2"
 
+// minTreePoints are the minumum number of points required before it makes
+// sense to index an the segments in it's own rtree.
+// 64 seems to be the sweet spot
+const minTreePoints = 64
+
 // Series is just a series of points with utilities for efficiently accessing
 // segments from rectangle queries, making stuff like point-in-polygon lookups
 // very quick.
@@ -28,10 +33,6 @@ func seriesCopyPoints(series Series) []Point {
 	}
 	return points
 }
-
-// minTreePoints are the minumum number of points required before it makes
-// sense to index an the segments in it's own rtree.
-const minTreePoints = 32
 
 // baseSeries is a concrete type containing all that is needed to make a Series.
 type baseSeries struct {

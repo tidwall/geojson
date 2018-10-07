@@ -1,119 +1,161 @@
 package geojson
 
 import (
+	"github.com/tidwall/geojson/geos"
 	"github.com/tidwall/gjson"
 )
 
-// Point GeoJSON type
+// Point ...
 type Point struct {
-	Coordinates Position
-	BBox        BBox
-	Extra       *Extra
+	base  geos.Point
+	extra *extra
 }
 
-// BBoxDefined return true if there is a defined GeoJSON "bbox" member
-func (g Point) BBoxDefined() bool {
-	return g.BBox != nil && g.BBox.Defined()
+// NewPoint ...
+func NewPoint(x, y float64) *Point {
+	point := new(Point)
+	point.base.X = x
+	point.base.Y = y
+	return point
 }
 
-// Rect returns the outer minimum bounding rectangle
-func (g Point) Rect() Rect {
-	if g.BBox != nil {
-		return g.BBox.Rect()
+// Empty ...
+func (g *Point) Empty() bool {
+	return g.base.Empty()
+}
+
+// Rect ...
+func (g *Point) Rect() geos.Rect {
+	if g.extra != nil && g.extra.bbox != nil {
+		return *g.extra.bbox
 	}
-	return Rect{Min: g.Coordinates, Max: g.Coordinates}
+	return g.base.Rect()
 }
 
-// Center returns the center position of the object
-func (g Point) Center() Position {
-	return g.Rect().Center()
+// Center ...
+func (g *Point) Center() geos.Point {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.Center()
+	}
+	return g.base
 }
 
-// AppendJSON appends the GeoJSON reprensentation to dst
-func (g Point) AppendJSON(dst []byte) []byte {
+// AppendJSON ...
+func (g *Point) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Point","coordinates":`...)
-	dst = appendJSONPosition(dst, g.Coordinates, g.Extra, 0)
-	if g.BBox != nil && g.BBox.Defined() {
-		dst = append(dst, `,"bbox":`...)
-		dst = g.BBox.AppendJSON(dst)
+	dst = appendJSONPoint(dst, g.base, g.extra, 0)
+	if g.extra != nil {
+		dst = g.extra.appendJSONBBox(dst)
 	}
 	dst = append(dst, '}')
 	return dst
 }
 
-// ForEachChild iterates over child objects.
-func (g Point) ForEachChild(func(child Object) bool) {}
-
-// Within is the inverse of contains
-func (g Point) Within(other Object) bool {
-	return other.Contains(g)
+// Within ...
+func (g *Point) Within(obj Object) bool {
+	return obj.Contains(g)
 }
 
-// Contains returns true if object contains other object
-func (g Point) Contains(other Object) bool {
-	return objectContains(g, other)
-}
-
-// Intersects returns true if object intersects with other object
-func (g Point) Intersects(other Object) bool {
-	return objectIntersects(g, other)
-}
-
-func (g Point) primativeContains(other Object) bool {
-	ppoint := polyPoint(g.Coordinates)
-	switch other := other.(type) {
-	case Position:
-		return polyPoint(other).InsidePoint(ppoint)
-	case Rect:
-		return polyRect(other).InsidePoint(ppoint)
-	case Point:
-		return polyPoint(other.Coordinates).InsidePoint(ppoint)
-	case LineString:
-		return polyLine(other.Coordinates).InsidePoint(ppoint)
-	case Polygon:
-		return polyPolygon(other.Coordinates).InsidePoint(ppoint)
+// Contains ...
+func (g *Point) Contains(obj Object) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return obj.withinRect(*g.extra.bbox)
 	}
-	return false
-}
-func (g Point) primativeIntersects(other Object) bool {
-	ppoint := polyPoint(g.Coordinates)
-	switch other := other.(type) {
-	case Position:
-		return ppoint.IntersectsPoint(polyPoint(other))
-	case Rect:
-		return ppoint.IntersectsRect(polyRect(other))
-	case Point:
-		return ppoint.IntersectsPoint(polyPoint(other.Coordinates))
-	case LineString:
-		return ppoint.IntersectsLine(polyLine(other.Coordinates))
-	case Polygon:
-		return ppoint.IntersectsPolygon(polyPolygon(other.Coordinates))
-	}
-	return false
+	return obj.withinPoint(g.base)
 }
 
-func loadJSONPoint(data string) (Object, error) {
-	var g Point
+func (g *Point) withinRect(rect geos.Rect) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return rect.ContainsRect(*g.extra.bbox)
+	}
+	return rect.ContainsPoint(g.base)
+}
+
+func (g *Point) withinPoint(point geos.Point) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return point.ContainsRect(*g.extra.bbox)
+	}
+	return point.ContainsPoint(g.base)
+}
+
+func (g *Point) withinLine(line *geos.Line) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return line.ContainsRect(*g.extra.bbox)
+	}
+	return line.ContainsPoint(g.base)
+}
+
+func (g *Point) withinPoly(poly *geos.Poly) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return poly.ContainsRect(*g.extra.bbox)
+	}
+	return poly.ContainsPoint(g.base)
+}
+
+// Intersects ...
+func (g *Point) Intersects(obj Object) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return obj.intersectsRect(*g.extra.bbox)
+	}
+	return obj.intersectsPoint(g.base)
+}
+
+func (g *Point) intersectsPoint(point geos.Point) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsPoint(point)
+	}
+	return g.base.IntersectsPoint(point)
+}
+
+func (g *Point) intersectsRect(rect geos.Rect) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsRect(rect)
+	}
+	return g.base.IntersectsRect(rect)
+}
+
+func (g *Point) intersectsLine(line *geos.Line) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsLine(line)
+	}
+	return g.base.IntersectsLine(line)
+}
+
+func (g *Point) intersectsPoly(poly *geos.Poly) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return g.extra.bbox.IntersectsPoly(poly)
+	}
+	return g.base.IntersectsPoly(poly)
+}
+
+// parse
+
+func parseJSONPoint(data string) (Object, error) {
+	var g *Point
 	var err error
-	g.Coordinates, g.Extra, err = loadJSONPointCoords(data, gjson.Result{})
+	g.base, g.extra, err = parseJSONPointCoords(data, gjson.Result{})
 	if err != nil {
 		return nil, err
 	}
-	g.BBox, err = loadBBox(data)
+	bbox, bboxExtras, err := parseBBox(data)
 	if err != nil {
 		return nil, err
 	}
-	if g.BBox == nil && g.Extra == nil {
-		return g.Coordinates, nil
+	if bbox != nil {
+		if g.extra == nil {
+			g.extra = new(extra)
+		}
+		g.extra.bbox = bbox
+		g.extra.bboxExtra = bboxExtras
 	}
 	return g, nil
 }
 
-func loadJSONPointCoords(data string, rcoords gjson.Result) (
-	Position, *Extra, error,
+func parseJSONPointCoords(data string, rcoords gjson.Result) (
+	geos.Point, *extra, error,
 ) {
-	var coords Position
-	var ex *Extra
+	var coords geos.Point
+	var ex *extra
 	if !rcoords.Exists() {
 		rcoords = gjson.Get(data, "coordinates")
 		if !rcoords.Exists() {
@@ -144,17 +186,17 @@ func loadJSONPointCoords(data string, rcoords gjson.Result) (
 	if count < 2 {
 		return coords, nil, errCoordinatesInvalid
 	}
-	coords = Position{X: nums[0], Y: nums[1]}
+	coords = geos.Point{X: nums[0], Y: nums[1]}
 	if count > 2 {
-		ex = new(Extra)
+		ex = new(extra)
 		if count > 3 {
-			ex.Dims = DimsZM
+			ex.dims = 2
 		} else {
-			ex.Dims = DimsZ
+			ex.dims = 1
 		}
-		ex.Positions = make([]float64, count-2)
+		ex.values = make([]float64, count-2)
 		for i := 2; i < count; i++ {
-			ex.Positions[i-2] = nums[i]
+			ex.values[i-2] = nums[i]
 		}
 	}
 	return coords, ex, nil
