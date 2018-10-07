@@ -13,50 +13,50 @@ func testBig(
 ) {
 	N, T := 100000, 4
 
-	simple := newRingX(points)
+	simple := newRing(points)
 	simple.(*baseSeries).tree = nil
-	tree := newRingX(points)
+	tree := newRing(points)
 	tree.(*baseSeries).buildTree()
 	pointOn := points[len(points)/2]
 
 	// ioutil.WriteFile(label+".svg", []byte(tools.SVG(tree.(*baseSeries).tree)), 0666)
 
-	expect(t, ringxContainsPoint(simple, pointIn, true).hit)
-	expect(t, ringxContainsPoint(tree, pointIn, true).hit)
+	expect(t, ringContainsPoint(simple, pointIn, true).hit)
+	expect(t, ringContainsPoint(tree, pointIn, true).hit)
 
-	expect(t, ringxContainsPoint(simple, pointOn, true).hit)
-	expect(t, ringxContainsPoint(tree, pointOn, true).hit)
+	expect(t, ringContainsPoint(simple, pointOn, true).hit)
+	expect(t, ringContainsPoint(tree, pointOn, true).hit)
 
-	expect(t, !ringxContainsPoint(simple, pointOn, false).hit)
-	expect(t, !ringxContainsPoint(tree, pointOn, false).hit)
+	expect(t, !ringContainsPoint(simple, pointOn, false).hit)
+	expect(t, !ringContainsPoint(tree, pointOn, false).hit)
 
-	expect(t, !ringxContainsPoint(simple, pointOut, true).hit)
-	expect(t, !ringxContainsPoint(tree, pointOut, true).hit)
+	expect(t, !ringContainsPoint(simple, pointOut, true).hit)
+	expect(t, !ringContainsPoint(tree, pointOut, true).hit)
 	if os.Getenv("PIPBENCH") == "1" {
 		lotsa.Output = os.Stderr
 		fmt.Printf(label + "/simp/in  ")
 		lotsa.Ops(N, T, func(_, _ int) {
-			ringxContainsPoint(simple, pointIn, true)
+			ringContainsPoint(simple, pointIn, true)
 		})
 		fmt.Printf(label + "/tree/in  ")
 		lotsa.Ops(N, T, func(_, _ int) {
-			ringxContainsPoint(tree, pointIn, true)
+			ringContainsPoint(tree, pointIn, true)
 		})
 		fmt.Printf(label + "/simp/on  ")
 		lotsa.Ops(N, T, func(_, _ int) {
-			ringxContainsPoint(simple, pointOn, true)
+			ringContainsPoint(simple, pointOn, true)
 		})
 		fmt.Printf(label + "/tree/on  ")
 		lotsa.Ops(N, T, func(_, _ int) {
-			ringxContainsPoint(tree, pointOn, true)
+			ringContainsPoint(tree, pointOn, true)
 		})
 		fmt.Printf(label + "/simp/out ")
 		lotsa.Ops(N, T, func(_, _ int) {
-			ringxContainsPoint(simple, pointOut, true)
+			ringContainsPoint(simple, pointOut, true)
 		})
 		fmt.Printf(label + "/tree/out ")
 		lotsa.Ops(N, T, func(_, _ int) {
-			ringxContainsPoint(tree, pointOut, true)
+			ringContainsPoint(tree, pointOut, true)
 		})
 	}
 }

@@ -60,7 +60,7 @@ func TestPolyMove(t *testing.T) {
 		poly2 := poly.Move(5, 8)
 		expect(t, poly2.Rect() == R(5, 8, 15, 18))
 	})
-	poly := &Poly{Exterior: R(0, 0, 10, 10), Holes: []RingX{R(2, 2, 8, 8)}}
+	poly := &Poly{Exterior: R(0, 0, 10, 10), Holes: []Ring{R(2, 2, 8, 8)}}
 	poly2 := poly.Move(5, 8)
 	expect(t, poly2.Rect() == R(5, 8, 15, 18))
 	expect(t, len(poly2.Holes) == 1)

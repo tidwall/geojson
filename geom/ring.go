@@ -6,44 +6,20 @@ import (
 
 const complexRingMinPoints = 16
 
-// RingX ...
-type RingX = Series
+// Ring ...
+type Ring = Series
 
-func newRingX(points []Point) RingX {
+func newRing(points []Point) Ring {
 	series := makeSeries(points, true, true)
 	return &series
 }
 
-// func ringxString(ring RingX) string {
-// 	var buf []byte
-// 	buf = append(buf, '[')
-// 	n := ring.NumPoints()
-// 	for i := 0; i < n; i++ {
-// 		if i == 0 {
-// 			buf = append(buf, '\n')
-// 		}
-// 		pt := ring.PointAt(i)
-// 		buf = append(buf, '\t', '[')
-// 		buf = strconv.AppendFloat(buf, pt.X, 'f', -1, 64)
-// 		buf = append(buf, ',')
-// 		buf = strconv.AppendFloat(buf, pt.Y, 'f', -1, 64)
-// 		buf = append(buf, ']')
-// 		if i < n-1 {
-// 			buf = append(buf, ',')
-// 		}
-// 		buf = append(buf, '\n')
-// 	}
-
-// 	buf = append(buf, ']')
-// 	return string(buf)
-// }
-
-type ringxResult struct {
+type ringResult struct {
 	hit bool // contains/intersects
 	idx int  // edge index
 }
 
-func ringxContainsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
+func ringContainsPoint(ring Ring, point Point, allowOnEdge bool) ringResult {
 	// println("A")
 	var idx = -1
 	// find all intersecting segments on the y-axis
@@ -67,11 +43,11 @@ func ringxContainsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
 			return true
 		},
 	)
-	return ringxResult{hit: in, idx: idx}
+	return ringResult{hit: in, idx: idx}
 }
 
-func ringxIntersectsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult {
-	return ringxContainsPoint(ring, point, allowOnEdge)
+func ringIntersectsPoint(ring Ring, point Point, allowOnEdge bool) ringResult {
+	return ringContainsPoint(ring, point, allowOnEdge)
 }
 
 // func segmentsIntersects(seg, other Segment, allowOnEdge bool) bool {
@@ -81,10 +57,10 @@ func ringxIntersectsPoint(ring RingX, point Point, allowOnEdge bool) ringxResult
 // 	return false
 // }
 
-func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
+func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	// fmt.Printf("%v %v\n", seg.A, seg.B)
 	// Test that segment points are contained in the ring.
-	resA := ringxContainsPoint(ring, seg.A, allowOnEdge)
+	resA := ringContainsPoint(ring, seg.A, allowOnEdge)
 	if !resA.hit {
 		// seg A is not inside ring
 		return false
@@ -92,7 +68,7 @@ func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 	if seg.B == seg.A {
 		return true
 	}
-	resB := ringxContainsPoint(ring, seg.B, allowOnEdge)
+	resB := ringContainsPoint(ring, seg.B, allowOnEdge)
 	if !resB.hit {
 		// seg B is not inside ring
 		return false
@@ -224,13 +200,13 @@ func ringxContainsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 	return !intersects
 }
 
-// ringxIntersectsSegment detect if the segment intersects the ring
-func ringxIntersectsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
+// ringIntersectsSegment detect if the segment intersects the ring
+func ringIntersectsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	// Quick check that either point is inside of the ring
-	if ringxContainsPoint(ring, seg.A, allowOnEdge).hit {
+	if ringContainsPoint(ring, seg.A, allowOnEdge).hit {
 		return true
 	}
-	if ringxContainsPoint(ring, seg.B, allowOnEdge).hit {
+	if ringContainsPoint(ring, seg.B, allowOnEdge).hit {
 		return true
 	}
 	// Neither point A or B is inside the the ring. It's possible that both
@@ -268,14 +244,14 @@ func ringxIntersectsSegment(ring RingX, seg Segment, allowOnEdge bool) bool {
 	return count >= 2
 }
 
-func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
+func ringContainsRing(ring, other Ring, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
 		return false
 	}
 	if other.NumPoints() >= complexRingMinPoints {
 		// inner ring has a lot of points, and is convex, so let just check if
 		// the rect ring is fully contained before we do the complicated stuff.
-		if ringxContainsRing(ring, other.Rect(), allowOnEdge) {
+		if ringContainsRing(ring, other.Rect(), allowOnEdge) {
 			return true
 		}
 	}
@@ -290,7 +266,7 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 		// the outer ring
 		otherNumPoints := other.NumPoints()
 		for i := 0; i < otherNumPoints; i++ {
-			if !ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
+			if !ringContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
 				// point is on the outside the outer ring
 				return false
 			}
@@ -300,7 +276,7 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 		// fully contained inside of the outer ring.
 		otherNumSegments := other.NumSegments()
 		for i := 0; i < otherNumSegments; i++ {
-			if !ringxContainsSegment(ring, other.SegmentAt(i), allowOnEdge) {
+			if !ringContainsSegment(ring, other.SegmentAt(i), allowOnEdge) {
 				// fmt.Printf("%v %v\n", ring, other.SegmentAt(i))
 				return false
 			}
@@ -309,7 +285,7 @@ func ringxContainsRing(ring, other RingX, allowOnEdge bool) bool {
 	return true
 }
 
-func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
+func ringIntersectsRing(ring, other Ring, allowOnEdge bool) bool {
 	if ring.Empty() || other.Empty() {
 		return false
 	}
@@ -326,7 +302,7 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 		// the outer ring
 		otherNumPoints := other.NumPoints()
 		for i := 0; i < otherNumPoints; i++ {
-			if ringxContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
+			if ringContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
 				return true
 			}
 		}
@@ -335,7 +311,7 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 		// fully contained inside of the outer ring.
 		otherNumSegments := other.NumSegments()
 		for i := 0; i < otherNumSegments; i++ {
-			if ringxIntersectsSegment(ring, other.SegmentAt(i), allowOnEdge) {
+			if ringIntersectsSegment(ring, other.SegmentAt(i), allowOnEdge) {
 				return true
 			}
 		}
@@ -343,12 +319,12 @@ func ringxIntersectsRing(ring, other RingX, allowOnEdge bool) bool {
 	return false
 }
 
-func ringxContainsLine(ring RingX, line *Line, allowOnEdge bool) bool {
+func ringContainsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 	// shares the same logic
-	return ringxContainsRing(ring, RingX(&line.baseSeries), allowOnEdge)
+	return ringContainsRing(ring, Ring(&line.baseSeries), allowOnEdge)
 }
 
-func ringxIntersectsLine(ring RingX, line *Line, allowOnEdge bool) bool {
+func ringIntersectsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 	if ring.Empty() || line.Empty() {
 		return false
 	}
@@ -359,13 +335,13 @@ func ringxIntersectsLine(ring RingX, line *Line, allowOnEdge bool) bool {
 	// check if any points are inside ring
 	lineNumPoints := line.NumPoints()
 	for i := 0; i < lineNumPoints; i++ {
-		if ringxContainsPoint(ring, line.PointAt(i), allowOnEdge).hit {
+		if ringContainsPoint(ring, line.PointAt(i), allowOnEdge).hit {
 			return true
 		}
 	}
 	lineNumSegments := line.NumSegments()
 	for i := 0; i < lineNumSegments; i++ {
-		if ringxIntersectsSegment(ring, line.SegmentAt(i), allowOnEdge) {
+		if ringIntersectsSegment(ring, line.SegmentAt(i), allowOnEdge) {
 			return true
 		}
 	}

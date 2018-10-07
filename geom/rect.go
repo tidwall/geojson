@@ -154,7 +154,7 @@ func (rect Rect) ContainsLine(line *Line) bool {
 
 // IntersectsLine ...
 func (rect Rect) IntersectsLine(line *Line) bool {
-	return ringxIntersectsLine(rect, line, true)
+	return ringIntersectsLine(rect, line, true)
 }
 
 // ContainsPoly ...
