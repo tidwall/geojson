@@ -1,6 +1,8 @@
 package geom
 
-import "testing"
+import (
+	"testing"
+)
 
 func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
 	poly := NewPoly(exterior, holes)
@@ -88,11 +90,11 @@ func TestPolyContainsRect(t *testing.T) {
 	ring := []Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}}
 	hole := []Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}
 	dualPolyTest(t, ring, [][]Point{hole}, func(t *testing.T, poly *Poly) {
-		// expect(t, poly.ContainsRect(R(0, 0, 4, 4)))
-		// expect(t, !poly.ContainsRect(R(0, 0, 5, 5)))
+		expect(t, poly.ContainsRect(R(0, 0, 4, 4)))
+		expect(t, !poly.ContainsRect(R(0, 0, 5, 5)))
 		expect(t, !poly.ContainsRect(R(2, 2, 6, 6)))
-		// expect(t, !poly.ContainsRect(R(4.1, 4.1, 5.9, 5.9)))
-		// expect(t, !poly.ContainsRect(R(4.1, 4.1, 5.9, 5.9)))
+		expect(t, !poly.ContainsRect(R(4.1, 4.1, 5.9, 5.9)))
+		expect(t, !poly.ContainsRect(R(4.1, 4.1, 5.9, 5.9)))
 	})
 }
 
@@ -113,9 +115,9 @@ func TestPolyContainsLine(t *testing.T) {
 	small := []Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}
 	dualPolyTest(t, octagon, [][]Point{small}, func(t *testing.T, poly *Poly) {
 		expect(t, poly.ContainsLine(L(P(3, 3), P(3, 7), P(7, 7), P(7, 3))))
-		// expect(t, !poly.ContainsLine(L(P(-1, 3), P(3, 7), P(7, 7), P(7, 3))))
-		// expect(t, poly.ContainsLine(L(P(4, 3), P(3, 7), P(7, 7), P(7, 3))))
-		// expect(t, !poly.ContainsLine(L(P(5, 3), P(3, 7), P(7, 7), P(7, 3))))
+		expect(t, !poly.ContainsLine(L(P(-1, 3), P(3, 7), P(7, 7), P(7, 3))))
+		expect(t, poly.ContainsLine(L(P(4, 3), P(3, 7), P(7, 7), P(7, 3))))
+		expect(t, !poly.ContainsLine(L(P(5, 3), P(3, 7), P(7, 7), P(7, 3))))
 	})
 }
 
@@ -145,61 +147,9 @@ func TestPolyContainsPoly(t *testing.T) {
 		expect(t, !poly.ContainsPoly(poly1.Move(1, 0)))
 		expect(t, poly.ContainsPoly(NewPoly(holes1[0], nil)))
 		expect(t, !poly.ContainsPoly(NewPoly(holes2[0], nil)))
-		// expect(t, !poly.ContainsPoly(NewPoly(holes[0], nil).Move(1, 0)))
-		// expect(t, !poly.ContainsPoly(NewPoly(holes[0], nil).Move(1, 0)))
 	})
-
 }
 
-// func TestPolyVarious(t *testing.T) {
-// 	exterior := octagon
-// 	small := []Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}
-// 	dualPolyTest(t, exterior, [][]Point{small},
-// 		func(t *testing.T, poly *Poly) {
-// 			expect(t, len(poly.Holes) == 1)
-// 			expect(t, reflect.DeepEqual(
-// 				seriesCopyPoints(poly.Holes[0]), small))
-// 			expect(t, !poly.ContainsPoint(P(0, 0)))
-// 			expect(t, poly.ContainsPoint(P(3, 3)))
-// 			expect(t, poly.ContainsPoint(P(4, 4)))
-// 			expect(t, !poly.ContainsPoint(P(5, 5)))
-// 			expect(t, poly.ContainsPoint(P(6, 6)))
-// 			expect(t, poly.ContainsPoint(P(7, 7)))
-// 			expect(t, poly.IntersectsPoint(P(7, 7)))
-
-// 			expect(t, poly.ContainsPoly(poly))
-// 			// expect(t, !poly.ContainsRing(poly.Exterior))
-// 			// expect(t, !poly.ContainsRing(poly.Holes[0]))
-
-// 			// expect(t, !poly.ContainsRing(newRingSimple(small).move(10, 0)))
-// 			expect(t, !poly.ContainsPoly(newPolySimple(
-// 				seriesCopyPoints(newRingSimple2(small).(*baseSeries).Move(10, 0)),
-// 				nil)))
-
-// 		},
-// 	)
-
-// 	ex1 := newRingSimple2([]Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}})
-// 	ex2 := newRingSimple2([]Point{{1, 1}, {9, 1}, {9, 9}, {1, 9}, {1, 1}})
-// 	ex3 := newRingSimple2([]Point{{2, 2}, {8, 2}, {8, 8}, {2, 8}, {2, 2}})
-// 	ex4 := newRingSimple2([]Point{{3, 3}, {7, 3}, {7, 7}, {3, 7}, {3, 3}})
-// 	ex5 := newRingSimple2([]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}})
-// 	// out5 := ex5.move(10, 0)
-
-// 	p1 := newPolySimple(seriesCopyPoints(ex1),
-// 		[][]Point{seriesCopyPoints(ex4)})
-// 	p2 := newPolySimple(seriesCopyPoints(ex2),
-// 		[][]Point{seriesCopyPoints(ex3)})
-// 	p3 := newPolySimple(seriesCopyPoints(ex2),
-// 		[][]Point{seriesCopyPoints(ex5)})
-
-// 	expect(t, p1.ContainsPoly(p2))
-// 	expect(t, !p1.ContainsPoly(p3))
-
-// 	expect(t, p1.IntersectsPoly(p1))
-// 	// expect(t, p1.IntersectsRing(ex1))
-// 	// expect(t, !p1.IntersectsRing(out5))
-
-// 	// expect(t, !p2.IntersectsRing(ex5))
-
-// }
+func TestPolyClockwise(t *testing.T) {
+	expect(t, !NewPoly(bowtie, nil).Clockwise())
+}
