@@ -23,7 +23,6 @@ var (
 	errGeometriesMissing  = errors.New("missing geometries")
 	errGeometriesInvalid  = errors.New("invalid geometries")
 	errBBoxInvalid        = errors.New("invalid bbox")
-	errMustBeALinearRing  = errors.New("invalid polygon")
 )
 
 // Object ...
@@ -36,6 +35,7 @@ type Object interface {
 	Within(other Object) bool
 	Intersects(other Object) bool
 
+	forEach(iter func(geom Object) bool) bool
 	withinRect(rect geos.Rect) bool
 	withinPoint(point geos.Point) bool
 	withinLine(line *geos.Line) bool
@@ -48,7 +48,9 @@ type Object interface {
 
 var _ = []Object{
 	&Point{}, &LineString{}, &Polygon{}, &Feature{},
-	&MultiPoint{},
+	&MultiPoint{}, &MultiLineString{}, &MultiPolygon{},
+	&GeometryCollection{}, &FeatureCollection{},
+	&Rect{},
 }
 
 type extra struct {
@@ -102,22 +104,22 @@ func parseJSON(data string) (Object, error) {
 		return nil, fmt.Errorf(fmtErrTypeIsUnknown, rtype.String())
 	case "Point":
 		return parseJSONPoint(data)
-		// case "LineString":
-		// 	return loadJSONLineString(data)
-		// case "Polygon":
-		// 	return loadJSONPolygon(data)
-		// case "MultiPoint":
-		// 	return loadJSONMultiPoint(data)
-		// case "MultiLineString":
-		// 	return loadJSONMultiLineString(data)
-		// case "MultiPolygon":
-		// 	return loadJSONMultiPolygon(data)
-		// case "GeometryCollection":
-		// 	return loadJSONGeometryCollection(data)
-		// case "Feature":
-		// 	return loadJSONFeature(data)
-		// case "FeatureCollection":
-		// 	return loadJSONFeatureCollection(data)
+	case "LineString":
+		return parseJSONLineString(data)
+	case "Polygon":
+		return parseJSONPolygon(data)
+	case "Feature":
+		return parseJSONFeature(data)
+	case "MultiPoint":
+		return parseJSONMultiPoint(data)
+	case "MultiLineString":
+		return parseJSONMultiLineString(data)
+	case "MultiPolygon":
+		return parseJSONMultiPolygon(data)
+	case "GeometryCollection":
+		return parseJSONGeometryCollection(data)
+	case "FeatureCollection":
+		return parseJSONFeatureCollection(data)
 	}
 }
 
@@ -173,6 +175,21 @@ func parseBBox(data string) (bbox *geos.Rect, bboxExtra []float64, err error) {
 	return &rect, bboxExtra, nil
 }
 
+func parseBBoxAndFillExtra(data string, ex **extra) error {
+	bbox, bboxExtras, err := parseBBox(data)
+	if err != nil {
+		return err
+	}
+	if bbox != nil {
+		if *ex == nil {
+			*ex = new(extra)
+		}
+		(*ex).bbox = bbox
+		(*ex).bboxExtra = bboxExtras
+	}
+	return nil
+}
+
 func appendJSONPoint(dst []byte, point geos.Point, ex *extra, idx int) []byte {
 	dst = append(dst, '[')
 	dst = strconv.AppendFloat(dst, point.X, 'f', -1, 64)
@@ -192,34 +209,65 @@ func appendJSONPoint(dst []byte, point geos.Point, ex *extra, idx int) []byte {
 }
 
 func (ex *extra) appendJSONBBox(dst []byte) []byte {
-	if ex.bbox != nil {
-		dst = append(dst, `,"bbox":[`...)
-		dst = strconv.AppendFloat(dst, ex.bbox.Min.X, 'f', -1, 64)
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bbox.Min.Y, 'f', -1, 64)
-		if len(ex.bboxExtra) == 2 {
-			dst = append(dst, ',')
-			dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
-		} else if len(ex.bboxExtra) == 4 {
-			dst = append(dst, ',')
-			dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
-			dst = append(dst, ',')
-			dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
-		}
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bbox.Max.X, 'f', -1, 64)
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bbox.Max.Y, 'f', -1, 64)
-		if len(ex.bboxExtra) == 2 {
-			dst = append(dst, ',')
-			dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
-		} else if len(ex.bboxExtra) == 4 {
-			dst = append(dst, ',')
-			dst = strconv.AppendFloat(dst, ex.bboxExtra[3], 'f', -1, 64)
-			dst = append(dst, ',')
-			dst = strconv.AppendFloat(dst, ex.bboxExtra[4], 'f', -1, 64)
-		}
-		dst = append(dst, ']')
+	if ex.bbox == nil {
+		return dst
 	}
+	dst = append(dst, `,"bbox":[`...)
+	dst = strconv.AppendFloat(dst, ex.bbox.Min.X, 'f', -1, 64)
+	dst = append(dst, ',')
+	dst = strconv.AppendFloat(dst, ex.bbox.Min.Y, 'f', -1, 64)
+	if len(ex.bboxExtra) == 2 {
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
+	} else if len(ex.bboxExtra) == 4 {
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
+	}
+	dst = append(dst, ',')
+	dst = strconv.AppendFloat(dst, ex.bbox.Max.X, 'f', -1, 64)
+	dst = append(dst, ',')
+	dst = strconv.AppendFloat(dst, ex.bbox.Max.Y, 'f', -1, 64)
+	if len(ex.bboxExtra) == 2 {
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
+	} else if len(ex.bboxExtra) == 4 {
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bboxExtra[3], 'f', -1, 64)
+		dst = append(dst, ',')
+		dst = strconv.AppendFloat(dst, ex.bboxExtra[4], 'f', -1, 64)
+	}
+	dst = append(dst, ']')
 	return dst
+}
+
+func appendJSONSeries(
+	dst []byte, series geos.Series, ex *extra, pidx int,
+) (ndst []byte, npidx int) {
+	dst = append(dst, '[')
+	nPoints := series.NumPoints()
+	for i := 0; i < nPoints; i++ {
+		if i > 0 {
+			dst = append(dst, ',')
+		}
+		dst = appendJSONPoint(dst, series.PointAt(i), ex, pidx)
+		pidx++
+	}
+	dst = append(dst, ']')
+	return dst, pidx
+}
+
+func unionRects(a, b geos.Rect) geos.Rect {
+	if b.Min.X < a.Min.X {
+		a.Min.X = b.Min.X
+	} else if b.Max.X > a.Max.X {
+		a.Max.X = b.Max.X
+	}
+	if b.Min.Y < a.Min.Y {
+		a.Min.Y = b.Min.Y
+	} else if b.Max.Y > a.Max.Y {
+		a.Max.Y = b.Max.Y
+	}
+	return a
 }

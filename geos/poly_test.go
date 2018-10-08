@@ -48,12 +48,6 @@ func TestPolyNewPoly(t *testing.T) {
 	})
 }
 
-func TestPolyNewPolyRect(t *testing.T) {
-	expect(t, NewPolyRect(R(0, 0, 10, 10)).ContainsPoint(P(5, 5)))
-	expect(t, !NewPolyRect(R(0, 0, 10, 10)).ContainsPoint(P(-1, -1)))
-	expect(t, NewPolyRect(R(0, 0, 10, 10)).ContainsPoint(P(10, 10)))
-}
-
 func TestPolyRect(t *testing.T) {
 	dualPolyTest(t, octagon, nil, func(t *testing.T, poly *Poly) {
 		expect(t, poly.Rect() == R(0, 0, 10, 10))

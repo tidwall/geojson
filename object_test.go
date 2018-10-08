@@ -30,25 +30,55 @@ func PO(x, y float64) *Point {
 	return NewPoint(x, y)
 }
 
-func expectJSON(t testing.TB, data string, exp error) Object {
+func RO(minX, minY, maxX, maxY float64) *Rect {
+	return NewRect(minX, minY, maxX, maxY)
+}
+
+func expectJSON(t testing.TB, data string, expect interface{}) Object {
 	if t != nil {
 		t.Helper()
 	}
+	var exerr error
+	var exstr string
+	switch expect := expect.(type) {
+	case string:
+		exstr = expect
+	case error:
+		exerr = expect
+	case nil:
+		exstr = data
+	}
+
 	obj, err := Parse(data)
-	if err != exp {
+	if err != exerr {
 		if t == nil {
-			panic(fmt.Sprintf("expected '%v', got '%v'", exp, err))
+			panic(fmt.Sprintf("expected '%v', got '%v'", exerr, err))
 		} else {
-			t.Fatalf("expected '%v', got '%v'", exp, err)
+			t.Fatalf("expected '%v', got '%v'", exerr, err)
+		}
+	}
+	if exstr != "" {
+		if cleanJSON(exstr) != cleanJSON(string(obj.AppendJSON(nil))) {
+			if t == nil {
+				panic("json mismatch")
+			} else {
+				t.Fatal("json mismatch")
+			}
 		}
 	}
 	return obj
 }
 
 func expect(t testing.TB, what bool) {
-	t.Helper()
+	if t != nil {
+		t.Helper()
+	}
 	if !what {
-		t.Fatal("expection failure")
+		if t == nil {
+			panic("exception failure")
+		} else {
+			t.Fatal("expection failure")
+		}
 	}
 }
 

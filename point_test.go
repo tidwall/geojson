@@ -1,20 +1,39 @@
 package geojson
 
-// func TestPointJSON(t *testing.T) {
-// 	p := expectJSON(t, `{"type":"Point","coordinates":[1,2,3]}`, nil)
-// 	if p.Center() != P(1, 2) {
-// 		t.Fatalf("expected '%v', got '%v'", P(1, 2), p.Center())
-// 	}
-// 	expectJSON(t, `{"type":"Point","coordinates":[1,null]}`, errCoordinatesInvalid)
-// 	expectJSON(t, `{"type":"Point","coordinates":[1,2],"bbox":null}`, errBBoxInvalid)
-// 	expectJSON(t, `{"type":"Point"}`, errCoordinatesMissing)
-// 	expectJSON(t, `{"type":"Point","coordinates":null}`, errCoordinatesInvalid)
-// 	expectJSON(t, `{"type":"Point","coordinates":[1,2,3,4,5]}`, nil)
-// 	expectJSON(t, `{"type":"Point","coordinates":[1]}`, errCoordinatesInvalid)
-// }
+import (
+	"testing"
+)
+
+func TestPointParse(t *testing.T) {
+	p := expectJSON(t, `{"type":"Point","coordinates":[1,2,3]}`, nil)
+	expect(t, p.Center() == P(1, 2))
+	expectJSON(t, `{"type":"Point","coordinates":[1,null]}`, errCoordinatesInvalid)
+	expectJSON(t, `{"type":"Point","coordinates":[1,2],"bbox":null}`, errBBoxInvalid)
+	expectJSON(t, `{"type":"Point"}`, errCoordinatesMissing)
+	expectJSON(t, `{"type":"Point","coordinates":null}`, errCoordinatesInvalid)
+	expectJSON(t, `{"type":"Point","coordinates":[1,2,3,4,5]}`, `{"type":"Point","coordinates":[1,2,3,4]}`)
+	expectJSON(t, `{"type":"Point","coordinates":[1]}`, errCoordinatesInvalid)
+	expectJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,4]}`, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,4]}`)
+}
+
+func TestPointVarious(t *testing.T) {
+	var g Object = NewPoint(10, 20)
+	expect(t, string(g.AppendJSON(nil)) == `{"type":"Point","coordinates":[10,20]}`)
+	expect(t, g.Rect() == R(10, 20, 10, 20))
+	expect(t, g.Center() == P(10, 20))
+	expect(t, !g.Empty())
+	g = expectJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,4]}`, nil)
+	expect(t, g.Rect() == R(1, 2, 3, 4))
+	expect(t, g.Center() == R(1, 2, 3, 4).Center())
+	// g.ForEach(func(geom geos.Geometry) bool {
+
+	// 	return false
+	// })
+}
 
 // func TestPointPoly(t *testing.T) {
 // 	p := expectJSON(t, `{"type":"Point","coordinates":[15,15,0]}`, nil)
+// 	expect(t, p.Within(PO(15, 15)))
 // 	expect(t, p.Contains(PO(15, 15)))
 // 	expect(t, p.Contains(RO(15, 15, 15, 15)))
 // 	expect(t, !p.Contains(RO(10, 10, 15, 15)))
@@ -74,28 +93,15 @@ package geojson
 // 	))
 // 	expect(t, !expectJSON(t,
 // 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Contains(P(7, 7)))
+// 	).Contains(PO(7, 7)))
 // 	expect(t, expectJSON(t,
 // 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Contains(P(12, 12)))
+// 	).Contains(PO(12, 12)))
 
 // 	expect(t, !expectJSON(t,
 // 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Intersects(P(7, 7)))
+// 	).Intersects(PO(7, 7)))
 // 	expect(t, expectJSON(t,
 // 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Intersects(P(12, 12)))
-// }
-
-// func TestPointAux(t *testing.T) {
-// 	expect(t, (Point{Coordinates: P(10, 10)}).Contains(Point{Coordinates: P(10, 10)}))
-// 	expect(t, !(Point{Coordinates: P(10, 10)}).Contains(Point{Coordinates: P(11, 10)}))
-// 	expect(t, (Point{Coordinates: P(10, 10)}).Contains(
-// 		LineString{Coordinates: []Position{P(10, 10)}},
-// 	))
-// 	expect(t, (Point{Coordinates: P(10, 10)}).Contains(
-// 		Polygon{Coordinates: [][]Position{{P(10, 10)}}},
-// 	))
-// 	expect(t, !(Point{Coordinates: P(10, 10)}).primativeContains(nil))
-// 	expect(t, !(Point{Coordinates: P(10, 10)}).primativeIntersects(nil))
+// 	).Intersects(PO(12, 12)))
 // }

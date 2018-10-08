@@ -17,16 +17,17 @@ type collection struct {
 	pempty   bool
 }
 
-func (g *collection) index() {
-	g.tree = new(d2.BoxTree)
-	for _, child := range g.children {
-		rect := child.Rect()
-		g.tree.Insert(
-			[]float64{rect.Min.X, rect.Min.Y},
-			[]float64{rect.Max.X, rect.Max.Y},
-			child,
-		)
+// forEach ...
+func (g *collection) forEach(iter func(geom Object) bool) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return iter(g)
 	}
+	for _, child := range g.children {
+		if !child.forEach(iter) {
+			return false
+		}
+	}
+	return true
 }
 
 func (g *collection) search(rect geos.Rect, iter func(child Object) bool) {
@@ -69,7 +70,8 @@ func (g *collection) Center() geos.Point {
 
 // AppendJSON ...
 func (g *collection) AppendJSON(dst []byte) []byte {
-	panic("not ready")
+	// this should never be called
+	return append(dst, "null"...)
 }
 
 // Within ...
@@ -82,12 +84,8 @@ func (g *collection) Contains(obj Object) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return obj.withinRect(*g.extra.bbox)
 	}
-	objRect := obj.Rect()
-	if !g.prect.ContainsRect(objRect) {
-		return false
-	}
 	var contains bool
-	g.search(objRect, func(child Object) bool {
+	g.search(obj.Rect(), func(child Object) bool {
 		if child.Contains(obj) {
 			contains = true
 			return false
@@ -243,4 +241,41 @@ func (g *collection) intersectsPoly(poly *geos.Poly) bool {
 		return true
 	})
 	return intersects
+}
+
+func (g *collection) initRectIndex() {
+	g.pempty = true
+	var count int
+	for _, child := range g.children {
+		if child.Empty() {
+			continue
+		}
+		if g.pempty && !child.Empty() {
+			g.pempty = false
+		}
+		if count == 0 {
+			g.prect = child.Rect()
+		} else {
+			if len(g.children) == 1 {
+				g.prect = child.Rect()
+			} else {
+				g.prect = unionRects(g.prect, child.Rect())
+			}
+		}
+		count++
+	}
+	if count >= minTreeChildren {
+		g.tree = new(d2.BoxTree)
+		for _, child := range g.children {
+			if !child.Empty() {
+				continue
+			}
+			rect := child.Rect()
+			g.tree.Insert(
+				[]float64{rect.Min.X, rect.Min.Y},
+				[]float64{rect.Max.X, rect.Max.Y},
+				child,
+			)
+		}
+	}
 }

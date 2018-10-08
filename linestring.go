@@ -1,6 +1,9 @@
 package geojson
 
-import "github.com/tidwall/geojson/geos"
+import (
+	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/gjson"
+)
 
 // LineString ...
 type LineString struct {
@@ -31,7 +34,18 @@ func (g *LineString) Center() geos.Point {
 
 // AppendJSON ...
 func (g *LineString) AppendJSON(dst []byte) []byte {
-	panic("not ready")
+	dst = append(dst, `{"type":"LineString","coordinates":`...)
+	dst, _ = appendJSONSeries(dst, &g.base, g.extra, 0)
+	if g.extra != nil {
+		dst = g.extra.appendJSONBBox(dst)
+	}
+	dst = append(dst, '}')
+	return dst
+}
+
+// forEach ...
+func (g *LineString) forEach(iter func(geom Object) bool) bool {
+	return iter(g)
 }
 
 // Within ...
@@ -45,6 +59,14 @@ func (g *LineString) Contains(obj Object) bool {
 		return obj.withinRect(*g.extra.bbox)
 	}
 	return obj.withinLine(&g.base)
+}
+
+// Intersects ...
+func (g *LineString) Intersects(obj Object) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return obj.intersectsRect(*g.extra.bbox)
+	}
+	return obj.intersectsLine(&g.base)
 }
 
 func (g *LineString) withinRect(rect geos.Rect) bool {
@@ -75,14 +97,6 @@ func (g *LineString) withinPoly(poly *geos.Poly) bool {
 	return poly.ContainsLine(&g.base)
 }
 
-// Intersects ...
-func (g *LineString) Intersects(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.intersectsRect(*g.extra.bbox)
-	}
-	return obj.intersectsLine(&g.base)
-}
-
 func (g *LineString) intersectsPoint(point geos.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoint(point)
@@ -109,4 +123,91 @@ func (g *LineString) intersectsPoly(poly *geos.Poly) bool {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
 	return g.base.IntersectsPoly(poly)
+}
+
+func parseJSONLineString(data string) (Object, error) {
+	var g LineString
+	points, ex, err := parseJSONLineStringCoords(data, gjson.Result{})
+	if err != nil {
+		return nil, err
+	}
+	if len(points) < 2 {
+		// Must have at least two points
+		// https://tools.ietf.org/html/rfc7946#section-3.1.4
+		return nil, errCoordinatesInvalid
+	}
+	line := geos.NewLine(points)
+	g.base = *line
+	g.extra = ex
+	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+		return nil, err
+	}
+	return &g, nil
+}
+
+func parseJSONLineStringCoords(data string, rcoords gjson.Result) (
+	[]geos.Point, *extra, error,
+) {
+	var err error
+	var coords []geos.Point
+	var ex *extra
+	var dims int
+	if !rcoords.Exists() {
+		rcoords = gjson.Get(data, "coordinates")
+		if !rcoords.Exists() {
+			return nil, nil, errCoordinatesMissing
+		}
+		if !rcoords.IsArray() {
+			return nil, nil, errCoordinatesInvalid
+		}
+	}
+	rcoords.ForEach(func(key, value gjson.Result) bool {
+		if !value.IsArray() {
+			err = errCoordinatesInvalid
+			return false
+		}
+		var count int
+		var nums [4]float64
+		value.ForEach(func(key, value gjson.Result) bool {
+			if count == 4 {
+				return false
+			}
+			if value.Type != gjson.Number {
+				err = errCoordinatesInvalid
+				return false
+			}
+			nums[count] = value.Float()
+			count++
+			return true
+		})
+		if err != nil {
+			return false
+		}
+		if count < 2 {
+			err = errCoordinatesInvalid
+			return false
+		}
+		coords = append(coords, geos.Point{X: nums[0], Y: nums[1]})
+		if ex == nil {
+			if count > 2 {
+				ex = new(extra)
+				if count > 3 {
+					ex.dims = 2
+				} else {
+					ex.dims = 1
+				}
+				dims = int(ex.dims)
+			}
+		}
+		if ex != nil {
+			for i := 0; i < dims; i++ {
+				ex.values = append(ex.values, nums[2+i])
+			}
+		}
+		return true
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return coords, ex, err
 }

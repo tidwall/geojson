@@ -1,20 +1,25 @@
 package geojson
 
-import "github.com/tidwall/geojson/geos"
+import (
+	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/pretty"
+)
 
 // Feature ...
 type Feature struct {
 	base       Object
 	extra      *extra
-	id         string
-	properties string
+	ID         string
+	Properties string
 }
 
-func (g *Feature) bbox() *geos.Rect {
-	if g.extra != nil {
-		return g.extra.bbox
+// forEach ...
+func (g *Feature) forEach(iter func(geom Object) bool) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return iter(g)
 	}
-	return nil
+	return g.base.forEach(iter)
 }
 
 // Empty ...
@@ -40,7 +45,22 @@ func (g *Feature) Center() geos.Point {
 
 // AppendJSON ...
 func (g *Feature) AppendJSON(dst []byte) []byte {
-	panic("not ready")
+	dst = append(dst, `{"type":"Feature","geometry":`...)
+	dst = g.base.AppendJSON(dst)
+	if g.extra != nil {
+		dst = g.extra.appendJSONBBox(dst)
+	}
+	if g.ID != "" {
+		dst = append(dst, `,"id":`...)
+		dst = append(dst, g.ID...)
+	}
+	if g.Properties != "" {
+		dst = append(dst, `,"properties":`...)
+		dst = append(dst, g.Properties...)
+	}
+	dst = append(dst, '}')
+	return dst
+
 }
 
 // Within ...
@@ -118,4 +138,30 @@ func (g *Feature) intersectsPoly(poly *geos.Poly) bool {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
 	return g.base.intersectsPoly(poly)
+}
+
+// parseJSONFeature will return a valid GeoJSON object.
+func parseJSONFeature(data string) (Object, error) {
+	var g Feature
+	rgeometry := gjson.Get(data, "geometry")
+	if !rgeometry.Exists() {
+		return nil, errGeometryMissing
+	}
+	var err error
+	g.base, err = Parse(rgeometry.Raw)
+	if err != nil {
+		return nil, err
+	}
+	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+		return nil, err
+	}
+	id := gjson.Get(data, "id").Raw
+	if len(id) > 0 {
+		g.ID = string(pretty.UglyInPlace([]byte(id)))
+	}
+	properties := gjson.Get(data, "properties").Raw
+	if len(properties) > 0 {
+		g.Properties = string(pretty.UglyInPlace([]byte(properties)))
+	}
+	return &g, nil
 }

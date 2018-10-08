@@ -1,6 +1,9 @@
 package geojson
 
-import "github.com/tidwall/geojson/geos"
+import (
+	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/gjson"
+)
 
 // Polygon ...
 type Polygon struct {
@@ -31,7 +34,24 @@ func (g *Polygon) Center() geos.Point {
 
 // AppendJSON ...
 func (g *Polygon) AppendJSON(dst []byte) []byte {
-	panic("not ready")
+	dst = append(dst, `{"type":"Polygon","coordinates":[`...)
+	var pidx int
+	dst, pidx = appendJSONSeries(dst, g.base.Exterior, g.extra, pidx)
+	for _, hole := range g.base.Holes {
+		dst = append(dst, ',')
+		dst, pidx = appendJSONSeries(dst, hole, g.extra, pidx)
+	}
+	dst = append(dst, ']')
+	if g.extra != nil {
+		dst = g.extra.appendJSONBBox(dst)
+	}
+	dst = append(dst, '}')
+	return dst
+}
+
+// forEach ...
+func (g *Polygon) forEach(iter func(geom Object) bool) bool {
+	return iter(g)
 }
 
 // Within ...
@@ -109,4 +129,104 @@ func (g *Polygon) intersectsPoly(poly *geos.Poly) bool {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
 	return g.base.IntersectsPoly(poly)
+}
+
+func parseJSONPolygon(data string) (Object, error) {
+	var g Polygon
+	coords, ex, err := parseJSONPolygonCoords(data, gjson.Result{})
+	if err != nil {
+		return nil, err
+	}
+	if len(coords) == 0 {
+		return nil, errCoordinatesInvalid // must be a linear ring
+	}
+	for _, p := range coords {
+		if len(p) < 4 || p[0] != p[len(p)-1] {
+			return nil, errCoordinatesInvalid // must be a linear ring
+		}
+	}
+	exterior := coords[0]
+	var holes [][]geos.Point
+	if len(coords) > 1 {
+		holes = coords[1:]
+	}
+	poly := geos.NewPoly(exterior, holes)
+	g.base = *poly
+	g.extra = ex
+	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+		return nil, err
+	}
+	return &g, nil
+}
+
+func parseJSONPolygonCoords(data string, rcoords gjson.Result) (
+	[][]geos.Point, *extra, error,
+) {
+	var err error
+	var coords [][]geos.Point
+	var ex *extra
+	var dims int
+	if !rcoords.Exists() {
+		rcoords = gjson.Get(data, "coordinates")
+		if !rcoords.Exists() {
+			return nil, nil, errCoordinatesMissing
+		}
+		if !rcoords.IsArray() {
+			return nil, nil, errCoordinatesInvalid
+		}
+	}
+	rcoords.ForEach(func(key, value gjson.Result) bool {
+		if !value.IsArray() {
+			err = errCoordinatesInvalid
+			return false
+		}
+		coords = append(coords, []geos.Point{})
+		ii := len(coords) - 1
+		value.ForEach(func(key, value gjson.Result) bool {
+			var count int
+			var nums [4]float64
+			value.ForEach(func(key, value gjson.Result) bool {
+				if count == 4 {
+					return false
+				}
+				if value.Type != gjson.Number {
+					err = errCoordinatesInvalid
+					return false
+				}
+				nums[count] = value.Float()
+				count++
+				return true
+			})
+			if err != nil {
+				return false
+			}
+			if count < 2 {
+				err = errCoordinatesInvalid
+				return false
+			}
+			coords[ii] = append(coords[ii], geos.Point{X: nums[0], Y: nums[1]})
+			if ex == nil {
+				if count > 2 {
+					ex = new(extra)
+					if count > 3 {
+						ex.dims = 2
+					} else {
+						ex.dims = 1
+					}
+					dims = int(ex.dims)
+				}
+			}
+			if ex != nil {
+				for i := 0; i < dims; i++ {
+					ex.values = append(ex.values, nums[2+i])
+				}
+			}
+			return true
+		})
+		return err == nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return coords, ex, err
 }

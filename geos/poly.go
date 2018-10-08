@@ -23,13 +23,6 @@ func NewPoly(exterior []Point, holes [][]Point) *Poly {
 	return poly
 }
 
-// NewPolyRect ...
-func NewPolyRect(rect Rect) *Poly {
-	poly := new(Poly)
-	poly.Exterior = rect
-	return poly
-}
-
 // Clockwise ...
 func (poly *Poly) Clockwise() bool {
 	return poly.Exterior.Clockwise()
@@ -120,25 +113,15 @@ func (poly *Poly) IntersectsLine(line *Line) bool {
 
 // ContainsPoly ...
 func (poly *Poly) ContainsPoly(other *Poly) bool {
-	// println(0)
 	// 1) other exterior must be fully contained inside of the poly exterior.
 	if !ringContainsRing(poly.Exterior, other.Exterior, true) {
 		return false
 	}
 	// 2) ring cannot intersect poly holes
-	// println(1)
 	contains := true
 	for _, polyHole := range poly.Holes {
-		// println(2)
-
-		// println(ringxString(polyHole))
-		// println(ringxString(other.Exterior))
-
-		// println("--", ringxIntersectsRing(polyHole, other.Exterior, false))
-		// println("--", ringxIntersectsRing(polyHole, other.Exterior, true))
 		if ringIntersectsRing(polyHole, other.Exterior, false) {
 			contains = false
-			// println(3)
 			// 3) unless the poly hole is contain inside of a other hole
 			for _, otherHole := range other.Holes {
 				if ringContainsRing(otherHole, polyHole, true) {
@@ -148,12 +131,10 @@ func (poly *Poly) ContainsPoly(other *Poly) bool {
 				}
 			}
 			if !contains {
-				// println(5)
 				break
 			}
 		}
 	}
-	// println(6)
 	return contains
 }
 

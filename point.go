@@ -11,12 +11,22 @@ type Point struct {
 	extra *extra
 }
 
+// // ForEach ...
+// func (g *Point) ForEach(iter func(geom geos.Geometry) bool) bool {
+// 	if g.extra != nil && g.extra.bbox != nil {
+// 		return iter(*g.extra.bbox)
+// 	}
+// 	return iter(g.base)
+// }
+
+// forEach ...
+func (g *Point) forEach(iter func(geom Object) bool) bool {
+	return iter(g)
+}
+
 // NewPoint ...
 func NewPoint(x, y float64) *Point {
-	point := new(Point)
-	point.base.X = x
-	point.base.Y = y
-	return point
+	return &Point{base: geos.Point{X: x, Y: y}}
 }
 
 // Empty ...
@@ -64,6 +74,14 @@ func (g *Point) Contains(obj Object) bool {
 	return obj.withinPoint(g.base)
 }
 
+// Intersects ...
+func (g *Point) Intersects(obj Object) bool {
+	if g.extra != nil && g.extra.bbox != nil {
+		return obj.intersectsRect(*g.extra.bbox)
+	}
+	return obj.intersectsPoint(g.base)
+}
+
 func (g *Point) withinRect(rect geos.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return rect.ContainsRect(*g.extra.bbox)
@@ -90,14 +108,6 @@ func (g *Point) withinPoly(poly *geos.Poly) bool {
 		return poly.ContainsRect(*g.extra.bbox)
 	}
 	return poly.ContainsPoint(g.base)
-}
-
-// Intersects ...
-func (g *Point) Intersects(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.intersectsRect(*g.extra.bbox)
-	}
-	return obj.intersectsPoint(g.base)
 }
 
 func (g *Point) intersectsPoint(point geos.Point) bool {
@@ -128,27 +138,17 @@ func (g *Point) intersectsPoly(poly *geos.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-// parse
-
 func parseJSONPoint(data string) (Object, error) {
-	var g *Point
+	var g Point
 	var err error
 	g.base, g.extra, err = parseJSONPointCoords(data, gjson.Result{})
 	if err != nil {
 		return nil, err
 	}
-	bbox, bboxExtras, err := parseBBox(data)
-	if err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
 		return nil, err
 	}
-	if bbox != nil {
-		if g.extra == nil {
-			g.extra = new(extra)
-		}
-		g.extra.bbox = bbox
-		g.extra.bboxExtra = bboxExtras
-	}
-	return g, nil
+	return &g, nil
 }
 
 func parseJSONPointCoords(data string, rcoords gjson.Result) (
