@@ -30,7 +30,7 @@ func P(x, y float64) Point {
 	return Point{x, y}
 }
 func L(points ...Point) *Line {
-	return NewLine(points)
+	return NewLine(points, DefaultIndex)
 }
 
 var (

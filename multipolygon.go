@@ -26,7 +26,7 @@ func (g *MultiPolygon) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-func parseJSONMultiPolygon(data string) (Object, error) {
+func parseJSONMultiPolygon(data string, opts *ParseOptions) (Object, error) {
 	var g MultiPolygon
 	var err error
 	rcoords := gjson.Get(data, "coordinates")
@@ -39,7 +39,7 @@ func parseJSONMultiPolygon(data string) (Object, error) {
 	var coords [][]geos.Point
 	var ex *extra
 	rcoords.ForEach(func(_, value gjson.Result) bool {
-		coords, ex, err = parseJSONPolygonCoords("", value)
+		coords, ex, err = parseJSONPolygonCoords("", value, opts)
 		if err != nil {
 			return false
 		}
@@ -58,7 +58,7 @@ func parseJSONMultiPolygon(data string) (Object, error) {
 		if len(coords) > 1 {
 			holes = coords[1:]
 		}
-		poly := geos.NewPoly(exterior, holes)
+		poly := geos.NewPoly(exterior, holes, opts.IndexGeometry)
 
 		g.children = append(g.children, &Polygon{base: *poly, extra: ex})
 		return true
@@ -66,9 +66,9 @@ func parseJSONMultiPolygon(data string) (Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
-	g.initRectIndex()
+	g.parseInitRectIndex(opts)
 	return &g, nil
 }

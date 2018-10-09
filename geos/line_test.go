@@ -7,7 +7,7 @@ package geos
 import "testing"
 
 func TestLineNewLine(t *testing.T) {
-	line := NewLine(u1)
+	line := NewLine(u1, DefaultIndex)
 	expect(t, !line.Empty())
 }
 
@@ -21,12 +21,12 @@ func TestLineMove(t *testing.T) {
 }
 
 func TestLineContainsPoint(t *testing.T) {
-	line := NewLine(u1)
+	line := NewLine(u1, DefaultIndex)
 	expect(t, line.ContainsPoint(P(0, 0)))
 	expect(t, line.ContainsPoint(P(10, 10)))
 	expect(t, line.ContainsPoint(P(0, 5)))
 	expect(t, !line.ContainsPoint(P(5, 5)))
-	line = NewLine(v1)
+	line = NewLine(v1, DefaultIndex)
 	expect(t, line.ContainsPoint(P(0, 10)))
 	expect(t, !line.ContainsPoint(P(0, 0)))
 	expect(t, line.ContainsPoint(P(5, 0)))
@@ -34,7 +34,7 @@ func TestLineContainsPoint(t *testing.T) {
 }
 
 func TestLineIntersectsPoint(t *testing.T) {
-	line := NewLine(v1)
+	line := NewLine(v1, DefaultIndex)
 	expect(t, line.IntersectsPoint(P(0, 10)))
 	expect(t, !line.IntersectsPoint(P(0, 0)))
 	expect(t, line.IntersectsPoint(P(5, 0)))
@@ -42,15 +42,15 @@ func TestLineIntersectsPoint(t *testing.T) {
 }
 
 func TestLineContainsRect(t *testing.T) {
-	line := NewLine(v1)
+	line := NewLine(v1, DefaultIndex)
 	expect(t, !line.ContainsRect(R(0, 0, 10, 10)))
 	expect(t, line.ContainsRect(R(0, 10, 0, 10)))
-	line = NewLine(u1)
+	line = NewLine(u1, DefaultIndex)
 	expect(t, line.ContainsRect(R(0, 0, 0, 10)))
 }
 
 func TestLineIntersectsRect(t *testing.T) {
-	line := NewLine(v1)
+	line := NewLine(v1, DefaultIndex)
 	expect(t, line.IntersectsRect(R(0, 0, 10, 10)))
 	expect(t, line.IntersectsRect(R(0, 0, 2.5, 5)))
 	expect(t, !line.IntersectsRect(R(0, 0, 2.4, 5)))
@@ -96,13 +96,15 @@ func TestLineIntersectsLine(t *testing.T) {
 	lns := [][]Point{u1, u2, u3, u4, v1, v2, v3, v4}
 	for i := 0; i < len(lns); i++ {
 		for j := 0; j < len(lns); j++ {
-			expect(t, NewLine(lns[i]).IntersectsLine(NewLine(lns[j])))
+			expect(t, NewLine(lns[i], DefaultIndex).IntersectsLine(
+				NewLine(lns[j], DefaultIndex),
+			))
 		}
 	}
-	line := NewLine(u1)
-	expect(t, !line.IntersectsLine(NewLine(nil)))
-	expect(t, !NewLine(nil).IntersectsLine(NewLine(nil)))
-	expect(t, !NewLine(nil).IntersectsLine(line))
+	line := NewLine(u1, DefaultIndex)
+	expect(t, !line.IntersectsLine(NewLine(nil, DefaultIndex)))
+	expect(t, !NewLine(nil, DefaultIndex).IntersectsLine(NewLine(nil, DefaultIndex)))
+	expect(t, !NewLine(nil, DefaultIndex).IntersectsLine(line))
 	expect(t, line.IntersectsLine(line.Move(5, 0)))
 	expect(t, line.IntersectsLine(line.Move(10, 0)))
 	expect(t, !line.IntersectsLine(line.Move(11, 0)))
@@ -111,27 +113,27 @@ func TestLineIntersectsLine(t *testing.T) {
 }
 
 func TestLineContainsPoly(t *testing.T) {
-	line := NewLine(u1)
-	poly := NewPoly(octagon, nil)
+	line := NewLine(u1, DefaultIndex)
+	poly := NewPoly(octagon, nil, DefaultIndex)
 	expect(t, !line.ContainsPoly(poly))
 	expect(t, line.ContainsPoly(NewPoly(
 		[]Point{P(0, 10), P(0, 0), P(0, 10)},
-		nil,
+		nil, DefaultIndex,
 	)))
 	expect(t, line.ContainsPoly(NewPoly(
 		[]Point{P(0, 0), P(10, 0), P(0, 0)},
-		nil,
+		nil, DefaultIndex,
 	)))
 	expect(t, !L().ContainsPoly(NewPoly(
 		[]Point{P(0, 0), P(10, 0), P(0, 0)},
-		nil,
+		nil, DefaultIndex,
 	)))
-	expect(t, !line.ContainsPoly(NewPoly(nil, nil)))
+	expect(t, !line.ContainsPoly(NewPoly(nil, nil, DefaultIndex)))
 }
 
 func TestLineIntersectsPoly(t *testing.T) {
-	line := NewLine(u1)
-	poly := NewPoly(octagon, nil)
+	line := NewLine(u1, DefaultIndex)
+	poly := NewPoly(octagon, nil, DefaultIndex)
 	expect(t, line.IntersectsPoly(poly))
 	expect(t, line.IntersectsPoly(poly.Move(5, 0)))
 	expect(t, line.IntersectsPoly(poly.Move(10, 0)))

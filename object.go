@@ -60,8 +60,33 @@ type extra struct {
 	values    []float64
 }
 
+// ParseOptions ...
+type ParseOptions struct {
+	// IndexChildren option will cause the object to index their children
+	// objects when the number of children is greater than or equal to the
+	// provided value. Setting this value to 0 will disable indexing.
+	// The default is 64.
+	IndexChildren int
+	// IndexGeometry option will cause the object to index it's geometry
+	// when the number of points in it's base polygon or linestring is greater
+	// that or equal to the provided value. Setting this value to 0 will
+	// disable indexing.
+	// The default is 64.
+	IndexGeometry int
+}
+
+// DefaultParseOptions ...
+var DefaultParseOptions = &ParseOptions{
+	IndexChildren: geos.DefaultIndex,
+	IndexGeometry: geos.DefaultIndex,
+}
+
 // Parse a GeoJSON object
-func Parse(data string) (Object, error) {
+func Parse(data string, opts *ParseOptions) (Object, error) {
+	if opts == nil {
+		// opts should never be nil
+		opts = DefaultParseOptions
+	}
 	// look at the first byte
 	for i := 0; ; i++ {
 		if len(data) == 0 {
@@ -83,12 +108,12 @@ func Parse(data string) (Object, error) {
 			data = data[1:]
 			continue
 		case '{':
-			return parseJSON(data)
+			return parseJSON(data, opts)
 		}
 	}
 }
 
-func parseJSON(data string) (Object, error) {
+func parseJSON(data string, opts *ParseOptions) (Object, error) {
 	if !gjson.Valid(data) {
 		return nil, errDataInvalid
 	}
@@ -103,27 +128,29 @@ func parseJSON(data string) (Object, error) {
 	default:
 		return nil, fmt.Errorf(fmtErrTypeIsUnknown, rtype.String())
 	case "Point":
-		return parseJSONPoint(data)
+		return parseJSONPoint(data, opts)
 	case "LineString":
-		return parseJSONLineString(data)
+		return parseJSONLineString(data, opts)
 	case "Polygon":
-		return parseJSONPolygon(data)
+		return parseJSONPolygon(data, opts)
 	case "Feature":
-		return parseJSONFeature(data)
+		return parseJSONFeature(data, opts)
 	case "MultiPoint":
-		return parseJSONMultiPoint(data)
+		return parseJSONMultiPoint(data, opts)
 	case "MultiLineString":
-		return parseJSONMultiLineString(data)
+		return parseJSONMultiLineString(data, opts)
 	case "MultiPolygon":
-		return parseJSONMultiPolygon(data)
+		return parseJSONMultiPolygon(data, opts)
 	case "GeometryCollection":
-		return parseJSONGeometryCollection(data)
+		return parseJSONGeometryCollection(data, opts)
 	case "FeatureCollection":
-		return parseJSONFeatureCollection(data)
+		return parseJSONFeatureCollection(data, opts)
 	}
 }
 
-func parseBBox(data string) (bbox *geos.Rect, bboxExtra []float64, err error) {
+func parseBBox(data string, opts *ParseOptions) (
+	bbox *geos.Rect, bboxExtra []float64, err error,
+) {
 	rbbox := gjson.Get(data, "bbox")
 	if !rbbox.Exists() {
 		return nil, nil, nil
@@ -175,8 +202,8 @@ func parseBBox(data string) (bbox *geos.Rect, bboxExtra []float64, err error) {
 	return &rect, bboxExtra, nil
 }
 
-func parseBBoxAndFillExtra(data string, ex **extra) error {
-	bbox, bboxExtras, err := parseBBox(data)
+func parseBBoxAndFillExtra(data string, ex **extra, opts *ParseOptions) error {
+	bbox, bboxExtras, err := parseBBox(data, opts)
 	if err != nil {
 		return err
 	}

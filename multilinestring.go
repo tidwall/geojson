@@ -27,7 +27,7 @@ func (g *MultiLineString) AppendJSON(dst []byte) []byte {
 
 }
 
-func parseJSONMultiLineString(data string) (Object, error) {
+func parseJSONMultiLineString(data string, opts *ParseOptions) (Object, error) {
 	var g MultiLineString
 	var err error
 	rcoords := gjson.Get(data, "coordinates")
@@ -40,7 +40,7 @@ func parseJSONMultiLineString(data string) (Object, error) {
 	var coords []geos.Point
 	var ex *extra
 	rcoords.ForEach(func(_, value gjson.Result) bool {
-		coords, ex, err = parseJSONLineStringCoords("", value)
+		coords, ex, err = parseJSONLineStringCoords("", value, opts)
 		if err != nil {
 			return false
 		}
@@ -48,16 +48,16 @@ func parseJSONMultiLineString(data string) (Object, error) {
 			err = errCoordinatesInvalid
 			return false
 		}
-		line := geos.NewLine(coords)
+		line := geos.NewLine(coords, opts.IndexGeometry)
 		g.children = append(g.children, &LineString{base: *line, extra: ex})
 		return true
 	})
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
-	g.initRectIndex()
+	g.parseInitRectIndex(opts)
 	return &g, nil
 }

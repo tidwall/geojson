@@ -31,27 +31,27 @@ func TestSeriesClockwise(t *testing.T) {
 	var series baseSeries
 	series = makeSeries([]Point{
 		P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0),
-	}, true, true)
+	}, true, true, DefaultIndex)
 	expect(t, !series.Clockwise())
 	series = makeSeries([]Point{
 		P(0, 0), P(10, 0), P(10, 10), P(0, 10),
-	}, true, true)
+	}, true, true, DefaultIndex)
 	expect(t, !series.Clockwise())
 	series = makeSeries([]Point{
 		P(0, 0), P(10, 0), P(10, 10),
-	}, true, true)
+	}, true, true, DefaultIndex)
 	expect(t, !series.Clockwise())
 	series = makeSeries([]Point{
 		P(0, 0), P(0, 10), P(10, 10), P(10, 0), P(0, 0),
-	}, true, true)
+	}, true, true, DefaultIndex)
 	expect(t, series.Clockwise())
 	series = makeSeries([]Point{
 		P(0, 0), P(0, 10), P(10, 10), P(10, 0),
-	}, true, true)
+	}, true, true, DefaultIndex)
 	expect(t, series.Clockwise())
 	series = makeSeries([]Point{
 		P(0, 0), P(0, 10), P(10, 10),
-	}, true, true)
+	}, true, true, DefaultIndex)
 	expect(t, series.Clockwise())
 }
 
@@ -59,19 +59,19 @@ func TestSeriesConvex(t *testing.T) {
 	t.Run("1", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(0, 4), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, series.Convex())
 	})
 	t.Run("2", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(3, 4), P(1, 4), P(0, 4), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, series.Convex())
 	})
 	t.Run("3", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(2, 5), P(0, 4), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, series.Convex())
 	})
 	t.Run("4", func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestSeriesConvex(t *testing.T) {
 			P(0, 0), P(4, 0), P(4, 4),
 			P(3, 4), P(2, 5), P(1, 4),
 			P(0, 4), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, !series.Convex())
 	})
 	t.Run("5", func(t *testing.T) {
@@ -87,28 +87,28 @@ func TestSeriesConvex(t *testing.T) {
 			P(0, 0), P(4, 0), P(4, 4),
 			P(3, 4), P(2, 3), P(1, 4),
 			P(0, 4), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, !series.Convex())
 	})
 	t.Run("5", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(0, 4),
 			P(-1, 2), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, series.Convex())
 	})
 	t.Run("6", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(0, 4), P(0, 3),
 			P(-1, 2), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, !series.Convex())
 	})
 	t.Run("6", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(0, 4),
 			P(-1, 2), P(0, 1), P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, !series.Convex())
 	})
 	t.Run("7", func(t *testing.T) {
@@ -116,14 +116,14 @@ func TestSeriesConvex(t *testing.T) {
 			P(0, 0), P(4, 0), P(4, 4),
 			P(3, 3), P(2, 5), P(1, 3), P(0, 4),
 			P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, !series.Convex())
 	})
 	t.Run("8", func(t *testing.T) {
 		series := makeSeries([]Point{
 			P(0, 0), P(0, 4), P(1, 3), P(4, 4), P(2, 5), P(3, 3), P(4, 0),
 			P(0, 0),
-		}, true, true)
+		}, true, true, DefaultIndex)
 		expect(t, !series.Convex())
 	})
 }
@@ -161,51 +161,51 @@ func testScanSeries(
 }
 
 func TestSeriesBasic(t *testing.T) {
-	series := makeSeries(octagon, true, true)
+	series := makeSeries(octagon, true, true, DefaultIndex)
 	expect(t, reflect.DeepEqual(seriesCopyPoints(&series), octagon))
 	expect(t, series.Convex())
 	expect(t, series.Rect() == R(0, 0, 10, 10))
 	expect(t, series.Closed())
-	series = makeSeries(octagon, false, true)
+	series = makeSeries(octagon, false, true, DefaultIndex)
 	expect(t, reflect.DeepEqual(seriesCopyPoints(&series), octagon))
 
-	series = makeSeries(ri, true, true)
+	series = makeSeries(ri, true, true, DefaultIndex)
 	testScanSeries(t, &series, true, len(ri)-1, false)
 	testScanSeries(t, &series, false, len(ri)-1, false)
 
 	// small lines
-	series = makeSeries([]Point{}, true, false)
+	series = makeSeries([]Point{}, true, false, DefaultIndex)
 	testScanSeries(t, &series, true, 0, true)
 	testScanSeries(t, &series, false, 0, true)
 
-	series = makeSeries([]Point{P(5, 5)}, true, false)
+	series = makeSeries([]Point{P(5, 5)}, true, false, DefaultIndex)
 	testScanSeries(t, &series, true, 0, true)
 	testScanSeries(t, &series, false, 0, true)
 
-	series = makeSeries([]Point{P(5, 5), P(10, 10)}, true, false)
+	series = makeSeries([]Point{P(5, 5), P(10, 10)}, true, false, DefaultIndex)
 	testScanSeries(t, &series, true, 1, false)
 	testScanSeries(t, &series, false, 1, false)
 
 	// small rings
-	series = makeSeries([]Point{}, true, true)
+	series = makeSeries([]Point{}, true, true, DefaultIndex)
 	testScanSeries(t, &series, true, 0, true)
 	testScanSeries(t, &series, false, 0, true)
 
-	series = makeSeries([]Point{P(5, 5)}, true, true)
+	series = makeSeries([]Point{P(5, 5)}, true, true, DefaultIndex)
 	testScanSeries(t, &series, true, 0, true)
 	testScanSeries(t, &series, false, 0, true)
 
-	series = makeSeries([]Point{P(5, 5), P(10, 10)}, true, true)
+	series = makeSeries([]Point{P(5, 5), P(10, 10)}, true, true, DefaultIndex)
 	testScanSeries(t, &series, true, 0, true)
 	testScanSeries(t, &series, false, 0, true)
 
-	series = makeSeries([]Point{P(5, 5), P(10, 10), P(10, 5)}, true, true)
+	series = makeSeries([]Point{P(5, 5), P(10, 10), P(10, 5)}, true, true, DefaultIndex)
 	testScanSeries(t, &series, true, 3, false)
 	testScanSeries(t, &series, false, 3, false)
 
 }
 func TestSeriesSearch(t *testing.T) {
-	series := makeSeries(octagon, true, true)
+	series := makeSeries(octagon, true, true, DefaultIndex)
 	var segs []Segment
 	series.Search(R(0, 0, 0, 0), func(seg Segment, _ int) bool {
 		segs = append(segs, seg)
@@ -267,7 +267,7 @@ func TestSeriesSearch(t *testing.T) {
 func TestSeriesBig(t *testing.T) {
 	t.Run("Closed", func(t *testing.T) {
 		// clip off the last point to force an auto closure
-		series := makeSeries(ri[:len(ri)-1], true, true)
+		series := makeSeries(ri[:len(ri)-1], true, true, DefaultIndex)
 		var seg2sA []Segment
 		series.Search(series.Rect(), func(seg Segment, idx int) bool {
 			seg2sA = append(seg2sA, seg)
@@ -282,7 +282,7 @@ func TestSeriesBig(t *testing.T) {
 		expect(t, checkSegsDups(seg2sA, seg2sB))
 
 		// use all points
-		series2 := makeSeries(ri, true, true)
+		series2 := makeSeries(ri, true, true, DefaultIndex)
 		var seg2sC []Segment
 		seriesForEachSegment(&series2, func(seg Segment) bool {
 			seg2sC = append(seg2sC, seg)
@@ -301,7 +301,7 @@ func TestSeriesBig(t *testing.T) {
 		expect(t, first == seg2sA[0])
 	})
 	t.Run("Opened", func(t *testing.T) {
-		series := makeSeries(az, true, false)
+		series := makeSeries(az, true, false, DefaultIndex)
 		var seg2sA []Segment
 		series.Search(series.Rect(), func(seg Segment, idx int) bool {
 			seg2sA = append(seg2sA, seg)
@@ -322,7 +322,7 @@ func TestSeriesReverse(t *testing.T) {
 		for i := len(shape) - 1; i >= 0; i-- {
 			rev = append(rev, shape[i])
 		}
-		series := makeSeries(rev, true, true)
+		series := makeSeries(rev, true, true, DefaultIndex)
 		var seg2sA []Segment
 		series.Search(series.Rect(), func(seg Segment, idx int) bool {
 			seg2sA = append(seg2sA, seg)
@@ -358,7 +358,7 @@ func checkSegsDups(a, b []Segment) bool {
 func TestSeriesMove(t *testing.T) {
 	shapes := [][]Point{ri, octagon}
 	for _, shape := range shapes {
-		series := makeSeries(shape, true, true)
+		series := makeSeries(shape, true, true, DefaultIndex)
 		series.tree = nil
 		series2 := series.Move(60, 70)
 		expect(t, series2.NumPoints() == len(shape))

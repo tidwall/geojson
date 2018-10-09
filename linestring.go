@@ -125,9 +125,9 @@ func (g *LineString) intersectsPoly(poly *geos.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-func parseJSONLineString(data string) (Object, error) {
+func parseJSONLineString(data string, opts *ParseOptions) (Object, error) {
 	var g LineString
-	points, ex, err := parseJSONLineStringCoords(data, gjson.Result{})
+	points, ex, err := parseJSONLineStringCoords(data, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -136,18 +136,18 @@ func parseJSONLineString(data string) (Object, error) {
 		// https://tools.ietf.org/html/rfc7946#section-3.1.4
 		return nil, errCoordinatesInvalid
 	}
-	line := geos.NewLine(points)
+	line := geos.NewLine(points, opts.IndexGeometry)
 	g.base = *line
 	g.extra = ex
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
 	return &g, nil
 }
 
-func parseJSONLineStringCoords(data string, rcoords gjson.Result) (
-	[]geos.Point, *extra, error,
-) {
+func parseJSONLineStringCoords(
+	data string, rcoords gjson.Result, opts *ParseOptions,
+) ([]geos.Point, *extra, error) {
 	var err error
 	var coords []geos.Point
 	var ex *extra

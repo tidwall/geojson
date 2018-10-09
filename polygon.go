@@ -131,9 +131,9 @@ func (g *Polygon) intersectsPoly(poly *geos.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-func parseJSONPolygon(data string) (Object, error) {
+func parseJSONPolygon(data string, opts *ParseOptions) (Object, error) {
 	var g Polygon
-	coords, ex, err := parseJSONPolygonCoords(data, gjson.Result{})
+	coords, ex, err := parseJSONPolygonCoords(data, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -150,16 +150,18 @@ func parseJSONPolygon(data string) (Object, error) {
 	if len(coords) > 1 {
 		holes = coords[1:]
 	}
-	poly := geos.NewPoly(exterior, holes)
+	poly := geos.NewPoly(exterior, holes, opts.IndexGeometry)
 	g.base = *poly
 	g.extra = ex
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
 	return &g, nil
 }
 
-func parseJSONPolygonCoords(data string, rcoords gjson.Result) (
+func parseJSONPolygonCoords(
+	data string, rcoords gjson.Result, opts *ParseOptions,
+) (
 	[][]geos.Point, *extra, error,
 ) {
 	var err error

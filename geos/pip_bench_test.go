@@ -17,9 +17,9 @@ func testBig(
 ) {
 	N, T := 100000, 4
 
-	simple := newRing(points)
+	simple := newRing(points, DefaultIndex)
 	simple.(*baseSeries).tree = nil
-	tree := newRing(points)
+	tree := newRing(points, DefaultIndex)
 	tree.(*baseSeries).buildTree()
 	pointOn := points[len(points)/2]
 

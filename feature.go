@@ -141,18 +141,18 @@ func (g *Feature) intersectsPoly(poly *geos.Poly) bool {
 }
 
 // parseJSONFeature will return a valid GeoJSON object.
-func parseJSONFeature(data string) (Object, error) {
+func parseJSONFeature(data string, opts *ParseOptions) (Object, error) {
 	var g Feature
 	rgeometry := gjson.Get(data, "geometry")
 	if !rgeometry.Exists() {
 		return nil, errGeometryMissing
 	}
 	var err error
-	g.base, err = Parse(rgeometry.Raw)
+	g.base, err = Parse(rgeometry.Raw, opts)
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
 	id := gjson.Get(data, "id").Raw

@@ -5,7 +5,7 @@
 package geos
 
 // NewCircle returns a circle polygon
-func NewCircle(center Point, meters float64, segments int) *Poly {
+func NewCircle(center Point, meters float64, segments, index int) *Poly {
 	if segments < 3 {
 		segments = 3
 	}
@@ -18,5 +18,5 @@ func NewCircle(center Point, meters float64, segments int) *Poly {
 		i++
 	}
 	points = append(points, points[0])
-	return NewPoly(points, nil)
+	return NewPoly(points, nil, index)
 }

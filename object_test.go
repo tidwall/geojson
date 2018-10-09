@@ -48,8 +48,7 @@ func expectJSON(t testing.TB, data string, expect interface{}) Object {
 	case nil:
 		exstr = data
 	}
-
-	obj, err := Parse(data)
+	obj, err := Parse(data, nil)
 	if err != exerr {
 		if t == nil {
 			panic(fmt.Sprintf("expected '%v', got '%v'", exerr, err))

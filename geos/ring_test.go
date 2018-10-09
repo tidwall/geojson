@@ -10,14 +10,14 @@ import (
 )
 
 func newRingXSimple(points []Point) Ring {
-	ring := newRing(points)
+	ring := newRing(points, DefaultIndex)
 	if ring.(*baseSeries).tree != nil {
 		ring.(*baseSeries).tree = nil
 	}
 	return ring
 }
 func newRingXIndexed(points []Point) Ring {
-	ring := newRing(points)
+	ring := newRing(points, DefaultIndex)
 	if ring.(*baseSeries).tree == nil {
 		ring.(*baseSeries).buildTree()
 	}
@@ -48,7 +48,7 @@ func TestRingXContainsPoint(t *testing.T) {
 		P(3, 4), P(1, 4),
 		P(0, 3), P(0, 0),
 	}
-	ring := newRing(shape)
+	ring := newRing(shape, DefaultIndex)
 	expect(t, !ringContainsPoint(ring, P(0, 3.5), true).hit)
 	expect(t, !ringContainsPoint(ring, P(0.4, 3.5), true).hit)
 	expect(t, ringContainsPoint(ring, P(0.5, 3.5), true).hit)
@@ -79,7 +79,7 @@ func TestRingXIntersectsSegment(t *testing.T) {
 	t.Run("Cases", func(t *testing.T) {
 		ring := newRing([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(0, 4), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("1", func(t *testing.T) {
 			expect(t, ringIntersectsSegment(ring, S(2, 2, 4, 4), true))
 			expect(t, ringIntersectsSegment(ring, S(2, 2, 4, 4), false))
@@ -127,42 +127,42 @@ func TestRingXIntersectsSegment(t *testing.T) {
 		t.Run("12", func(t *testing.T) {
 			ring := newRing([]Point{
 				{0, 0}, {2, 0}, {4, 0}, {4, 4}, {0, 4}, {0, 0},
-			})
+			}, DefaultIndex)
 			expect(t, ringIntersectsSegment(ring, S(1, 0, 3, 0), true))
 			expect(t, !ringIntersectsSegment(ring, S(1, 0, 3, 0), false))
 		})
 		t.Run("13", func(t *testing.T) {
 			ring := newRing([]Point{
 				{0, 0}, {4, 0}, {4, 4}, {2, 4}, {0, 4}, {0, 0},
-			})
+			}, DefaultIndex)
 			expect(t, ringIntersectsSegment(ring, S(0, 4, 4, 4), true))
 			expect(t, !ringIntersectsSegment(ring, S(0, 4, 4, 4), false))
 		})
 		t.Run("14", func(t *testing.T) {
 			ring := newRing([]Point{
 				{0, 0}, {4, 0}, {4, 4}, {2, 4}, {0, 4}, {0, 0},
-			})
+			}, DefaultIndex)
 			expect(t, ringIntersectsSegment(ring, S(-1, -2, 0, 0), true))
 			expect(t, !ringIntersectsSegment(ring, S(-1, -2, 0, 0), false))
 		})
 		t.Run("15", func(t *testing.T) {
 			ring := newRing([]Point{
 				{0, 0}, {4, 0}, {4, 4}, {2, 4}, {0, 4}, {0, 0},
-			})
+			}, DefaultIndex)
 			expect(t, ringIntersectsSegment(ring, S(0, 4, 5, 4), true))
 			expect(t, !ringIntersectsSegment(ring, S(0, 4, 5, 4), false))
 		})
 		t.Run("16", func(t *testing.T) {
 			ring := newRing([]Point{
 				{0, 0}, {4, 0}, {4, 4}, {2, 4}, {0, 4}, {0, 0},
-			})
+			}, DefaultIndex)
 			expect(t, ringIntersectsSegment(ring, S(1, 4, 5, 4), true))
 			expect(t, !ringIntersectsSegment(ring, S(1, 4, 5, 4), false))
 		})
 		t.Run("17", func(t *testing.T) {
 			ring := newRing([]Point{
 				{0, 0}, {4, 0}, {4, 4}, {2, 4}, {0, 4}, {0, 0},
-			})
+			}, DefaultIndex)
 			expect(t, ringIntersectsSegment(ring, S(1, 4, 4, 4), true))
 			expect(t, !ringIntersectsSegment(ring, S(1, 4, 4, 4), false))
 		})
@@ -797,7 +797,7 @@ func TestRingXContainsSegment(t *testing.T) {
 		ring := newRing([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(3, 4),
 			P(2, 3), P(1, 4), P(0, 4), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("1", func(t *testing.T) {
 			expect(t, !ringContainsSegment(ring, S(1.5, 3.5, 2.5, 3.5), true))
 			expect(t, !ringContainsSegment(ring, S(1.5, 3.5, 2.5, 3.5), false))
@@ -822,7 +822,7 @@ func TestRingXContainsSegment(t *testing.T) {
 			ring := newRing([]Point{
 				P(0, 0), P(4, 0), P(4, 4), P(3, 4),
 				P(2, 5), P(1, 4), P(0, 4), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, ringContainsSegment(ring, S(1.5, 4.5, 2.5, 4.5), true))
 			expect(t, !ringContainsSegment(ring, S(1.5, 4.5, 2.5, 4.5), false))
 		})
@@ -831,7 +831,7 @@ func TestRingXContainsSegment(t *testing.T) {
 				P(0, 0), P(4, 0), P(4, 4), P(3, 4),
 				P(2.5, 3), P(2, 4), P(1.5, 3),
 				P(1, 4), P(0, 4), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, !ringContainsSegment(ring, S(1.25, 3.5, 2.75, 3.5), true))
 			expect(t, !ringContainsSegment(ring, S(1.25, 3.5, 2.75, 3.5), false))
 		})
@@ -840,7 +840,7 @@ func TestRingXContainsSegment(t *testing.T) {
 				P(0, 0), P(4, 0), P(4, 4), P(3, 4),
 				P(2.5, 5), P(2, 4), P(1.5, 5),
 				P(1, 4), P(0, 4), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, !ringContainsSegment(ring, S(1.25, 4.5, 2.75, 4.5), true))
 			expect(t, !ringContainsSegment(ring, S(1.25, 4.5, 2.75, 4.5), false))
 		})
@@ -864,14 +864,14 @@ func TestRingXContainsSegment(t *testing.T) {
 			ring := newRing([]Point{
 				P(0, 0), P(2, 0), P(4, 0), P(4, 4), P(3, 4),
 				P(2, 3), P(1, 4), P(0, 4), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, ringContainsSegment(ring, S(1, 0, 3, 0), true))
 			expect(t, !ringContainsSegment(ring, S(1, 0, 3, 0), false))
 		})
 		t.Run("14", func(t *testing.T) {
 			ring := newRing([]Point{
 				P(0, 0), P(4, 0), P(2, 2), P(0, 4), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, ringContainsSegment(ring, S(1, 3, 3, 1), true))
 			expect(t, ringContainsSegment(ring, S(3, 1, 1, 3), true))
 			expect(t, !ringContainsSegment(ring, S(1, 3, 3, 1), false))
@@ -890,24 +890,24 @@ func TestRingXContainsSegment(t *testing.T) {
 
 func TestRingXContainsRing(t *testing.T) {
 	t.Run("Empty", func(t *testing.T) {
-		expect(t, !ringContainsRing(newRing(nil), R(0, 0, 1, 1), true))
-		expect(t, !ringContainsRing(R(0, 0, 1, 1), newRing(nil), true))
+		expect(t, !ringContainsRing(newRing(nil, DefaultIndex), R(0, 0, 1, 1), true))
+		expect(t, !ringContainsRing(R(0, 0, 1, 1), newRing(nil, DefaultIndex), true))
 	})
 
 	t.Run("Exact", func(t *testing.T) {
 		expect(t, ringContainsRing(R(0, 0, 1, 1), R(0, 0, 1, 1), true))
 		expect(t, !ringContainsRing(R(0, 0, 1, 1), R(0, 0, 1, 1), false))
-		expect(t, ringContainsRing(newRing(concave1), newRing(concave1), true))
-		expect(t, !ringContainsRing(newRing(concave1), newRing(concave1), false))
-		expect(t, ringContainsRing(newRing(octagon), newRing(octagon), true))
-		expect(t, !ringContainsRing(newRing(octagon), newRing(octagon), false))
+		expect(t, ringContainsRing(newRing(concave1, DefaultIndex), newRing(concave1, DefaultIndex), true))
+		expect(t, !ringContainsRing(newRing(concave1, DefaultIndex), newRing(concave1, DefaultIndex), false))
+		expect(t, ringContainsRing(newRing(octagon, DefaultIndex), newRing(octagon, DefaultIndex), true))
+		expect(t, !ringContainsRing(newRing(octagon, DefaultIndex), newRing(octagon, DefaultIndex), false))
 	})
 	t.Run("Cases", func(t *testing.T) {
 		// concave
 		ring := newRing([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(3, 4),
 			P(2, 3), P(1, 4), P(0, 4), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("1", func(t *testing.T) {
 			expect(t, ringContainsRing(ring, R(1, 1, 3, 2), true))
 			expect(t, ringContainsRing(ring, R(1, 1, 3, 2), false))
@@ -933,7 +933,7 @@ func TestRingXContainsRing(t *testing.T) {
 			P(0, 0), P(4, 0), P(4, 4),
 			P(3, 4), P(2, 5), P(1, 4),
 			P(0, 4), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("6", func(t *testing.T) {
 			expect(t, ringContainsRing(ring, R(1, 2, 3, 3), true))
 			expect(t, ringContainsRing(ring, R(1, 2, 3, 3), false))
@@ -950,7 +950,7 @@ func TestRingXContainsRing(t *testing.T) {
 			ring = newRing([]Point{
 				P(0, 0), P(2, 0), P(4, 0), P(4, 4), P(3, 4),
 				P(2, 5), P(1, 4), P(0, 4), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, ringContainsRing(ring, R(1, 0, 3, 1), true))
 			expect(t, !ringContainsRing(ring, R(1, 0, 3, 1), false))
 		})
@@ -958,13 +958,13 @@ func TestRingXContainsRing(t *testing.T) {
 			ring = newRing([]Point{
 				P(0, 0), P(4, 0), P(4, 3), P(2, 4),
 				P(0, 3), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, ringContainsRing(ring, R(1, 1, 3, 2), true))
 			expect(t, ringContainsRing(ring, R(1, 1, 3, 2), false))
 		})
 		ring = newRing([]Point{
 			P(0, 0), P(4, 0), P(4, 3), P(3, 4), P(1, 4), P(0, 3), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("11", func(t *testing.T) {
 			expect(t, ringContainsRing(ring, R(1, 1, 3, 2), true))
 			expect(t, ringContainsRing(ring, R(1, 1, 3, 2), false))
@@ -1006,10 +1006,10 @@ func TestRingXContainsRing(t *testing.T) {
 	t.Run("Identical", func(t *testing.T) {
 		shapes := []Ring{
 			R(0, 0, 10, 10),
-			newRing(octagon),
-			newRing(concave1), newRing(concave2),
-			newRing(concave3), newRing(concave4),
-			newRing(ri),
+			newRing(octagon, DefaultIndex),
+			newRing(concave1, DefaultIndex), newRing(concave2, DefaultIndex),
+			newRing(concave3, DefaultIndex), newRing(concave4, DefaultIndex),
+			newRing(ri, DefaultIndex),
 		}
 		for i, shape := range shapes {
 			t.Run(fmt.Sprintf("Shape%d", i), func(t *testing.T) {
@@ -1020,7 +1020,7 @@ func TestRingXContainsRing(t *testing.T) {
 
 	t.Run("Big", func(t *testing.T) {
 		// use rhode island
-		ring := newRing(ri)
+		ring := newRing(ri, DefaultIndex)
 		expect(t, ringContainsRing(ring.Rect(), ring, true))
 		expect(t, ringContainsRing(ring, ring, true))
 
@@ -1037,15 +1037,15 @@ func TestRingXIntersectsRing(t *testing.T) {
 		return t1
 	}
 	t.Run("Empty", func(t *testing.T) {
-		expect(t, !intersectsBothWays(newRing(nil), R(0, 0, 1, 1), true))
-		expect(t, !intersectsBothWays(R(0, 0, 1, 1), newRing(nil), true))
+		expect(t, !intersectsBothWays(newRing(nil, DefaultIndex), R(0, 0, 1, 1), true))
+		expect(t, !intersectsBothWays(R(0, 0, 1, 1), newRing(nil, DefaultIndex), true))
 	})
 	t.Run("Cases", func(t *testing.T) {
 		// concave
 		ring := newRing([]Point{
 			P(0, 0), P(4, 0), P(4, 4), P(3, 4),
 			P(2, 3), P(1, 4), P(0, 4), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("1", func(t *testing.T) {
 			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), true))
 			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), false))
@@ -1071,7 +1071,7 @@ func TestRingXIntersectsRing(t *testing.T) {
 			P(0, 0), P(4, 0), P(4, 4),
 			P(3, 4), P(2, 5), P(1, 4),
 			P(0, 4), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("6", func(t *testing.T) {
 			expect(t, intersectsBothWays(ring, R(1, 2, 3, 3), true))
 			expect(t, intersectsBothWays(ring, R(1, 2, 3, 3), false))
@@ -1088,7 +1088,7 @@ func TestRingXIntersectsRing(t *testing.T) {
 			ring = newRing([]Point{
 				P(0, 0), P(2, 0), P(4, 0), P(4, 4), P(3, 4),
 				P(2, 5), P(1, 4), P(0, 4), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, intersectsBothWays(ring, R(1, 0, 3, 1), true))
 			expect(t, intersectsBothWays(ring, R(1, 0, 3, 1), false))
 		})
@@ -1096,13 +1096,13 @@ func TestRingXIntersectsRing(t *testing.T) {
 			ring = newRing([]Point{
 				P(0, 0), P(4, 0), P(4, 3), P(2, 4),
 				P(0, 3), P(0, 0),
-			})
+			}, DefaultIndex)
 			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), true))
 			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), false))
 		})
 		ring = newRing([]Point{
 			P(0, 0), P(4, 0), P(4, 3), P(3, 4), P(1, 4), P(0, 3), P(0, 0),
-		})
+		}, DefaultIndex)
 		t.Run("11", func(t *testing.T) {
 			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), true))
 			expect(t, intersectsBothWays(ring, R(1, 1, 3, 2), false))
@@ -1149,12 +1149,12 @@ func TestRingXContainsLine(t *testing.T) {
 			P(0, 0), P(4, 0), P(4, 3),
 			P(3, 4), P(1, 4),
 			P(0, 3), P(0, 0),
-		})
+		}, DefaultIndex)
 		makeLine := func(start Point) *Line {
 			return NewLine([]Point{
 				start, start.Move(0, 1), start.Move(1, 1),
 				start.Move(1, 2), start.Move(2, 2),
-			})
+			}, DefaultIndex)
 		}
 		t.Run("1", func(t *testing.T) {
 			expect(t, ringContainsLine(ring, makeLine(P(1, 1)), true))
@@ -1267,12 +1267,12 @@ func TestRingXIntersectsLine(t *testing.T) {
 			P(0, 0), P(4, 0), P(4, 3),
 			P(3, 4), P(1, 4),
 			P(0, 3), P(0, 0),
-		})
+		}, DefaultIndex)
 		makeLine := func(start Point) *Line {
 			return NewLine([]Point{
 				start, start.Move(0, 1), start.Move(1, 1),
 				start.Move(1, 2), start.Move(2, 2),
-			})
+			}, DefaultIndex)
 		}
 		t.Run("1", func(t *testing.T) {
 			expect(t, ringIntersectsLine(ring, makeLine(P(1, 1)), true))

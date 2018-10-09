@@ -5,9 +5,11 @@ import (
 	"github.com/tidwall/geojson/geos"
 )
 
-// minTreeChildren are the minumum number of child objects required before it
-// makes sense to index the children
-const minTreeChildren = 32
+// Collection is a searchable type
+type Collection interface {
+	Children() []Object
+	Search(rect geos.Rect, iter func(child Object) bool)
+}
 
 type collection struct {
 	children []Object
@@ -15,6 +17,10 @@ type collection struct {
 	tree     *d2.BoxTree
 	prect    geos.Rect
 	pempty   bool
+}
+
+func (g *collection) Children() []Object {
+	return g.children
 }
 
 // forEach ...
@@ -30,7 +36,7 @@ func (g *collection) forEach(iter func(geom Object) bool) bool {
 	return true
 }
 
-func (g *collection) search(rect geos.Rect, iter func(child Object) bool) {
+func (g *collection) Search(rect geos.Rect, iter func(child Object) bool) {
 	if g.tree != nil {
 		g.tree.Search(
 			[]float64{rect.Min.X, rect.Min.Y},
@@ -41,6 +47,9 @@ func (g *collection) search(rect geos.Rect, iter func(child Object) bool) {
 		)
 	} else {
 		for _, child := range g.children {
+			if child.Empty() {
+				continue
+			}
 			if child.Rect().IntersectsRect(rect) {
 				if !iter(child) {
 					break
@@ -84,15 +93,35 @@ func (g *collection) Contains(obj Object) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return obj.withinRect(*g.extra.bbox)
 	}
-	var contains bool
-	g.search(obj.Rect(), func(child Object) bool {
-		if child.Contains(obj) {
-			contains = true
+	if g.Empty() {
+		return false
+	}
+	// all of obj must be contained by any number of the collection children
+	var objContained bool
+	obj.forEach(func(geom Object) bool {
+		if geom.Empty() {
+			// ignore empties
+			return true
+		}
+		var geomContained bool
+		g.Search(geom.Rect(), func(child Object) bool {
+			if child.Contains(geom) {
+				// found a child object that contains geom, end inner loop
+				geomContained = true
+				return false
+			}
+			return true
+		})
+		if !geomContained {
+			// unmark and quit the loop
+			objContained = false
 			return false
 		}
+		// mark that at least one geom is contained
+		objContained = true
 		return true
 	})
-	return contains
+	return objContained
 }
 
 func (g *collection) withinRect(rect geos.Rect) bool {
@@ -103,7 +132,7 @@ func (g *collection) withinRect(rect geos.Rect) bool {
 		return false
 	}
 	var withinCount int
-	g.search(rect, func(child Object) bool {
+	g.Search(rect, func(child Object) bool {
 		if child.withinRect(rect) {
 			withinCount++
 			return true
@@ -121,7 +150,7 @@ func (g *collection) withinPoint(point geos.Point) bool {
 		return false
 	}
 	var withinCount int
-	g.search(point.Rect(), func(child Object) bool {
+	g.Search(point.Rect(), func(child Object) bool {
 		if child.withinPoint(point) {
 			withinCount++
 			return true
@@ -139,7 +168,7 @@ func (g *collection) withinLine(line *geos.Line) bool {
 		return false
 	}
 	var withinCount int
-	g.search(line.Rect(), func(child Object) bool {
+	g.Search(line.Rect(), func(child Object) bool {
 		if child.withinLine(line) {
 			withinCount++
 			return true
@@ -157,7 +186,7 @@ func (g *collection) withinPoly(poly *geos.Poly) bool {
 		return false
 	}
 	var withinCount int
-	g.search(poly.Rect(), func(child Object) bool {
+	g.Search(poly.Rect(), func(child Object) bool {
 		if child.withinPoly(poly) {
 			withinCount++
 			return true
@@ -172,10 +201,21 @@ func (g *collection) Intersects(obj Object) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return obj.intersectsRect(*g.extra.bbox)
 	}
+	// check if any of obj intersects with any of collection
 	var intersects bool
-	g.search(obj.Rect(), func(child Object) bool {
-		if child.Intersects(obj) {
-			intersects = true
+	obj.forEach(func(geom Object) bool {
+		if geom.Empty() {
+			// ignore the empties
+			return true
+		}
+		g.Search(geom.Rect(), func(child Object) bool {
+			if child.Intersects(geom) {
+				intersects = true
+				return false
+			}
+			return true
+		})
+		if intersects {
 			return false
 		}
 		return true
@@ -188,7 +228,7 @@ func (g *collection) intersectsPoint(point geos.Point) bool {
 		return g.extra.bbox.IntersectsPoint(point)
 	}
 	var intersects bool
-	g.search(point.Rect(), func(child Object) bool {
+	g.Search(point.Rect(), func(child Object) bool {
 		if child.intersectsPoint(point) {
 			intersects = true
 			return false
@@ -203,7 +243,7 @@ func (g *collection) intersectsRect(rect geos.Rect) bool {
 		return g.extra.bbox.IntersectsRect(rect)
 	}
 	var intersects bool
-	g.search(rect, func(child Object) bool {
+	g.Search(rect, func(child Object) bool {
 		if child.intersectsRect(rect) {
 			intersects = true
 			return false
@@ -218,7 +258,7 @@ func (g *collection) intersectsLine(line *geos.Line) bool {
 		return g.extra.bbox.IntersectsLine(line)
 	}
 	var intersects bool
-	g.search(line.Rect(), func(child Object) bool {
+	g.Search(line.Rect(), func(child Object) bool {
 		if child.intersectsLine(line) {
 			intersects = true
 			return false
@@ -233,7 +273,7 @@ func (g *collection) intersectsPoly(poly *geos.Poly) bool {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
 	var intersects bool
-	g.search(poly.Rect(), func(child Object) bool {
+	g.Search(poly.Rect(), func(child Object) bool {
 		if child.intersectsPoly(poly) {
 			intersects = true
 			return false
@@ -243,7 +283,7 @@ func (g *collection) intersectsPoly(poly *geos.Poly) bool {
 	return intersects
 }
 
-func (g *collection) initRectIndex() {
+func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 	g.pempty = true
 	var count int
 	for _, child := range g.children {
@@ -264,10 +304,10 @@ func (g *collection) initRectIndex() {
 		}
 		count++
 	}
-	if count >= minTreeChildren {
+	if opts.IndexChildren != 0 && count >= opts.IndexChildren {
 		g.tree = new(d2.BoxTree)
 		for _, child := range g.children {
-			if !child.Empty() {
+			if child.Empty() {
 				continue
 			}
 			rect := child.Rect()

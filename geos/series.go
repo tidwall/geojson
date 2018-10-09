@@ -6,10 +6,10 @@ package geos
 
 import "github.com/tidwall/boxtree/d2"
 
-// minTreePoints are the minumum number of points required before it makes
-// sense to index an the segments in it's own rtree.
+// DefaultIndex are the minumum number of points required before it makes
+// sense to index the segments.
 // 64 seems to be the sweet spot
-const minTreePoints = 64
+const DefaultIndex = 64
 
 // Series is just a series of points with utilities for efficiently accessing
 // segments from rectangle queries, making stuff like point-in-polygon lookups
@@ -45,7 +45,7 @@ type baseSeries struct {
 }
 
 // makeSeries returns a processed baseSeries.
-func makeSeries(points []Point, copyPoints, closed bool) baseSeries {
+func makeSeries(points []Point, copyPoints, closed bool, index int) baseSeries {
 	var series baseSeries
 	series.closed = closed
 	if copyPoints {
@@ -54,7 +54,7 @@ func makeSeries(points []Point, copyPoints, closed bool) baseSeries {
 	} else {
 		series.points = points
 	}
-	if len(points) >= minTreePoints {
+	if index != 0 && len(points) >= int(index) {
 		series.tree = new(d2.BoxTree)
 	}
 	series.convex, series.rect, series.clockwise =
@@ -73,15 +73,9 @@ func (series *baseSeries) Move(deltaX, deltaY float64) Series {
 		points[i].X = series.points[i].X + deltaX
 		points[i].Y = series.points[i].Y + deltaY
 	}
-	nseries := makeSeries(points, false, series.closed)
+	nseries := makeSeries(points, false, series.closed, 0)
 	if series.tree != nil {
-		if nseries.tree == nil {
-			nseries.buildTree()
-		}
-	} else {
-		if nseries.tree != nil {
-			nseries.tree = nil
-		}
+		nseries.buildTree()
 	}
 	return &nseries
 }

@@ -26,7 +26,7 @@ func (g *MultiPoint) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-func parseJSONMultiPoint(data string) (Object, error) {
+func parseJSONMultiPoint(data string, opts *ParseOptions) (Object, error) {
 	var g MultiPoint
 	var err error
 	rcoords := gjson.Get(data, "coordinates")
@@ -39,7 +39,7 @@ func parseJSONMultiPoint(data string) (Object, error) {
 	var coords geos.Point
 	var ex *extra
 	rcoords.ForEach(func(_, value gjson.Result) bool {
-		coords, ex, err = parseJSONPointCoords("", value)
+		coords, ex, err = parseJSONPointCoords("", value, opts)
 		if err != nil {
 			return false
 		}
@@ -49,9 +49,9 @@ func parseJSONMultiPoint(data string) (Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
-	g.initRectIndex()
+	g.parseInitRectIndex(opts)
 	return &g, nil
 }

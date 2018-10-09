@@ -27,7 +27,9 @@ func (g *FeatureCollection) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-func parseJSONFeatureCollection(data string) (Object, error) {
+func parseJSONFeatureCollection(data string, opts *ParseOptions) (
+	Object, error,
+) {
 	var g FeatureCollection
 	rFeatures := gjson.Get(data, "features")
 	if !rFeatures.Exists() {
@@ -39,7 +41,7 @@ func parseJSONFeatureCollection(data string) (Object, error) {
 	var err error
 	rFeatures.ForEach(func(key, value gjson.Result) bool {
 		var f Object
-		f, err = Parse(value.Raw)
+		f, err = Parse(value.Raw, opts)
 		if err != nil {
 			return false
 		}
@@ -49,9 +51,9 @@ func parseJSONFeatureCollection(data string) (Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
-	g.initRectIndex()
+	g.parseInitRectIndex(opts)
 	return &g, nil
 }

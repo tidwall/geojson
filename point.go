@@ -138,22 +138,22 @@ func (g *Point) intersectsPoly(poly *geos.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-func parseJSONPoint(data string) (Object, error) {
+func parseJSONPoint(data string, opts *ParseOptions) (Object, error) {
 	var g Point
 	var err error
-	g.base, g.extra, err = parseJSONPointCoords(data, gjson.Result{})
+	g.base, g.extra, err = parseJSONPointCoords(data, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra); err != nil {
+	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
 		return nil, err
 	}
 	return &g, nil
 }
 
-func parseJSONPointCoords(data string, rcoords gjson.Result) (
-	geos.Point, *extra, error,
-) {
+func parseJSONPointCoords(
+	data string, rcoords gjson.Result, opts *ParseOptions,
+) (geos.Point, *extra, error) {
 	var coords geos.Point
 	var ex *extra
 	if !rcoords.Exists() {

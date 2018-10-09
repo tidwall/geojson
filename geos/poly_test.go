@@ -9,7 +9,7 @@ import (
 )
 
 func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
-	poly := NewPoly(exterior, holes)
+	poly := NewPoly(exterior, holes, DefaultIndex)
 	poly.Exterior.(*baseSeries).buildTree()
 	for _, hole := range poly.Holes {
 		hole.(*baseSeries).buildTree()
@@ -18,7 +18,7 @@ func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
 }
 
 func newPolySimple(exterior []Point, holes [][]Point) *Poly {
-	poly := NewPoly(exterior, holes)
+	poly := NewPoly(exterior, holes, DefaultIndex)
 	poly.Exterior.(*baseSeries).tree = nil
 	for _, hole := range poly.Holes {
 		hole.(*baseSeries).tree = nil
@@ -140,20 +140,20 @@ func TestPolyIntersectsLine(t *testing.T) {
 func TestPolyContainsPoly(t *testing.T) {
 	holes1 := [][]Point{[]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}}
 	holes2 := [][]Point{[]Point{{5, 4}, {7, 4}, {7, 6}, {5, 6}, {5, 4}}}
-	poly1 := NewPoly(octagon, holes1)
-	poly2 := NewPoly(octagon, holes2)
+	poly1 := NewPoly(octagon, holes1, DefaultIndex)
+	poly2 := NewPoly(octagon, holes2, DefaultIndex)
 
-	expect(t, !poly1.ContainsPoly(NewPoly(holes2[0], nil)))
+	expect(t, !poly1.ContainsPoly(NewPoly(holes2[0], nil, DefaultIndex)))
 	expect(t, !poly1.ContainsPoly(poly2))
 
 	dualPolyTest(t, octagon, holes1, func(t *testing.T, poly *Poly) {
 		expect(t, poly.ContainsPoly(poly1))
 		expect(t, !poly.ContainsPoly(poly1.Move(1, 0)))
-		expect(t, poly.ContainsPoly(NewPoly(holes1[0], nil)))
-		expect(t, !poly.ContainsPoly(NewPoly(holes2[0], nil)))
+		expect(t, poly.ContainsPoly(NewPoly(holes1[0], nil, DefaultIndex)))
+		expect(t, !poly.ContainsPoly(NewPoly(holes2[0], nil, DefaultIndex)))
 	})
 }
 
 func TestPolyClockwise(t *testing.T) {
-	expect(t, !NewPoly(bowtie, nil).Clockwise())
+	expect(t, !NewPoly(bowtie, nil, DefaultIndex).Clockwise())
 }

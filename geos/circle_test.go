@@ -11,7 +11,7 @@ import (
 )
 
 func TestCircleNewCircle(t *testing.T) {
-	circle := NewCircle(P(-112, 33), 1000, 2)
+	circle := NewCircle(P(-112, 33), 1000, 2, DefaultIndex)
 	expect(t, circle.ContainsPoint(P(-112, 33)))
 }
 
@@ -27,7 +27,7 @@ func BenchmarkCircleContainsPoint(b *testing.B) {
 					name = "Indexed"
 				}
 				b.Run(name, func(b *testing.B) {
-					poly := NewCircle(center, meters, j)
+					poly := NewCircle(center, meters, j, 0)
 					if i == 0 {
 						poly.Exterior.(*baseSeries).tree = nil
 					} else {
