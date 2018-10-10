@@ -1,17 +1,11 @@
 package geojson
 
-import (
-	"github.com/tidwall/geojson/geos"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/pretty"
-)
+import "github.com/tidwall/geojson/geos"
 
 // Feature ...
 type Feature struct {
-	base       Object
-	extra      *extra
-	ID         string
-	Properties string
+	base  Object
+	extra *extra
 }
 
 // forEach ...
@@ -47,17 +41,7 @@ func (g *Feature) Center() geos.Point {
 func (g *Feature) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Feature","geometry":`...)
 	dst = g.base.AppendJSON(dst)
-	if g.extra != nil {
-		dst = g.extra.appendJSONBBox(dst)
-	}
-	if g.ID != "" {
-		dst = append(dst, `,"id":`...)
-		dst = append(dst, g.ID...)
-	}
-	if g.Properties != "" {
-		dst = append(dst, `,"properties":`...)
-		dst = append(dst, g.Properties...)
-	}
+	dst = g.extra.appendJSONExtra(dst)
 	dst = append(dst, '}')
 	return dst
 
@@ -141,27 +125,18 @@ func (g *Feature) intersectsPoly(poly *geos.Poly) bool {
 }
 
 // parseJSONFeature will return a valid GeoJSON object.
-func parseJSONFeature(data string, opts *ParseOptions) (Object, error) {
+func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g Feature
-	rgeometry := gjson.Get(data, "geometry")
-	if !rgeometry.Exists() {
+	if !keys.rGeometry.Exists() {
 		return nil, errGeometryMissing
 	}
 	var err error
-	g.base, err = Parse(rgeometry.Raw, opts)
+	g.base, err = Parse(keys.rGeometry.Raw, opts)
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
+	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
-	}
-	id := gjson.Get(data, "id").Raw
-	if len(id) > 0 {
-		g.ID = string(pretty.UglyInPlace([]byte(id)))
-	}
-	properties := gjson.Get(data, "properties").Raw
-	if len(properties) > 0 {
-		g.Properties = string(pretty.UglyInPlace([]byte(properties)))
 	}
 	return &g, nil
 }

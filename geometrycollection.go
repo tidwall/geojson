@@ -20,26 +20,25 @@ func (g *GeometryCollection) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, ']')
 	if g.extra != nil {
-		dst = g.extra.appendJSONBBox(dst)
+		dst = g.extra.appendJSONExtra(dst)
 	}
 	dst = append(dst, '}')
 	strings.Index("", " ")
 	return dst
 }
 
-func parseJSONGeometryCollection(data string, opts *ParseOptions) (
-	Object, error,
-) {
+func parseJSONGeometryCollection(
+	keys *parseKeys, opts *ParseOptions,
+) (Object, error) {
 	var g GeometryCollection
-	rGeometries := gjson.Get(data, "geometries")
-	if !rGeometries.Exists() {
+	if !keys.rGeometries.Exists() {
 		return nil, errGeometriesMissing
 	}
-	if !rGeometries.IsArray() {
+	if !keys.rGeometries.IsArray() {
 		return nil, errGeometriesInvalid
 	}
 	var err error
-	rGeometries.ForEach(func(key, value gjson.Result) bool {
+	keys.rGeometries.ForEach(func(key, value gjson.Result) bool {
 		var f Object
 		f, err = Parse(value.Raw, opts)
 		if err != nil {
@@ -51,7 +50,7 @@ func parseJSONGeometryCollection(data string, opts *ParseOptions) (
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
+	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
 	g.parseInitRectIndex(opts)

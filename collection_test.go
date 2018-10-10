@@ -3,10 +3,16 @@ package geojson
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
+	"os"
 	"sort"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/tidwall/lotsa"
+
+	"github.com/tidwall/sjson"
 
 	"github.com/tidwall/geojson/geos"
 )
@@ -16,8 +22,10 @@ func parseCollection(t *testing.T, data string, index bool) Collection {
 	opts := *DefaultParseOptions
 	if index {
 		opts.IndexChildren = 1
+		opts.IndexGeometry = 1
 	} else {
 		opts.IndexChildren = 0
+		opts.IndexGeometry = 0
 	}
 	g, err := Parse(string(data), &opts)
 	if err != nil {
@@ -39,10 +47,14 @@ func testCollectionSubset(
 	c := parseCollection(t, json, true)
 	dur := time.Since(start)
 	fmt.Printf("%d children in %s\n", len(c.Children()), dur)
-	cs := []Collection{
-		parseCollection(t, json, false),
-		parseCollection(t, json, true),
-	}
+	cs := make([]Collection, 2)
+	ts := make([]time.Duration, 2)
+	start = time.Now()
+	cs[0] = parseCollection(t, json, false)
+	ts[0] = time.Since(start)
+	start = time.Now()
+	cs[1] = parseCollection(t, json, true)
+	ts[1] = time.Since(start)
 	var lastSubset string
 	for i, c := range cs {
 		var children []Object
@@ -52,10 +64,10 @@ func testCollectionSubset(
 			return true
 		})
 		dur := time.Since(start)
-		if i == 0 {
-			fmt.Printf("Simple:  %v\n", dur)
+		if c.Indexed() {
+			fmt.Printf("Indexed: %v (build: %v)\n", dur, ts[i])
 		} else {
-			fmt.Printf("Indexed: %v\n", dur)
+			fmt.Printf("Simple:  %v (build: %v)\n", dur, ts[i])
 		}
 		var childrenJSONs []string
 		for _, child := range children {
@@ -72,28 +84,54 @@ func testCollectionSubset(
 		lastSubset = subset
 	}
 	return cs
-
 }
 
 func TestCollectionBostonSubset(t *testing.T) {
 	data, err := ioutil.ReadFile("test_files/boston_subset.geojson")
+	datas, _ := sjson.Delete(string(data), "bbox") // remove bbox
 	expect(t, err == nil)
-	cs := testCollectionSubset(t,
-		string(data),
+	cs := testCollectionSubset(t, datas,
 		R(-71.474046, 42.492479, -71.466321, 42.497415),
 	)
-	// expect(t, cs[0].(Object).Intersects(PO(-71.46723, 42.49432)))
-	// expect(t, cs[1].(Object).Intersects(PO(-71.46723, 42.49432)))
+	expect(t, cs[0].(Object).Intersects(PO(-71.46723, 42.49432)))
+	expect(t, cs[1].(Object).Intersects(PO(-71.46723, 42.49432)))
 	expect(t, !cs[0].(*FeatureCollection).Intersects(PO(-71.46713, 42.49431)))
-	// expect(t, !cs[1].(Object).Intersects(PO(-71.46713, 42.49431)))
-
+	expect(t, !cs[1].(Object).Intersects(PO(-71.46713, 42.49431)))
 }
 
 func TestCollectionUSASubset(t *testing.T) {
 	data, err := ioutil.ReadFile("test_files/usa.geojson")
+
 	expect(t, err == nil)
-	testCollectionSubset(t,
-		string(data),
+	cs := testCollectionSubset(t, string(data),
 		R(-90, -45, 90, 45),
 	)
+	expect(t, cs[0].(Object).Intersects(PO(-91.09863, 30.03105)))
+	expect(t, cs[1].(Object).Intersects(PO(-91.09863, 30.03105)))
+	expect(t, !cs[0].(Object).Intersects(PO(-86.87988, 28.439713)))
+	expect(t, !cs[1].(Object).Intersects(PO(-86.87988, 28.439713)))
+
+	N := 1000000
+	T := 6
+
+	// 34 is the lower 48
+	rect := cs[0].Children()[34].(Object).Rect()
+	points := make([]Object, N)
+	for i := 0; i < N; i++ {
+		points[i] = PO(
+			(rect.Max.X-rect.Min.X)*rand.Float64()+rect.Min.X,
+			(rect.Max.Y-rect.Min.Y)*rand.Float64()+rect.Min.Y,
+		)
+	}
+
+	lotsa.Output = os.Stdout
+	cs0 := cs[0].(Object)
+	cs1 := cs[1].(Object)
+	lotsa.Ops(N, T, func(i, _ int) {
+		cs0.Intersects(points[i])
+	})
+	lotsa.Ops(N, T, func(i, _ int) {
+		cs1.Intersects(points[i])
+	})
+
 }

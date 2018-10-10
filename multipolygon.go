@@ -20,26 +20,27 @@ func (g *MultiPolygon) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, ']')
 	if g.extra != nil {
-		dst = g.extra.appendJSONBBox(dst)
+		dst = g.extra.appendJSONExtra(dst)
 	}
 	dst = append(dst, '}')
 	return dst
 }
 
-func parseJSONMultiPolygon(data string, opts *ParseOptions) (Object, error) {
+func parseJSONMultiPolygon(
+	keys *parseKeys, opts *ParseOptions,
+) (Object, error) {
 	var g MultiPolygon
 	var err error
-	rcoords := gjson.Get(data, "coordinates")
-	if !rcoords.Exists() {
+	if !keys.rCoordinates.Exists() {
 		return nil, errCoordinatesMissing
 	}
-	if !rcoords.IsArray() {
+	if !keys.rCoordinates.IsArray() {
 		return nil, errCoordinatesInvalid
 	}
 	var coords [][]geos.Point
 	var ex *extra
-	rcoords.ForEach(func(_, value gjson.Result) bool {
-		coords, ex, err = parseJSONPolygonCoords("", value, opts)
+	keys.rCoordinates.ForEach(func(_, value gjson.Result) bool {
+		coords, ex, err = parseJSONPolygonCoords(keys, value, opts)
 		if err != nil {
 			return false
 		}
@@ -66,7 +67,7 @@ func parseJSONMultiPolygon(data string, opts *ParseOptions) (Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
+	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
 	g.parseInitRectIndex(opts)

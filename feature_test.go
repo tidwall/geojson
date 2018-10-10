@@ -20,10 +20,22 @@ func TestFeatureVarious(t *testing.T) {
 	expect(t, g.Rect() == R(1, 2, 1, 2))
 	expect(t, g.Center() == P(1, 2))
 	expect(t, !g.Empty())
-	g = expectJSON(t, `{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2,3]},"bbox":[1,2,3,4]}`, nil)
+	opts := *DefaultParseOptions
+	opts.UseBBoxRect = true
+	g = expectJSONOpts(t,
+		`{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2,3]},"bbox":[1,2,3,4]}`,
+		nil, &opts)
 	expect(t, !g.Empty())
 	expect(t, g.Rect() == R(1, 2, 3, 4))
 	expect(t, g.Center() == R(1, 2, 3, 4).Center())
+
+	g = expectJSONOpts(t,
+		`{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2,3]},"bbox":[1,2,3,4]}`,
+		nil, nil)
+	expect(t, !g.Empty())
+	expect(t, g.Rect() == R(1, 2, 1, 2))
+	expect(t, g.Center() == P(1, 2))
+
 }
 
 // func TestFeaturePoly(t *testing.T) {

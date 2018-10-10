@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/tidwall/pretty"
+
 	"github.com/tidwall/geojson/geos"
 	"github.com/tidwall/gjson"
 )
@@ -54,10 +56,15 @@ var _ = []Object{
 }
 
 type extra struct {
-	bbox      *geos.Rect
-	bboxExtra []float64
-	dims      int
-	values    []float64
+	dims   byte      // number of extra coordinate values, 1 or 2
+	values []float64 // extra coordinate values
+	// valid json object that includes extra members such as
+	// "id", "properties", and foreign members
+	members string
+	// only used if ParseOptions.BBoxRect is true
+	bbox      *geos.Rect // calculated bbox rectangle
+	bboxExtra []float64  // extra bbox values
+
 }
 
 // ParseOptions ...
@@ -73,12 +80,16 @@ type ParseOptions struct {
 	// disable indexing.
 	// The default is 64.
 	IndexGeometry int
+	// UseBBoxRect option will treat the the object as a simple rectangle
+	// when the "bbox" member is present.
+	UseBBoxRect bool
 }
 
 // DefaultParseOptions ...
 var DefaultParseOptions = &ParseOptions{
 	IndexChildren: geos.DefaultIndex,
 	IndexGeometry: geos.DefaultIndex,
+	UseBBoxRect:   false,
 }
 
 // Parse a GeoJSON object
@@ -113,53 +124,97 @@ func Parse(data string, opts *ParseOptions) (Object, error) {
 	}
 }
 
+type parseKeys struct {
+	rCoordinates gjson.Result
+	rGeometries  gjson.Result
+	rGeometry    gjson.Result
+	rFeatures    gjson.Result
+	members      string // a valid payload with all extra members
+}
+
 func parseJSON(data string, opts *ParseOptions) (Object, error) {
 	if !gjson.Valid(data) {
 		return nil, errDataInvalid
 	}
-	rtype := gjson.Get(data, "type")
-	if !rtype.Exists() {
+	var keys parseKeys
+	var fmembers []byte
+	var rType gjson.Result
+	gjson.Parse(data).ForEach(func(key, val gjson.Result) bool {
+		switch key.String() {
+		case "type":
+			rType = val
+		case "coordinates":
+			keys.rCoordinates = val
+		case "geometries":
+			keys.rGeometries = val
+		case "geometry":
+			keys.rGeometry = val
+		case "features":
+			keys.rFeatures = val
+		default:
+			if len(fmembers) == 0 {
+				fmembers = append(fmembers, '{')
+			} else {
+				fmembers = append(fmembers, ',')
+			}
+			fmembers = append(fmembers, pretty.UglyInPlace([]byte(key.Raw))...)
+			fmembers = append(fmembers, ':')
+			fmembers = append(fmembers, pretty.UglyInPlace([]byte(val.Raw))...)
+		}
+		return true
+	})
+	if len(fmembers) > 0 {
+		fmembers = append(fmembers, '}')
+		keys.members = string(fmembers)
+	}
+	if !rType.Exists() {
 		return nil, errTypeMissing
 	}
-	if rtype.Type != gjson.String {
+	if rType.Type != gjson.String {
 		return nil, errTypeInvalid
 	}
-	switch rtype.String() {
+	switch rType.String() {
 	default:
-		return nil, fmt.Errorf(fmtErrTypeIsUnknown, rtype.String())
+		return nil, fmt.Errorf(fmtErrTypeIsUnknown, rType.String())
 	case "Point":
-		return parseJSONPoint(data, opts)
+		return parseJSONPoint(&keys, opts)
 	case "LineString":
-		return parseJSONLineString(data, opts)
+		return parseJSONLineString(&keys, opts)
 	case "Polygon":
-		return parseJSONPolygon(data, opts)
+		return parseJSONPolygon(&keys, opts)
 	case "Feature":
-		return parseJSONFeature(data, opts)
+		return parseJSONFeature(&keys, opts)
 	case "MultiPoint":
-		return parseJSONMultiPoint(data, opts)
+		return parseJSONMultiPoint(&keys, opts)
 	case "MultiLineString":
-		return parseJSONMultiLineString(data, opts)
+		return parseJSONMultiLineString(&keys, opts)
 	case "MultiPolygon":
-		return parseJSONMultiPolygon(data, opts)
+		return parseJSONMultiPolygon(&keys, opts)
 	case "GeometryCollection":
-		return parseJSONGeometryCollection(data, opts)
+		return parseJSONGeometryCollection(&keys, opts)
 	case "FeatureCollection":
-		return parseJSONFeatureCollection(data, opts)
+		return parseJSONFeatureCollection(&keys, opts)
 	}
 }
 
-func parseBBox(data string, opts *ParseOptions) (
-	bbox *geos.Rect, bboxExtra []float64, err error,
-) {
-	rbbox := gjson.Get(data, "bbox")
+func parseBBoxAndExtras(ex **extra, keys *parseKeys, opts *ParseOptions) error {
+	if keys.members == "" {
+		return nil
+	}
+	if *ex == nil {
+		*ex = new(extra)
+	}
+	(*ex).members = keys.members
+	rbbox := gjson.Get(keys.members, "bbox")
 	if !rbbox.Exists() {
-		return nil, nil, nil
+		return nil
 	}
 	if !rbbox.IsArray() {
-		return nil, nil, errBBoxInvalid
+		return errBBoxInvalid
 	}
 	var count int
 	var nums [8]float64
+	var err error
 	rbbox.ForEach(func(key, value gjson.Result) bool {
 		if count == 8 {
 			return false
@@ -173,46 +228,31 @@ func parseBBox(data string, opts *ParseOptions) (
 		return true
 	})
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	if count < 4 || count%2 == 1 {
-		return nil, nil, errBBoxInvalid
+		return errBBoxInvalid
 	}
-	var rect geos.Rect
-	rect.Min.X = nums[0]
-	rect.Min.Y = nums[1]
-	rect.Max.X = nums[count/2]
-	rect.Max.Y = nums[count/2+1]
-	if count == 4 {
-		return &rect, nil, nil
+	if !opts.UseBBoxRect {
+		return nil
 	}
+	(*ex).bbox = new(geos.Rect)
+	(*ex).bbox.Min.X = nums[0]
+	(*ex).bbox.Min.Y = nums[1]
+	(*ex).bbox.Max.X = nums[count/2]
+	(*ex).bbox.Max.Y = nums[count/2+1]
 	if count == 6 {
-		bboxExtra = []float64{
+		(*ex).bboxExtra = []float64{
 			nums[2],
 			nums[count/2+2],
 		}
-		return &rect, bboxExtra, nil
-	}
-	bboxExtra = []float64{
-		nums[2],
-		nums[3],
-		nums[count/2+2],
-		nums[count/2+3],
-	}
-	return &rect, bboxExtra, nil
-}
-
-func parseBBoxAndFillExtra(data string, ex **extra, opts *ParseOptions) error {
-	bbox, bboxExtras, err := parseBBox(data, opts)
-	if err != nil {
-		return err
-	}
-	if bbox != nil {
-		if *ex == nil {
-			*ex = new(extra)
+	} else if count > 6 {
+		(*ex).bboxExtra = []float64{
+			nums[2],
+			nums[3],
+			nums[count/2+2],
+			nums[count/2+3],
 		}
-		(*ex).bbox = bbox
-		(*ex).bboxExtra = bboxExtras
 	}
 	return nil
 }
@@ -235,37 +275,12 @@ func appendJSONPoint(dst []byte, point geos.Point, ex *extra, idx int) []byte {
 	return dst
 }
 
-func (ex *extra) appendJSONBBox(dst []byte) []byte {
-	if ex.bbox == nil {
-		return dst
+func (ex *extra) appendJSONExtra(dst []byte) []byte {
+	if ex != nil && ex.members != "" {
+		dst = append(dst, ',')
+		dst = append(dst, ex.members[1:len(ex.members)-1]...)
 	}
-	dst = append(dst, `,"bbox":[`...)
-	dst = strconv.AppendFloat(dst, ex.bbox.Min.X, 'f', -1, 64)
-	dst = append(dst, ',')
-	dst = strconv.AppendFloat(dst, ex.bbox.Min.Y, 'f', -1, 64)
-	if len(ex.bboxExtra) == 2 {
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
-	} else if len(ex.bboxExtra) == 4 {
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bboxExtra[0], 'f', -1, 64)
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
-	}
-	dst = append(dst, ',')
-	dst = strconv.AppendFloat(dst, ex.bbox.Max.X, 'f', -1, 64)
-	dst = append(dst, ',')
-	dst = strconv.AppendFloat(dst, ex.bbox.Max.Y, 'f', -1, 64)
-	if len(ex.bboxExtra) == 2 {
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bboxExtra[1], 'f', -1, 64)
-	} else if len(ex.bboxExtra) == 4 {
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bboxExtra[3], 'f', -1, 64)
-		dst = append(dst, ',')
-		dst = strconv.AppendFloat(dst, ex.bboxExtra[4], 'f', -1, 64)
-	}
-	dst = append(dst, ']')
+
 	return dst
 }
 

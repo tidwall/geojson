@@ -37,7 +37,7 @@ func (g *LineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"LineString","coordinates":`...)
 	dst, _ = appendJSONSeries(dst, &g.base, g.extra, 0)
 	if g.extra != nil {
-		dst = g.extra.appendJSONBBox(dst)
+		dst = g.extra.appendJSONExtra(dst)
 	}
 	dst = append(dst, '}')
 	return dst
@@ -125,9 +125,9 @@ func (g *LineString) intersectsPoly(poly *geos.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-func parseJSONLineString(data string, opts *ParseOptions) (Object, error) {
+func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g LineString
-	points, ex, err := parseJSONLineStringCoords(data, gjson.Result{}, opts)
+	points, ex, err := parseJSONLineStringCoords(keys, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -139,21 +139,21 @@ func parseJSONLineString(data string, opts *ParseOptions) (Object, error) {
 	line := geos.NewLine(points, opts.IndexGeometry)
 	g.base = *line
 	g.extra = ex
-	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
+	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
 	return &g, nil
 }
 
 func parseJSONLineStringCoords(
-	data string, rcoords gjson.Result, opts *ParseOptions,
+	keys *parseKeys, rcoords gjson.Result, opts *ParseOptions,
 ) ([]geos.Point, *extra, error) {
 	var err error
 	var coords []geos.Point
 	var ex *extra
 	var dims int
 	if !rcoords.Exists() {
-		rcoords = gjson.Get(data, "coordinates")
+		rcoords = keys.rCoordinates
 		if !rcoords.Exists() {
 			return nil, nil, errCoordinatesMissing
 		}

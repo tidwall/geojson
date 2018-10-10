@@ -20,26 +20,25 @@ func (g *FeatureCollection) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, ']')
 	if g.extra != nil {
-		dst = g.extra.appendJSONBBox(dst)
+		dst = g.extra.appendJSONExtra(dst)
 	}
 	dst = append(dst, '}')
 	strings.Index("", " ")
 	return dst
 }
 
-func parseJSONFeatureCollection(data string, opts *ParseOptions) (
-	Object, error,
-) {
+func parseJSONFeatureCollection(
+	keys *parseKeys, opts *ParseOptions,
+) (Object, error) {
 	var g FeatureCollection
-	rFeatures := gjson.Get(data, "features")
-	if !rFeatures.Exists() {
+	if !keys.rFeatures.Exists() {
 		return nil, errFeaturesMissing
 	}
-	if !rFeatures.IsArray() {
+	if !keys.rFeatures.IsArray() {
 		return nil, errFeaturesInvalid
 	}
 	var err error
-	rFeatures.ForEach(func(key, value gjson.Result) bool {
+	keys.rFeatures.ForEach(func(key, value gjson.Result) bool {
 		var f Object
 		f, err = Parse(value.Raw, opts)
 		if err != nil {
@@ -51,7 +50,7 @@ func parseJSONFeatureCollection(data string, opts *ParseOptions) (
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
+	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
 	g.parseInitRectIndex(opts)

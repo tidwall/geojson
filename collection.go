@@ -9,6 +9,7 @@ import (
 type Collection interface {
 	Children() []Object
 	Search(rect geos.Rect, iter func(child Object) bool)
+	Indexed() bool
 }
 
 type collection struct {
@@ -17,6 +18,10 @@ type collection struct {
 	tree     *d2.BoxTree
 	prect    geos.Rect
 	pempty   bool
+}
+
+func (g *collection) Indexed() bool {
+	return g.tree != nil
 }
 
 func (g *collection) Children() []Object {

@@ -11,14 +11,6 @@ type Point struct {
 	extra *extra
 }
 
-// // ForEach ...
-// func (g *Point) ForEach(iter func(geom geos.Geometry) bool) bool {
-// 	if g.extra != nil && g.extra.bbox != nil {
-// 		return iter(*g.extra.bbox)
-// 	}
-// 	return iter(g.base)
-// }
-
 // forEach ...
 func (g *Point) forEach(iter func(geom Object) bool) bool {
 	return iter(g)
@@ -54,9 +46,7 @@ func (g *Point) Center() geos.Point {
 func (g *Point) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Point","coordinates":`...)
 	dst = appendJSONPoint(dst, g.base, g.extra, 0)
-	if g.extra != nil {
-		dst = g.extra.appendJSONBBox(dst)
-	}
+	dst = g.extra.appendJSONExtra(dst)
 	dst = append(dst, '}')
 	return dst
 }
@@ -138,26 +128,26 @@ func (g *Point) intersectsPoly(poly *geos.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-func parseJSONPoint(data string, opts *ParseOptions) (Object, error) {
+func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g Point
 	var err error
-	g.base, g.extra, err = parseJSONPointCoords(data, gjson.Result{}, opts)
+	g.base, g.extra, err = parseJSONPointCoords(keys, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
+	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
 	return &g, nil
 }
 
 func parseJSONPointCoords(
-	data string, rcoords gjson.Result, opts *ParseOptions,
+	keys *parseKeys, rcoords gjson.Result, opts *ParseOptions,
 ) (geos.Point, *extra, error) {
 	var coords geos.Point
 	var ex *extra
 	if !rcoords.Exists() {
-		rcoords = gjson.Get(data, "coordinates")
+		rcoords = keys.rCoordinates
 		if !rcoords.Exists() {
 			return coords, nil, errCoordinatesMissing
 		}

@@ -33,8 +33,13 @@ func PO(x, y float64) *Point {
 func RO(minX, minY, maxX, maxY float64) *Rect {
 	return NewRect(minX, minY, maxX, maxY)
 }
-
 func expectJSON(t testing.TB, data string, expect interface{}) Object {
+	if t != nil {
+		t.Helper()
+	}
+	return expectJSONOpts(t, data, expect, nil)
+}
+func expectJSONOpts(t testing.TB, data string, expect interface{}, opts *ParseOptions) Object {
 	if t != nil {
 		t.Helper()
 	}
@@ -48,7 +53,7 @@ func expectJSON(t testing.TB, data string, expect interface{}) Object {
 	case nil:
 		exstr = data
 	}
-	obj, err := Parse(data, nil)
+	obj, err := Parse(data, opts)
 	if err != exerr {
 		if t == nil {
 			panic(fmt.Sprintf("expected '%v', got '%v'", exerr, err))
@@ -84,6 +89,7 @@ func expect(t testing.TB, what bool) {
 func cleanJSON(data string) string {
 	var v interface{}
 	if err := json.Unmarshal([]byte(data), &v); err != nil {
+		println(string(data))
 		panic(err)
 	}
 	dst, err := json.Marshal(v)

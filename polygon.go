@@ -43,7 +43,7 @@ func (g *Polygon) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, ']')
 	if g.extra != nil {
-		dst = g.extra.appendJSONBBox(dst)
+		dst = g.extra.appendJSONExtra(dst)
 	}
 	dst = append(dst, '}')
 	return dst
@@ -131,9 +131,9 @@ func (g *Polygon) intersectsPoly(poly *geos.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-func parseJSONPolygon(data string, opts *ParseOptions) (Object, error) {
+func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g Polygon
-	coords, ex, err := parseJSONPolygonCoords(data, gjson.Result{}, opts)
+	coords, ex, err := parseJSONPolygonCoords(keys, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -153,14 +153,14 @@ func parseJSONPolygon(data string, opts *ParseOptions) (Object, error) {
 	poly := geos.NewPoly(exterior, holes, opts.IndexGeometry)
 	g.base = *poly
 	g.extra = ex
-	if err := parseBBoxAndFillExtra(data, &g.extra, opts); err != nil {
+	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
 	return &g, nil
 }
 
 func parseJSONPolygonCoords(
-	data string, rcoords gjson.Result, opts *ParseOptions,
+	keys *parseKeys, rcoords gjson.Result, opts *ParseOptions,
 ) (
 	[][]geos.Point, *extra, error,
 ) {
@@ -169,7 +169,7 @@ func parseJSONPolygonCoords(
 	var ex *extra
 	var dims int
 	if !rcoords.Exists() {
-		rcoords = gjson.Get(data, "coordinates")
+		rcoords = keys.rCoordinates
 		if !rcoords.Exists() {
 			return nil, nil, errCoordinatesMissing
 		}
