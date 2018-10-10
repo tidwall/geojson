@@ -39,7 +39,9 @@ func (g *Rect) Center() geometry.Point {
 
 // AppendJSON ...
 func (g *Rect) AppendJSON(dst []byte) []byte {
-	panic("not ready")
+	var gPoly Polygon
+	gPoly.base.Exterior = g.base
+	return gPoly.AppendJSON(dst)
 }
 
 // String ...
@@ -99,9 +101,9 @@ func (g *Rect) NumPoints() int {
 	return 2
 }
 
-// Nearby ...
-func (g *Rect) Nearby(center geometry.Point, meters float64) bool {
-	panic("not ready")
+// Clipped ...
+func (g *Rect) Clipped(obj Object) Object {
+	return g
 }
 
 // RectFromCenter returns a geospatial rect

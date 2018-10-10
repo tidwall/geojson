@@ -8,7 +8,7 @@ func TestPointParse(t *testing.T) {
 	p := expectJSON(t, `{"type":"Point","coordinates":[1,2,3]}`, nil)
 	expect(t, p.Center() == P(1, 2))
 	expectJSON(t, `{"type":"Point","coordinates":[1,null]}`, errCoordinatesInvalid)
-	expectJSON(t, `{"type":"Point","coordinates":[1,2],"bbox":null}`, errBBoxInvalid)
+	expectJSON(t, `{"type":"Point","coordinates":[1,2],"bbox":null}`, nil)
 	expectJSON(t, `{"type":"Point"}`, errCoordinatesMissing)
 	expectJSON(t, `{"type":"Point","coordinates":null}`, errCoordinatesInvalid)
 	expectJSON(t, `{"type":"Point","coordinates":[1,2,3,4,5]}`, `{"type":"Point","coordinates":[1,2,3,4]}`)
@@ -22,15 +22,6 @@ func TestPointVarious(t *testing.T) {
 	expect(t, g.Rect() == R(10, 20, 10, 20))
 	expect(t, g.Center() == P(10, 20))
 	expect(t, !g.Empty())
-	opts := *DefaultParseOptions
-	opts.UseBBoxRect = true
-	g = expectJSONOpts(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,4]}`, nil, &opts)
-	expect(t, g.Rect() == R(1, 2, 3, 4))
-	expect(t, g.Center() == R(1, 2, 3, 4).Center())
-	// g.ForEach(func(geom geometry.Geometry) bool {
-
-	// 	return false
-	// })
 }
 
 // func TestPointPoly(t *testing.T) {

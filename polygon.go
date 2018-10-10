@@ -13,17 +13,11 @@ type Polygon struct {
 
 // Empty ...
 func (g *Polygon) Empty() bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return false
-	}
 	return g.base.Empty()
 }
 
 // Rect ...
 func (g *Polygon) Rect() geometry.Rect {
-	if g.extra != nil && g.extra.bbox != nil {
-		return *g.extra.bbox
-	}
 	return g.base.Rect()
 }
 
@@ -66,73 +60,43 @@ func (g *Polygon) Within(obj Object) bool {
 
 // Contains ...
 func (g *Polygon) Contains(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.withinRect(*g.extra.bbox)
-	}
 	return obj.withinPoly(&g.base)
 }
 
 func (g *Polygon) withinRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return rect.ContainsRect(*g.extra.bbox)
-	}
 	return rect.ContainsPoly(&g.base)
 }
 
 func (g *Polygon) withinPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return point.ContainsRect(*g.extra.bbox)
-	}
 	return point.ContainsPoly(&g.base)
 }
 
 func (g *Polygon) withinLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return line.ContainsRect(*g.extra.bbox)
-	}
 	return line.ContainsPoly(&g.base)
 }
 
 func (g *Polygon) withinPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return poly.ContainsRect(*g.extra.bbox)
-	}
 	return poly.ContainsPoly(&g.base)
 }
 
 // Intersects ...
 func (g *Polygon) Intersects(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.intersectsRect(*g.extra.bbox)
-	}
 	return obj.intersectsPoly(&g.base)
 }
 
 func (g *Polygon) intersectsPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoint(point)
-	}
 	return g.base.IntersectsPoint(point)
 }
 
 func (g *Polygon) intersectsRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsRect(rect)
-	}
 	return g.base.IntersectsRect(rect)
 }
 
 func (g *Polygon) intersectsLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsLine(line)
-	}
 	return g.base.IntersectsLine(line)
 }
 
 func (g *Polygon) intersectsPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoly(poly)
-	}
 	return g.base.IntersectsPoly(poly)
 }
 
@@ -143,11 +107,6 @@ func (g *Polygon) NumPoints() int {
 		n += hole.NumPoints()
 	}
 	return n
-}
-
-// Nearby ...
-func (g *Polygon) Nearby(center geometry.Point, meters float64) bool {
-	panic("not ready")
 }
 
 func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
@@ -250,4 +209,9 @@ func parseJSONPolygonCoords(
 		return nil, nil, err
 	}
 	return coords, ex, err
+}
+
+// Clipped ...
+func (g *Polygon) Clipped(obj Object) Object {
+	return g
 }

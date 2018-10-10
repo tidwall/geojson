@@ -5,11 +5,11 @@ import (
 	"github.com/tidwall/geojson/geometry"
 )
 
-// Collection is a searchable type
+// Collection is a searchable with children
 type Collection interface {
 	Children() []Object
-	Search(rect geometry.Rect, iter func(child Object) bool)
 	Indexed() bool
+	Search(rect geometry.Rect, iter func(child Object) bool)
 }
 
 type collection struct {
@@ -30,9 +30,6 @@ func (g *collection) Children() []Object {
 
 // forEach ...
 func (g *collection) forEach(iter func(geom Object) bool) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return iter(g)
-	}
 	for _, child := range g.children {
 		if !child.forEach(iter) {
 			return false
@@ -71,9 +68,6 @@ func (g *collection) Empty() bool {
 
 // Rect ...
 func (g *collection) Rect() geometry.Rect {
-	if g.extra != nil && g.extra.bbox != nil {
-		return *g.extra.bbox
-	}
 	return g.prect
 }
 
@@ -100,9 +94,6 @@ func (g *collection) Within(obj Object) bool {
 
 // Contains ...
 func (g *collection) Contains(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.withinRect(*g.extra.bbox)
-	}
 	if g.Empty() {
 		return false
 	}
@@ -135,9 +126,6 @@ func (g *collection) Contains(obj Object) bool {
 }
 
 func (g *collection) withinRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return rect.ContainsRect(*g.extra.bbox)
-	}
 	if g.Empty() {
 		return false
 	}
@@ -153,9 +141,6 @@ func (g *collection) withinRect(rect geometry.Rect) bool {
 }
 
 func (g *collection) withinPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return point.ContainsRect(*g.extra.bbox)
-	}
 	if g.Empty() {
 		return false
 	}
@@ -171,9 +156,6 @@ func (g *collection) withinPoint(point geometry.Point) bool {
 }
 
 func (g *collection) withinLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return line.ContainsRect(*g.extra.bbox)
-	}
 	if g.Empty() {
 		return false
 	}
@@ -189,9 +171,6 @@ func (g *collection) withinLine(line *geometry.Line) bool {
 }
 
 func (g *collection) withinPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return poly.ContainsRect(*g.extra.bbox)
-	}
 	if g.Empty() {
 		return false
 	}
@@ -208,9 +187,6 @@ func (g *collection) withinPoly(poly *geometry.Poly) bool {
 
 // Intersects ...
 func (g *collection) Intersects(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.intersectsRect(*g.extra.bbox)
-	}
 	// check if any of obj intersects with any of collection
 	var intersects bool
 	obj.forEach(func(geom Object) bool {
@@ -234,9 +210,6 @@ func (g *collection) Intersects(obj Object) bool {
 }
 
 func (g *collection) intersectsPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoint(point)
-	}
 	var intersects bool
 	g.Search(point.Rect(), func(child Object) bool {
 		if child.intersectsPoint(point) {
@@ -249,9 +222,6 @@ func (g *collection) intersectsPoint(point geometry.Point) bool {
 }
 
 func (g *collection) intersectsRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsRect(rect)
-	}
 	var intersects bool
 	g.Search(rect, func(child Object) bool {
 		if child.intersectsRect(rect) {
@@ -264,9 +234,6 @@ func (g *collection) intersectsRect(rect geometry.Rect) bool {
 }
 
 func (g *collection) intersectsLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsLine(line)
-	}
 	var intersects bool
 	g.Search(line.Rect(), func(child Object) bool {
 		if child.intersectsLine(line) {
@@ -279,9 +246,6 @@ func (g *collection) intersectsLine(line *geometry.Line) bool {
 }
 
 func (g *collection) intersectsPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoly(poly)
-	}
 	var intersects bool
 	g.Search(poly.Rect(), func(child Object) bool {
 		if child.intersectsPoly(poly) {
@@ -300,11 +264,6 @@ func (g *collection) NumPoints() int {
 		n += child.NumPoints()
 	}
 	return n
-}
-
-// Nearby ...
-func (g *collection) Nearby(center geometry.Point, meters float64) bool {
-	panic("not ready")
 }
 
 func (g *collection) parseInitRectIndex(opts *ParseOptions) {
@@ -342,4 +301,9 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 			)
 		}
 	}
+}
+
+// Clipped ...
+func (g *collection) Clipped(obj Object) Object {
+	return g
 }

@@ -11,7 +11,7 @@ func TestFeatureCollection(t *testing.T) {
 	}
 	expectJSON(t, `{"type":"FeatureCollection"}`, errFeaturesMissing)
 	expectJSON(t, `{"type":"FeatureCollection","features":null}`, errFeaturesInvalid)
-	expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point","coordinates":[1,2,3]}],"bbox":null}`, errBBoxInvalid)
+	expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point","coordinates":[1,2,3]}],"bbox":null}`, nil)
 	expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point"}]}`, errCoordinatesMissing)
 }
 

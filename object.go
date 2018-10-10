@@ -24,7 +24,6 @@ var (
 	errFeaturesInvalid    = errors.New("invalid features")
 	errGeometriesMissing  = errors.New("missing geometries")
 	errGeometriesInvalid  = errors.New("invalid geometries")
-	errBBoxInvalid        = errors.New("invalid bbox")
 )
 
 // Object ...
@@ -32,13 +31,13 @@ type Object interface {
 	Empty() bool
 	Rect() geometry.Rect
 	Center() geometry.Point
-	AppendJSON(dst []byte) []byte
 	Contains(other Object) bool
 	Within(other Object) bool
 	Intersects(other Object) bool
-	Nearby(center geometry.Point, meters float64) bool
+	AppendJSON(dst []byte) []byte
 	String() string
 	NumPoints() int
+	Clipped(obj Object) Object
 
 	forEach(iter func(geom Object) bool) bool
 	withinRect(rect geometry.Rect) bool
@@ -55,19 +54,15 @@ var _ = []Object{
 	&Point{}, &LineString{}, &Polygon{}, &Feature{},
 	&MultiPoint{}, &MultiLineString{}, &MultiPolygon{},
 	&GeometryCollection{}, &FeatureCollection{},
-	&Rect{}, &String{},
+	&Rect{}, &String{}, &Circle{},
 }
 
 type extra struct {
 	dims   byte      // number of extra coordinate values, 1 or 2
 	values []float64 // extra coordinate values
 	// valid json object that includes extra members such as
-	// "id", "properties", and foreign members
+	// "bbox", "id", "properties", and foreign members
 	members string
-	// only used if ParseOptions.BBoxRect is true
-	bbox      *geometry.Rect // calculated bbox rectangle
-	bboxExtra []float64      // extra bbox values
-
 }
 
 // ParseOptions ...
@@ -83,16 +78,12 @@ type ParseOptions struct {
 	// disable indexing.
 	// The default is 64.
 	IndexGeometry int
-	// UseBBoxRect option will treat the the object as a simple rectangle
-	// when the "bbox" member is present.
-	UseBBoxRect bool
 }
 
 // DefaultParseOptions ...
 var DefaultParseOptions = &ParseOptions{
 	IndexChildren: geometry.DefaultIndex,
 	IndexGeometry: geometry.DefaultIndex,
-	UseBBoxRect:   false,
 }
 
 // Parse a GeoJSON object
@@ -208,55 +199,6 @@ func parseBBoxAndExtras(ex **extra, keys *parseKeys, opts *ParseOptions) error {
 		*ex = new(extra)
 	}
 	(*ex).members = keys.members
-	rbbox := gjson.Get(keys.members, "bbox")
-	if !rbbox.Exists() {
-		return nil
-	}
-	if !rbbox.IsArray() {
-		return errBBoxInvalid
-	}
-	var count int
-	var nums [8]float64
-	var err error
-	rbbox.ForEach(func(key, value gjson.Result) bool {
-		if count == 8 {
-			return false
-		}
-		if value.Type != gjson.Number {
-			err = errBBoxInvalid
-			return false
-		}
-		nums[count] = value.Float()
-		count++
-		return true
-	})
-	if err != nil {
-		return err
-	}
-	if count < 4 || count%2 == 1 {
-		return errBBoxInvalid
-	}
-	if !opts.UseBBoxRect {
-		return nil
-	}
-	(*ex).bbox = new(geometry.Rect)
-	(*ex).bbox.Min.X = nums[0]
-	(*ex).bbox.Min.Y = nums[1]
-	(*ex).bbox.Max.X = nums[count/2]
-	(*ex).bbox.Max.Y = nums[count/2+1]
-	if count == 6 {
-		(*ex).bboxExtra = []float64{
-			nums[2],
-			nums[count/2+2],
-		}
-	} else if count > 6 {
-		(*ex).bboxExtra = []float64{
-			nums[2],
-			nums[3],
-			nums[count/2+2],
-			nums[count/2+3],
-		}
-	}
 	return nil
 }
 

@@ -16,7 +16,7 @@ func TestPolygonParse(t *testing.T) {
 	expectJSON(t, `{"type":"Polygon","coordinates":[[1,null]]}`, errCoordinatesInvalid)
 	expectJSON(t, `{"type":"Polygon","coordinates":[]}`, errCoordinatesInvalid)
 	expectJSON(t, `{"type":"Polygon","coordinates":[[[0,0],[10,0],[5,10],[0,0]],[[1,1]]]}`, errCoordinatesInvalid)
-	expectJSON(t, `{"type":"Polygon","coordinates":[[[0,0],[10,0],[5,10],[0,0]]],"bbox":null}`, errBBoxInvalid)
+	expectJSON(t, `{"type":"Polygon","coordinates":[[[0,0],[10,0],[5,10],[0,0]]],"bbox":null}`, nil)
 	expectJSON(t, `{"type":"Polygon"}`, errCoordinatesMissing)
 	expectJSON(t, `{"type":"Polygon","coordinates":null}`, errCoordinatesInvalid)
 	expectJSON(t, `{"type":"Polygon","coordinates":[null]}`, errCoordinatesInvalid)
@@ -35,12 +35,6 @@ func TestPolygonVarious(t *testing.T) {
 	expect(t, g.Rect() == R(0, 0, 10, 10))
 	expect(t, g.Center() == P(5, 5))
 	expect(t, !g.Empty())
-	opts := *DefaultParseOptions
-	opts.UseBBoxRect = true
-	g = expectJSONOpts(t, `{"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]],"bbox":[1,2,3,4]}`, nil, &opts)
-	expect(t, !g.Empty())
-	expect(t, g.Rect() == R(1, 2, 3, 4))
-	expect(t, g.Center() == R(1, 2, 3, 4).Center())
 }
 
 // func TestPolygonPoly(t *testing.T) {

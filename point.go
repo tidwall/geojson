@@ -21,6 +21,14 @@ func NewPoint(x, y float64) *Point {
 	return &Point{base: geometry.Point{X: x, Y: y}}
 }
 
+// NewPointZ ...
+func NewPointZ(x, y, z float64) *Point {
+	return &Point{
+		base:  geometry.Point{X: x, Y: y},
+		extra: &extra{dims: 1, values: []float64{z}},
+	}
+}
+
 // Empty ...
 func (g *Point) Empty() bool {
 	return g.base.Empty()
@@ -28,17 +36,11 @@ func (g *Point) Empty() bool {
 
 // Rect ...
 func (g *Point) Rect() geometry.Rect {
-	if g.extra != nil && g.extra.bbox != nil {
-		return *g.extra.bbox
-	}
 	return g.base.Rect()
 }
 
 // Center ...
 func (g *Point) Center() geometry.Point {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.Center()
-	}
 	return g.base
 }
 
@@ -63,84 +65,57 @@ func (g *Point) Within(obj Object) bool {
 
 // Contains ...
 func (g *Point) Contains(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.withinRect(*g.extra.bbox)
-	}
 	return obj.withinPoint(g.base)
 }
 
 // Intersects ...
 func (g *Point) Intersects(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.intersectsRect(*g.extra.bbox)
-	}
 	return obj.intersectsPoint(g.base)
 }
 
 func (g *Point) withinRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return rect.ContainsRect(*g.extra.bbox)
-	}
 	return rect.ContainsPoint(g.base)
 }
 
 func (g *Point) withinPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return point.ContainsRect(*g.extra.bbox)
-	}
 	return point.ContainsPoint(g.base)
 }
 
 func (g *Point) withinLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return line.ContainsRect(*g.extra.bbox)
-	}
 	return line.ContainsPoint(g.base)
 }
 
 func (g *Point) withinPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return poly.ContainsRect(*g.extra.bbox)
-	}
 	return poly.ContainsPoint(g.base)
 }
 
 func (g *Point) intersectsPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoint(point)
-	}
 	return g.base.IntersectsPoint(point)
 }
 
 func (g *Point) intersectsRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsRect(rect)
-	}
 	return g.base.IntersectsRect(rect)
 }
 
 func (g *Point) intersectsLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsLine(line)
-	}
 	return g.base.IntersectsLine(line)
 }
 
 func (g *Point) intersectsPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoly(poly)
-	}
 	return g.base.IntersectsPoly(poly)
 }
 
 // NumPoints ...
 func (g *Point) NumPoints() int {
-	return 0
+	return 1
 }
 
-// Nearby ...
-func (g *Point) Nearby(center geometry.Point, meters float64) bool {
-	panic("not ready")
+// Z ...
+func (g *Point) Z() float64 {
+	if g.extra != nil && len(g.extra.values) > 0 {
+		return g.extra.values[0]
+	}
+	return 0
 }
 
 func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
@@ -205,4 +180,9 @@ func parseJSONPointCoords(
 		}
 	}
 	return coords, ex, nil
+}
+
+// Clipped ...
+func (g *Point) Clipped(obj Object) Object {
+	return g
 }

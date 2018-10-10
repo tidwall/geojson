@@ -11,19 +11,19 @@ type LineString struct {
 	extra *extra
 }
 
+// NewLineString ...
+func NewLineString(points []geometry.Point) *LineString {
+	line := geometry.NewLine(points, geometry.DefaultIndex)
+	return &LineString{base: *line}
+}
+
 // Empty ...
 func (g *LineString) Empty() bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return false
-	}
 	return g.base.Empty()
 }
 
 // Rect ...
 func (g *LineString) Rect() geometry.Rect {
-	if g.extra != nil && g.extra.bbox != nil {
-		return *g.extra.bbox
-	}
 	return g.base.Rect()
 }
 
@@ -60,84 +60,49 @@ func (g *LineString) Within(obj Object) bool {
 
 // Contains ...
 func (g *LineString) Contains(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.withinRect(*g.extra.bbox)
-	}
 	return obj.withinLine(&g.base)
 }
 
 // Intersects ...
 func (g *LineString) Intersects(obj Object) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return obj.intersectsRect(*g.extra.bbox)
-	}
 	return obj.intersectsLine(&g.base)
 }
 
 func (g *LineString) withinRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return rect.ContainsRect(*g.extra.bbox)
-	}
 	return rect.ContainsLine(&g.base)
 }
 
 func (g *LineString) withinPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return point.ContainsRect(*g.extra.bbox)
-	}
 	return point.ContainsLine(&g.base)
 }
 
 func (g *LineString) withinLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return line.ContainsRect(*g.extra.bbox)
-	}
 	return line.ContainsLine(&g.base)
 }
 
 func (g *LineString) withinPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return poly.ContainsRect(*g.extra.bbox)
-	}
 	return poly.ContainsLine(&g.base)
 }
 
 func (g *LineString) intersectsPoint(point geometry.Point) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoint(point)
-	}
 	return g.base.IntersectsPoint(point)
 }
 
 func (g *LineString) intersectsRect(rect geometry.Rect) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsRect(rect)
-	}
 	return g.base.IntersectsRect(rect)
 }
 
 func (g *LineString) intersectsLine(line *geometry.Line) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsLine(line)
-	}
 	return g.base.IntersectsLine(line)
 }
 
 func (g *LineString) intersectsPoly(poly *geometry.Poly) bool {
-	if g.extra != nil && g.extra.bbox != nil {
-		return g.extra.bbox.IntersectsPoly(poly)
-	}
 	return g.base.IntersectsPoly(poly)
 }
 
 // NumPoints ...
 func (g *LineString) NumPoints() int {
 	return g.base.NumPoints()
-}
-
-// Nearby ...
-func (g *LineString) Nearby(center geometry.Point, meters float64) bool {
-	panic("not ready")
 }
 
 func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
@@ -225,4 +190,9 @@ func parseJSONLineStringCoords(
 		return nil, nil, err
 	}
 	return coords, ex, err
+}
+
+// Clipped ...
+func (g *LineString) Clipped(obj Object) Object {
+	return g
 }

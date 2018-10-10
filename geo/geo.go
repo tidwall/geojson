@@ -60,3 +60,36 @@ func BearingTo(latA, lonA, latB, lonB float64) float64 {
 
 	return math.Mod(θ*degrees+360, 360)
 }
+
+// // SegmentIntersectsCircle ...
+// func SegmentIntersectsCircle(
+// 	startLat, startLon, endLat, endLon, centerLat, centerLon, meters float64,
+// ) bool {
+// 	// These are faster checks.
+// 	// If they succeed there's no need do complicate things.
+// 	if DistanceTo(startLat, startLon, centerLat, centerLon) <= meters {
+// 		return true
+// 	}
+// 	if DistanceTo(endLat, endLon, centerLat, centerLon) <= meters {
+// 		return true
+// 	}
+
+// 	// Distance between start and end
+// 	l := DistanceTo(startLat, startLon, endLat, endLon)
+
+// 	// Unit direction vector
+// 	dLat := (endLat - startLat) / l
+// 	dLon := (endLon - startLon) / l
+
+// 	// Point of the line closest to the center
+// 	t := dLon*(centerLon-startLon) + dLat*(centerLat-startLat)
+// 	pLat := t*dLat + startLat
+// 	pLon := t*dLon + startLon
+// 	if pLon < startLon || pLon > endLon || pLat < startLat || pLat > endLat {
+// 		// closest point is outside the segment
+// 		return false
+// 	}
+
+// 	// Distance from the closest point to the center
+// 	return DistanceTo(centerLat, centerLon, pLat, pLon) <= meters
+// }

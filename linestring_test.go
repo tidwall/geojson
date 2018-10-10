@@ -16,7 +16,7 @@ func TestLineStringParse(t *testing.T) {
 	expectJSON(t, `{"type":"LineString","coordinates":[[1]]}`, errCoordinatesInvalid)
 	g := expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]]}`, nil)
 	expect(t, g.Rect() == R(1, 2, 3, 4))
-	expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]],"bbox":null}`, errBBoxInvalid)
+	expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]],"bbox":null}`, nil)
 	expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]],"bbox":[1,2,3,4]}`, nil)
 }
 

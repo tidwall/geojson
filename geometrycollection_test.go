@@ -7,7 +7,7 @@ func TestGeometryCollection(t *testing.T) {
 	expect(t, p.Center() == P(1, 2))
 	expectJSON(t, `{"type":"GeometryCollection"}`, errGeometriesMissing)
 	expectJSON(t, `{"type":"GeometryCollection","geometries":null}`, errGeometriesInvalid)
-	expectJSON(t, `{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[1,2,3]}],"bbox":null}`, errBBoxInvalid)
+	expectJSON(t, `{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[1,2,3]}],"bbox":null}`, nil)
 	expectJSON(t, `{"type":"GeometryCollection","geometries":[{"type":"Point"}]}`, errCoordinatesMissing)
 }
 
