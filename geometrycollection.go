@@ -27,6 +27,11 @@ func (g *GeometryCollection) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
+// String ...
+func (g *GeometryCollection) String() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONGeometryCollection(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {

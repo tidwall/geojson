@@ -1,7 +1,7 @@
 package geojson
 
 import (
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
 
@@ -26,6 +26,11 @@ func (g *MultiPolygon) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
+// String ...
+func (g *MultiPolygon) String() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONMultiPolygon(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {
@@ -37,7 +42,7 @@ func parseJSONMultiPolygon(
 	if !keys.rCoordinates.IsArray() {
 		return nil, errCoordinatesInvalid
 	}
-	var coords [][]geos.Point
+	var coords [][]geometry.Point
 	var ex *extra
 	keys.rCoordinates.ForEach(func(_, value gjson.Result) bool {
 		coords, ex, err = parseJSONPolygonCoords(keys, value, opts)
@@ -55,11 +60,11 @@ func parseJSONMultiPolygon(
 			}
 		}
 		exterior := coords[0]
-		var holes [][]geos.Point
+		var holes [][]geometry.Point
 		if len(coords) > 1 {
 			holes = coords[1:]
 		}
-		poly := geos.NewPoly(exterior, holes, opts.IndexGeometry)
+		poly := geometry.NewPoly(exterior, holes, opts.IndexGeometry)
 
 		g.children = append(g.children, &Polygon{base: *poly, extra: ex})
 		return true

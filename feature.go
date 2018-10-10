@@ -1,6 +1,6 @@
 package geojson
 
-import "github.com/tidwall/geojson/geos"
+import "github.com/tidwall/geojson/geometry"
 
 // Feature ...
 type Feature struct {
@@ -25,7 +25,7 @@ func (g *Feature) Empty() bool {
 }
 
 // Rect ...
-func (g *Feature) Rect() geos.Rect {
+func (g *Feature) Rect() geometry.Rect {
 	if g.extra != nil && g.extra.bbox != nil {
 		return *g.extra.bbox
 	}
@@ -33,7 +33,7 @@ func (g *Feature) Rect() geos.Rect {
 }
 
 // Center ...
-func (g *Feature) Center() geos.Point {
+func (g *Feature) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
@@ -45,6 +45,11 @@ func (g *Feature) AppendJSON(dst []byte) []byte {
 	dst = append(dst, '}')
 	return dst
 
+}
+
+// String ...
+func (g *Feature) String() string {
+	return string(g.AppendJSON(nil))
 }
 
 // Within ...
@@ -60,28 +65,28 @@ func (g *Feature) Contains(obj Object) bool {
 	return obj.Within(g.base)
 }
 
-func (g *Feature) withinRect(rect geos.Rect) bool {
+func (g *Feature) withinRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return rect.ContainsRect(*g.extra.bbox)
 	}
 	return g.base.withinRect(rect)
 }
 
-func (g *Feature) withinPoint(point geos.Point) bool {
+func (g *Feature) withinPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return point.ContainsRect(*g.extra.bbox)
 	}
 	return g.base.withinPoint(point)
 }
 
-func (g *Feature) withinLine(line *geos.Line) bool {
+func (g *Feature) withinLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return line.ContainsRect(*g.extra.bbox)
 	}
 	return g.base.withinLine(line)
 }
 
-func (g *Feature) withinPoly(poly *geos.Poly) bool {
+func (g *Feature) withinPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return poly.ContainsRect(*g.extra.bbox)
 	}
@@ -96,32 +101,37 @@ func (g *Feature) Intersects(obj Object) bool {
 	return obj.Intersects(g.base)
 }
 
-func (g *Feature) intersectsPoint(point geos.Point) bool {
+func (g *Feature) intersectsPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoint(point)
 	}
 	return g.base.intersectsPoint(point)
 }
 
-func (g *Feature) intersectsRect(rect geos.Rect) bool {
+func (g *Feature) intersectsRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsRect(rect)
 	}
 	return g.base.intersectsRect(rect)
 }
 
-func (g *Feature) intersectsLine(line *geos.Line) bool {
+func (g *Feature) intersectsLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsLine(line)
 	}
 	return g.base.intersectsLine(line)
 }
 
-func (g *Feature) intersectsPoly(poly *geos.Poly) bool {
+func (g *Feature) intersectsPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
 	return g.base.intersectsPoly(poly)
+}
+
+// NumPoints ...
+func (g *Feature) NumPoints() int {
+	return g.base.NumPoints()
 }
 
 // parseJSONFeature will return a valid GeoJSON object.

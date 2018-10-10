@@ -1,7 +1,7 @@
 package geojson
 
 import (
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
 
@@ -27,6 +27,11 @@ func (g *MultiLineString) AppendJSON(dst []byte) []byte {
 
 }
 
+// String ...
+func (g *MultiLineString) String() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONMultiLineString(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {
@@ -38,7 +43,7 @@ func parseJSONMultiLineString(
 	if !keys.rCoordinates.IsArray() {
 		return nil, errCoordinatesInvalid
 	}
-	var coords []geos.Point
+	var coords []geometry.Point
 	var ex *extra
 	keys.rCoordinates.ForEach(func(_, value gjson.Result) bool {
 		coords, ex, err = parseJSONLineStringCoords(keys, value, opts)
@@ -49,7 +54,7 @@ func parseJSONMultiLineString(
 			err = errCoordinatesInvalid
 			return false
 		}
-		line := geos.NewLine(coords, opts.IndexGeometry)
+		line := geometry.NewLine(coords, opts.IndexGeometry)
 		g.children = append(g.children, &LineString{base: *line, extra: ex})
 		return true
 	})

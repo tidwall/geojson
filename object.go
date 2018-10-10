@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/pretty"
 
-	"github.com/tidwall/geojson/geos"
 	"github.com/tidwall/gjson"
 )
 
@@ -30,29 +30,32 @@ var (
 // Object ...
 type Object interface {
 	Empty() bool
-	Rect() geos.Rect
-	Center() geos.Point
+	Rect() geometry.Rect
+	Center() geometry.Point
 	AppendJSON(dst []byte) []byte
 	Contains(other Object) bool
 	Within(other Object) bool
 	Intersects(other Object) bool
+	//Nearby(center geometry.Point, meters float64) bool
+	String() string
+	NumPoints() int
 
 	forEach(iter func(geom Object) bool) bool
-	withinRect(rect geos.Rect) bool
-	withinPoint(point geos.Point) bool
-	withinLine(line *geos.Line) bool
-	withinPoly(poly *geos.Poly) bool
-	intersectsRect(rect geos.Rect) bool
-	intersectsPoint(point geos.Point) bool
-	intersectsLine(line *geos.Line) bool
-	intersectsPoly(poly *geos.Poly) bool
+	withinRect(rect geometry.Rect) bool
+	withinPoint(point geometry.Point) bool
+	withinLine(line *geometry.Line) bool
+	withinPoly(poly *geometry.Poly) bool
+	intersectsRect(rect geometry.Rect) bool
+	intersectsPoint(point geometry.Point) bool
+	intersectsLine(line *geometry.Line) bool
+	intersectsPoly(poly *geometry.Poly) bool
 }
 
 var _ = []Object{
 	&Point{}, &LineString{}, &Polygon{}, &Feature{},
 	&MultiPoint{}, &MultiLineString{}, &MultiPolygon{},
 	&GeometryCollection{}, &FeatureCollection{},
-	&Rect{},
+	&Rect{}, &String{},
 }
 
 type extra struct {
@@ -62,8 +65,8 @@ type extra struct {
 	// "id", "properties", and foreign members
 	members string
 	// only used if ParseOptions.BBoxRect is true
-	bbox      *geos.Rect // calculated bbox rectangle
-	bboxExtra []float64  // extra bbox values
+	bbox      *geometry.Rect // calculated bbox rectangle
+	bboxExtra []float64      // extra bbox values
 
 }
 
@@ -87,8 +90,8 @@ type ParseOptions struct {
 
 // DefaultParseOptions ...
 var DefaultParseOptions = &ParseOptions{
-	IndexChildren: geos.DefaultIndex,
-	IndexGeometry: geos.DefaultIndex,
+	IndexChildren: geometry.DefaultIndex,
+	IndexGeometry: geometry.DefaultIndex,
 	UseBBoxRect:   false,
 }
 
@@ -236,7 +239,7 @@ func parseBBoxAndExtras(ex **extra, keys *parseKeys, opts *ParseOptions) error {
 	if !opts.UseBBoxRect {
 		return nil
 	}
-	(*ex).bbox = new(geos.Rect)
+	(*ex).bbox = new(geometry.Rect)
 	(*ex).bbox.Min.X = nums[0]
 	(*ex).bbox.Min.Y = nums[1]
 	(*ex).bbox.Max.X = nums[count/2]
@@ -257,7 +260,7 @@ func parseBBoxAndExtras(ex **extra, keys *parseKeys, opts *ParseOptions) error {
 	return nil
 }
 
-func appendJSONPoint(dst []byte, point geos.Point, ex *extra, idx int) []byte {
+func appendJSONPoint(dst []byte, point geometry.Point, ex *extra, idx int) []byte {
 	dst = append(dst, '[')
 	dst = strconv.AppendFloat(dst, point.X, 'f', -1, 64)
 	dst = append(dst, ',')
@@ -285,7 +288,7 @@ func (ex *extra) appendJSONExtra(dst []byte) []byte {
 }
 
 func appendJSONSeries(
-	dst []byte, series geos.Series, ex *extra, pidx int,
+	dst []byte, series geometry.Series, ex *extra, pidx int,
 ) (ndst []byte, npidx int) {
 	dst = append(dst, '[')
 	nPoints := series.NumPoints()
@@ -300,7 +303,7 @@ func appendJSONSeries(
 	return dst, pidx
 }
 
-func unionRects(a, b geos.Rect) geos.Rect {
+func unionRects(a, b geometry.Rect) geometry.Rect {
 	if b.Min.X < a.Min.X {
 		a.Min.X = b.Min.X
 	} else if b.Max.X > a.Max.X {

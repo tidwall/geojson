@@ -1,13 +1,14 @@
 package geojson
 
 import (
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geo"
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
 
 // Point ...
 type Point struct {
-	base  geos.Point
+	base  geometry.Point
 	extra *extra
 }
 
@@ -18,7 +19,7 @@ func (g *Point) forEach(iter func(geom Object) bool) bool {
 
 // NewPoint ...
 func NewPoint(x, y float64) *Point {
-	return &Point{base: geos.Point{X: x, Y: y}}
+	return &Point{base: geometry.Point{X: x, Y: y}}
 }
 
 // Empty ...
@@ -27,7 +28,7 @@ func (g *Point) Empty() bool {
 }
 
 // Rect ...
-func (g *Point) Rect() geos.Rect {
+func (g *Point) Rect() geometry.Rect {
 	if g.extra != nil && g.extra.bbox != nil {
 		return *g.extra.bbox
 	}
@@ -35,7 +36,7 @@ func (g *Point) Rect() geos.Rect {
 }
 
 // Center ...
-func (g *Point) Center() geos.Point {
+func (g *Point) Center() geometry.Point {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.Center()
 	}
@@ -49,6 +50,11 @@ func (g *Point) AppendJSON(dst []byte) []byte {
 	dst = g.extra.appendJSONExtra(dst)
 	dst = append(dst, '}')
 	return dst
+}
+
+// String ...
+func (g *Point) String() string {
+	return string(g.AppendJSON(nil))
 }
 
 // Within ...
@@ -72,60 +78,70 @@ func (g *Point) Intersects(obj Object) bool {
 	return obj.intersectsPoint(g.base)
 }
 
-func (g *Point) withinRect(rect geos.Rect) bool {
+func (g *Point) withinRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return rect.ContainsRect(*g.extra.bbox)
 	}
 	return rect.ContainsPoint(g.base)
 }
 
-func (g *Point) withinPoint(point geos.Point) bool {
+func (g *Point) withinPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return point.ContainsRect(*g.extra.bbox)
 	}
 	return point.ContainsPoint(g.base)
 }
 
-func (g *Point) withinLine(line *geos.Line) bool {
+func (g *Point) withinLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return line.ContainsRect(*g.extra.bbox)
 	}
 	return line.ContainsPoint(g.base)
 }
 
-func (g *Point) withinPoly(poly *geos.Poly) bool {
+func (g *Point) withinPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return poly.ContainsRect(*g.extra.bbox)
 	}
 	return poly.ContainsPoint(g.base)
 }
 
-func (g *Point) intersectsPoint(point geos.Point) bool {
+func (g *Point) intersectsPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoint(point)
 	}
 	return g.base.IntersectsPoint(point)
 }
 
-func (g *Point) intersectsRect(rect geos.Rect) bool {
+func (g *Point) intersectsRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsRect(rect)
 	}
 	return g.base.IntersectsRect(rect)
 }
 
-func (g *Point) intersectsLine(line *geos.Line) bool {
+func (g *Point) intersectsLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsLine(line)
 	}
 	return g.base.IntersectsLine(line)
 }
 
-func (g *Point) intersectsPoly(poly *geos.Poly) bool {
+func (g *Point) intersectsPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
 	return g.base.IntersectsPoly(poly)
+}
+
+// NumPoints ...
+func (g *Point) NumPoints() int {
+	return 0
+}
+
+// Nearby ...
+func (g *Point) Nearby(center geometry.Point, meters float64) bool {
+	return geo.DistanceTo(g.base.Y, g.base.X, center.Y, center.X) <= meters
 }
 
 func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
@@ -143,8 +159,8 @@ func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 
 func parseJSONPointCoords(
 	keys *parseKeys, rcoords gjson.Result, opts *ParseOptions,
-) (geos.Point, *extra, error) {
-	var coords geos.Point
+) (geometry.Point, *extra, error) {
+	var coords geometry.Point
 	var ex *extra
 	if !rcoords.Exists() {
 		rcoords = keys.rCoordinates
@@ -176,7 +192,7 @@ func parseJSONPointCoords(
 	if count < 2 {
 		return coords, nil, errCoordinatesInvalid
 	}
-	coords = geos.Point{X: nums[0], Y: nums[1]}
+	coords = geometry.Point{X: nums[0], Y: nums[1]}
 	if count > 2 {
 		ex = new(extra)
 		if count > 3 {

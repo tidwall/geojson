@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/pretty"
 )
 
@@ -17,14 +17,14 @@ func init() {
 	rand.Seed(seed)
 }
 
-func R(minX, minY, maxX, maxY float64) geos.Rect {
-	return geos.Rect{
-		Min: geos.Point{X: minX, Y: minY},
-		Max: geos.Point{X: maxX, Y: maxY},
+func R(minX, minY, maxX, maxY float64) geometry.Rect {
+	return geometry.Rect{
+		Min: geometry.Point{X: minX, Y: minY},
+		Max: geometry.Point{X: maxX, Y: maxY},
 	}
 }
-func P(x, y float64) geos.Point {
-	return geos.Point{X: x, Y: y}
+func P(x, y float64) geometry.Point {
+	return geometry.Point{X: x, Y: y}
 }
 func PO(x, y float64) *Point {
 	return NewPoint(x, y)

@@ -3,14 +3,15 @@ package geojson
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
+	"os"
 	"sort"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/tidwall/sjson"
-
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geometry"
+	"github.com/tidwall/lotsa"
 )
 
 func parseCollection(t *testing.T, data string, index bool) Collection {
@@ -35,7 +36,7 @@ func parseCollection(t *testing.T, data string, index bool) Collection {
 }
 
 func testCollectionSubset(
-	t *testing.T, json string, subsetRect geos.Rect,
+	t *testing.T, json string, subsetRect geometry.Rect,
 ) []Collection {
 	t.Helper()
 	expectJSON(t, json, nil)
@@ -84,9 +85,8 @@ func testCollectionSubset(
 
 func TestCollectionBostonSubset(t *testing.T) {
 	data, err := ioutil.ReadFile("test_files/boston_subset.geojson")
-	datas, _ := sjson.Delete(string(data), "bbox") // remove bbox
 	expect(t, err == nil)
-	cs := testCollectionSubset(t, datas,
+	cs := testCollectionSubset(t, string(data),
 		R(-71.474046, 42.492479, -71.466321, 42.497415),
 	)
 	expect(t, cs[0].(Object).Intersects(PO(-71.46723, 42.49432)))
@@ -95,38 +95,42 @@ func TestCollectionBostonSubset(t *testing.T) {
 	expect(t, !cs[1].(Object).Intersects(PO(-71.46713, 42.49431)))
 }
 
-// func TestCollectionUSASubset(t *testing.T) {
-// 	data, err := ioutil.ReadFile("test_files/usa.geojson")
+func TestCollectionUSASubset(t *testing.T) {
+	data, err := ioutil.ReadFile("test_files/usa.geojson")
+	if err == nil {
+		fmt.Printf("test_files/usa.geojson missing\n")
+		return
+	}
 
-// 	expect(t, err == nil)
-// 	cs := testCollectionSubset(t, string(data),
-// 		R(-90, -45, 90, 45),
-// 	)
-// 	expect(t, cs[0].(Object).Intersects(PO(-91.09863, 30.03105)))
-// 	expect(t, cs[1].(Object).Intersects(PO(-91.09863, 30.03105)))
-// 	expect(t, !cs[0].(Object).Intersects(PO(-86.87988, 28.439713)))
-// 	expect(t, !cs[1].(Object).Intersects(PO(-86.87988, 28.439713)))
+	expect(t, err == nil)
+	cs := testCollectionSubset(t, string(data),
+		R(-90, -45, 90, 45),
+	)
+	expect(t, cs[0].(Object).Intersects(PO(-91.09863, 30.03105)))
+	expect(t, cs[1].(Object).Intersects(PO(-91.09863, 30.03105)))
+	expect(t, !cs[0].(Object).Intersects(PO(-86.87988, 28.439713)))
+	expect(t, !cs[1].(Object).Intersects(PO(-86.87988, 28.439713)))
 
-// 	N := 10000
-// 	T := 6
+	N := 10000
+	T := 6
 
-// 	// 34 is the lower 48
-// 	rect := cs[0].Children()[34].(Object).Rect()
-// 	points := make([]Object, N)
-// 	for i := 0; i < N; i++ {
-// 		points[i] = PO(
-// 			(rect.Max.X-rect.Min.X)*rand.Float64()+rect.Min.X,
-// 			(rect.Max.Y-rect.Min.Y)*rand.Float64()+rect.Min.Y,
-// 		)
-// 	}
-// 	lotsa.Output = os.Stdout
-// 	cs0 := cs[0].(Object)
-// 	cs1 := cs[1].(Object)
-// 	lotsa.Ops(N, T, func(i, _ int) {
-// 		cs0.Intersects(points[i])
-// 	})
-// 	lotsa.Ops(N, T, func(i, _ int) {
-// 		cs1.Intersects(points[i])
-// 	})
+	// 34 is the lower 48
+	rect := cs[0].Children()[34].(Object).Rect()
+	points := make([]Object, N)
+	for i := 0; i < N; i++ {
+		points[i] = PO(
+			(rect.Max.X-rect.Min.X)*rand.Float64()+rect.Min.X,
+			(rect.Max.Y-rect.Min.Y)*rand.Float64()+rect.Min.Y,
+		)
+	}
+	lotsa.Output = os.Stdout
+	cs0 := cs[0].(Object)
+	cs1 := cs[1].(Object)
+	lotsa.Ops(N, T, func(i, _ int) {
+		cs0.Intersects(points[i])
+	})
+	lotsa.Ops(N, T, func(i, _ int) {
+		cs1.Intersects(points[i])
+	})
 
-// }
+}

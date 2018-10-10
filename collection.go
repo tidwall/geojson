@@ -2,13 +2,13 @@ package geojson
 
 import (
 	"github.com/tidwall/boxtree/d2"
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geometry"
 )
 
 // Collection is a searchable type
 type Collection interface {
 	Children() []Object
-	Search(rect geos.Rect, iter func(child Object) bool)
+	Search(rect geometry.Rect, iter func(child Object) bool)
 	Indexed() bool
 }
 
@@ -16,7 +16,7 @@ type collection struct {
 	children []Object
 	extra    *extra
 	tree     *d2.BoxTree
-	prect    geos.Rect
+	prect    geometry.Rect
 	pempty   bool
 }
 
@@ -41,7 +41,7 @@ func (g *collection) forEach(iter func(geom Object) bool) bool {
 	return true
 }
 
-func (g *collection) Search(rect geos.Rect, iter func(child Object) bool) {
+func (g *collection) Search(rect geometry.Rect, iter func(child Object) bool) {
 	if g.tree != nil {
 		g.tree.Search(
 			[]float64{rect.Min.X, rect.Min.Y},
@@ -70,7 +70,7 @@ func (g *collection) Empty() bool {
 }
 
 // Rect ...
-func (g *collection) Rect() geos.Rect {
+func (g *collection) Rect() geometry.Rect {
 	if g.extra != nil && g.extra.bbox != nil {
 		return *g.extra.bbox
 	}
@@ -78,7 +78,7 @@ func (g *collection) Rect() geos.Rect {
 }
 
 // Center ...
-func (g *collection) Center() geos.Point {
+func (g *collection) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
@@ -86,6 +86,11 @@ func (g *collection) Center() geos.Point {
 func (g *collection) AppendJSON(dst []byte) []byte {
 	// this should never be called
 	return append(dst, "null"...)
+}
+
+// String ...
+func (g *collection) String() string {
+	return string(g.AppendJSON(nil))
 }
 
 // Within ...
@@ -129,7 +134,7 @@ func (g *collection) Contains(obj Object) bool {
 	return objContained
 }
 
-func (g *collection) withinRect(rect geos.Rect) bool {
+func (g *collection) withinRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return rect.ContainsRect(*g.extra.bbox)
 	}
@@ -147,7 +152,7 @@ func (g *collection) withinRect(rect geos.Rect) bool {
 	return withinCount == len(g.children)
 }
 
-func (g *collection) withinPoint(point geos.Point) bool {
+func (g *collection) withinPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return point.ContainsRect(*g.extra.bbox)
 	}
@@ -165,7 +170,7 @@ func (g *collection) withinPoint(point geos.Point) bool {
 	return withinCount == len(g.children)
 }
 
-func (g *collection) withinLine(line *geos.Line) bool {
+func (g *collection) withinLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return line.ContainsRect(*g.extra.bbox)
 	}
@@ -183,7 +188,7 @@ func (g *collection) withinLine(line *geos.Line) bool {
 	return withinCount == len(g.children)
 }
 
-func (g *collection) withinPoly(poly *geos.Poly) bool {
+func (g *collection) withinPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return poly.ContainsRect(*g.extra.bbox)
 	}
@@ -228,7 +233,7 @@ func (g *collection) Intersects(obj Object) bool {
 	return intersects
 }
 
-func (g *collection) intersectsPoint(point geos.Point) bool {
+func (g *collection) intersectsPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoint(point)
 	}
@@ -243,7 +248,7 @@ func (g *collection) intersectsPoint(point geos.Point) bool {
 	return intersects
 }
 
-func (g *collection) intersectsRect(rect geos.Rect) bool {
+func (g *collection) intersectsRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsRect(rect)
 	}
@@ -258,7 +263,7 @@ func (g *collection) intersectsRect(rect geos.Rect) bool {
 	return intersects
 }
 
-func (g *collection) intersectsLine(line *geos.Line) bool {
+func (g *collection) intersectsLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsLine(line)
 	}
@@ -273,7 +278,7 @@ func (g *collection) intersectsLine(line *geos.Line) bool {
 	return intersects
 }
 
-func (g *collection) intersectsPoly(poly *geos.Poly) bool {
+func (g *collection) intersectsPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
@@ -286,6 +291,15 @@ func (g *collection) intersectsPoly(poly *geos.Poly) bool {
 		return true
 	})
 	return intersects
+}
+
+// NumPoints ...
+func (g *collection) NumPoints() int {
+	var n int
+	for _, child := range g.children {
+		n += child.NumPoints()
+	}
+	return n
 }
 
 func (g *collection) parseInitRectIndex(opts *ParseOptions) {

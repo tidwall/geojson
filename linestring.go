@@ -1,13 +1,13 @@
 package geojson
 
 import (
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
 
 // LineString ...
 type LineString struct {
-	base  geos.Line
+	base  geometry.Line
 	extra *extra
 }
 
@@ -20,7 +20,7 @@ func (g *LineString) Empty() bool {
 }
 
 // Rect ...
-func (g *LineString) Rect() geos.Rect {
+func (g *LineString) Rect() geometry.Rect {
 	if g.extra != nil && g.extra.bbox != nil {
 		return *g.extra.bbox
 	}
@@ -28,7 +28,7 @@ func (g *LineString) Rect() geos.Rect {
 }
 
 // Center ...
-func (g *LineString) Center() geos.Point {
+func (g *LineString) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
@@ -41,6 +41,11 @@ func (g *LineString) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, '}')
 	return dst
+}
+
+// String ...
+func (g *LineString) String() string {
+	return string(g.AppendJSON(nil))
 }
 
 // forEach ...
@@ -69,61 +74,71 @@ func (g *LineString) Intersects(obj Object) bool {
 	return obj.intersectsLine(&g.base)
 }
 
-func (g *LineString) withinRect(rect geos.Rect) bool {
+func (g *LineString) withinRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return rect.ContainsRect(*g.extra.bbox)
 	}
 	return rect.ContainsLine(&g.base)
 }
 
-func (g *LineString) withinPoint(point geos.Point) bool {
+func (g *LineString) withinPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return point.ContainsRect(*g.extra.bbox)
 	}
 	return point.ContainsLine(&g.base)
 }
 
-func (g *LineString) withinLine(line *geos.Line) bool {
+func (g *LineString) withinLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return line.ContainsRect(*g.extra.bbox)
 	}
 	return line.ContainsLine(&g.base)
 }
 
-func (g *LineString) withinPoly(poly *geos.Poly) bool {
+func (g *LineString) withinPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return poly.ContainsRect(*g.extra.bbox)
 	}
 	return poly.ContainsLine(&g.base)
 }
 
-func (g *LineString) intersectsPoint(point geos.Point) bool {
+func (g *LineString) intersectsPoint(point geometry.Point) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoint(point)
 	}
 	return g.base.IntersectsPoint(point)
 }
 
-func (g *LineString) intersectsRect(rect geos.Rect) bool {
+func (g *LineString) intersectsRect(rect geometry.Rect) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsRect(rect)
 	}
 	return g.base.IntersectsRect(rect)
 }
 
-func (g *LineString) intersectsLine(line *geos.Line) bool {
+func (g *LineString) intersectsLine(line *geometry.Line) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsLine(line)
 	}
 	return g.base.IntersectsLine(line)
 }
 
-func (g *LineString) intersectsPoly(poly *geos.Poly) bool {
+func (g *LineString) intersectsPoly(poly *geometry.Poly) bool {
 	if g.extra != nil && g.extra.bbox != nil {
 		return g.extra.bbox.IntersectsPoly(poly)
 	}
 	return g.base.IntersectsPoly(poly)
 }
+
+// NumPoints ...
+func (g *LineString) NumPoints() int {
+	return g.base.NumPoints()
+}
+
+// // Nearby ...
+// func (g *LineString) Nearby(center geometry.Point, meters float64) bool {
+// 	return geometry.DestinationPoint(g.Center(), center) <= meters
+// }
 
 func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g LineString
@@ -136,7 +151,7 @@ func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
 		// https://tools.ietf.org/html/rfc7946#section-3.1.4
 		return nil, errCoordinatesInvalid
 	}
-	line := geos.NewLine(points, opts.IndexGeometry)
+	line := geometry.NewLine(points, opts.IndexGeometry)
 	g.base = *line
 	g.extra = ex
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
@@ -147,9 +162,9 @@ func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
 
 func parseJSONLineStringCoords(
 	keys *parseKeys, rcoords gjson.Result, opts *ParseOptions,
-) ([]geos.Point, *extra, error) {
+) ([]geometry.Point, *extra, error) {
 	var err error
-	var coords []geos.Point
+	var coords []geometry.Point
 	var ex *extra
 	var dims int
 	if !rcoords.Exists() {
@@ -187,7 +202,7 @@ func parseJSONLineStringCoords(
 			err = errCoordinatesInvalid
 			return false
 		}
-		coords = append(coords, geos.Point{X: nums[0], Y: nums[1]})
+		coords = append(coords, geometry.Point{X: nums[0], Y: nums[1]})
 		if ex == nil {
 			if count > 2 {
 				ex = new(extra)

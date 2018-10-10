@@ -27,7 +27,7 @@ func TestPointVarious(t *testing.T) {
 	g = expectJSONOpts(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,4]}`, nil, &opts)
 	expect(t, g.Rect() == R(1, 2, 3, 4))
 	expect(t, g.Center() == R(1, 2, 3, 4).Center())
-	// g.ForEach(func(geom geos.Geometry) bool {
+	// g.ForEach(func(geom geometry.Geometry) bool {
 
 	// 	return false
 	// })

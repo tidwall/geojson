@@ -4,7 +4,7 @@
 
 package geos
 
-// NewCircle returns a circle polygon
+// NewCircle returns a geospatial circle polygon
 func NewCircle(center Point, meters float64, segments, index int) *Poly {
 	if segments < 3 {
 		segments = 3

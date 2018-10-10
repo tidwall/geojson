@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package geos
+package geometry
 
 // Geometry is a standard geometry
 type Geometry interface {

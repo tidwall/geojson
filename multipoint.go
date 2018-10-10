@@ -1,7 +1,7 @@
 package geojson
 
 import (
-	"github.com/tidwall/geojson/geos"
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
 
@@ -26,6 +26,11 @@ func (g *MultiPoint) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
+// String ...
+func (g *MultiPoint) String() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONMultiPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g MultiPoint
 	var err error
@@ -35,7 +40,7 @@ func parseJSONMultiPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	if !keys.rCoordinates.IsArray() {
 		return nil, errCoordinatesInvalid
 	}
-	var coords geos.Point
+	var coords geometry.Point
 	var ex *extra
 	keys.rCoordinates.ForEach(func(_, value gjson.Result) bool {
 		coords, ex, err = parseJSONPointCoords(keys, value, opts)
