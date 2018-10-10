@@ -36,7 +36,7 @@ type Object interface {
 	Contains(other Object) bool
 	Within(other Object) bool
 	Intersects(other Object) bool
-	//Nearby(center geometry.Point, meters float64) bool
+	Nearby(center geometry.Point, meters float64) bool
 	String() string
 	NumPoints() int
 

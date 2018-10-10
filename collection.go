@@ -302,6 +302,11 @@ func (g *collection) NumPoints() int {
 	return n
 }
 
+// Nearby ...
+func (g *collection) Nearby(center geometry.Point, meters float64) bool {
+	panic("not ready")
+}
+
 func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 	g.pempty = true
 	var count int

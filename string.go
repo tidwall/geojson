@@ -98,3 +98,8 @@ func (g *String) intersectsPoly(poly *geometry.Poly) bool {
 func (g *String) NumPoints() int {
 	return 0
 }
+
+// Nearby ...
+func (g *String) Nearby(center geometry.Point, meters float64) bool {
+	panic("not ready")
+}

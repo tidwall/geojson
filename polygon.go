@@ -145,6 +145,11 @@ func (g *Polygon) NumPoints() int {
 	return n
 }
 
+// Nearby ...
+func (g *Polygon) Nearby(center geometry.Point, meters float64) bool {
+	panic("not ready")
+}
+
 func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g Polygon
 	coords, ex, err := parseJSONPolygonCoords(keys, gjson.Result{}, opts)

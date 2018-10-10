@@ -134,6 +134,11 @@ func (g *Feature) NumPoints() int {
 	return g.base.NumPoints()
 }
 
+// Nearby ...
+func (g *Feature) Nearby(center geometry.Point, meters float64) bool {
+	panic("not ready")
+}
+
 // parseJSONFeature will return a valid GeoJSON object.
 func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g Feature

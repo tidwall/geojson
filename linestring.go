@@ -135,10 +135,10 @@ func (g *LineString) NumPoints() int {
 	return g.base.NumPoints()
 }
 
-// // Nearby ...
-// func (g *LineString) Nearby(center geometry.Point, meters float64) bool {
-// 	return geometry.DestinationPoint(g.Center(), center) <= meters
-// }
+// Nearby ...
+func (g *LineString) Nearby(center geometry.Point, meters float64) bool {
+	panic("not ready")
+}
 
 func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g LineString

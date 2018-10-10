@@ -1,7 +1,6 @@
 package geojson
 
 import (
-	"github.com/tidwall/geojson/geo"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
@@ -141,7 +140,7 @@ func (g *Point) NumPoints() int {
 
 // Nearby ...
 func (g *Point) Nearby(center geometry.Point, meters float64) bool {
-	return geo.DistanceTo(g.base.Y, g.base.X, center.Y, center.X) <= meters
+	panic("not ready")
 }
 
 func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
