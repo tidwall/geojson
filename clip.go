@@ -37,19 +37,14 @@ func ClipRing(ring []geometry.Point, bbox geometry.Rect) (
 		// under 4 elements this is not a polygon ring!
 		return
 	}
-
 	var edge uint8
 	var inside, prevInside bool
 	var prev geometry.Point
-
 	for edge = 1; edge <= 8; edge *= 2 {
 		prev = ring[len(ring)-2]
 		prevInside = (getCode(bbox, prev) & edge) == 0
-
 		for _, p := range ring {
-
 			inside = (getCode(bbox, p) & edge) == 0
-
 			if prevInside && inside {
 				// Staying inside
 				resRing = append(resRing, p)
@@ -63,16 +58,16 @@ func ClipRing(ring []geometry.Point, bbox geometry.Rect) (
 			} else {
 				// Staying outside
 			}
-
 			prev, prevInside = p, inside
 		}
-
-		if resRing[0] != resRing[len(resRing)-1] {
+		if len(resRing) > 0 && resRing[0] != resRing[len(resRing)-1] {
 			resRing = append(resRing, resRing[0])
 		}
 		ring, resRing = resRing, []geometry.Point{}
+		if len(ring) == 0 {
+			break
+		}
 	}
-
 	resRing = ring
 	return
 }

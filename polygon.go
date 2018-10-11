@@ -235,6 +235,11 @@ func (g *Polygon) Clipped(obj Object) Object {
 	}
 	poly := geometry.NewPoly(exterior, holes, geometry.DefaultIndex)
 	polygon.base = *poly
+	if poly.Empty() {
+		multi := new(MultiPolygon)
+		multi.parseInitRectIndex(DefaultParseOptions)
+		return multi
+	}
 	return polygon
 }
 
