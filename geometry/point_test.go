@@ -10,6 +10,24 @@ func TestPointEmpty(t *testing.T) {
 	expect(t, !P(0, 0).Empty())
 }
 
+func TestPointGeometryDefaults(t *testing.T) {
+	g := Geometry(Point{})
+	expect(t, !g.Empty())
+	expect(t, g.Rect() == R(0, 0, 0, 0))
+	expect(t, !g.ContainsLine(nil))
+	expect(t, !g.ContainsLine(&Line{}))
+	expect(t, g.ContainsPoint(Point{}))
+	expect(t, !g.ContainsPoly(nil))
+	expect(t, !g.ContainsPoly(&Poly{}))
+	expect(t, g.ContainsRect(Rect{}))
+	expect(t, !g.IntersectsLine(nil))
+	expect(t, !g.IntersectsLine(&Line{}))
+	expect(t, g.IntersectsPoint(Point{}))
+	expect(t, !g.IntersectsPoly(nil))
+	expect(t, !g.IntersectsPoly(&Poly{}))
+	expect(t, g.IntersectsRect(Rect{}))
+}
+
 func TestPointRect(t *testing.T) {
 	expect(t, P(5, 5).Rect() == R(5, 5, 5, 5))
 }

@@ -27,6 +27,13 @@ func seriesForEachPoint(ring Ring, iter func(point Point) bool) {
 	}
 }
 
+func TestSeriesEmpty(t *testing.T) {
+	var series *baseSeries
+	expect(t, series.Empty())
+	series2 := makeSeries(nil, false, false, 0)
+	expect(t, series2.Empty())
+}
+
 func TestSeriesClockwise(t *testing.T) {
 	var series baseSeries
 	series = makeSeries([]Point{

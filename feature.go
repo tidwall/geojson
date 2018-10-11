@@ -116,3 +116,20 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 func (g *Feature) Clipped(obj Object) Object {
 	return g
 }
+
+// Distance ...
+func (g *Feature) Distance(obj Object) float64 {
+	return g.base.Distance(obj)
+}
+func (g *Feature) distancePoint(point geometry.Point) float64 {
+	return g.base.distancePoint(point)
+}
+func (g *Feature) distanceRect(rect geometry.Rect) float64 {
+	return g.base.distanceRect(rect)
+}
+func (g *Feature) distanceLine(line *geometry.Line) float64 {
+	return g.base.distanceLine(line)
+}
+func (g *Feature) distancePoly(poly *geometry.Poly) float64 {
+	return g.base.distancePoly(poly)
+}

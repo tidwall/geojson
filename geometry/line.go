@@ -18,6 +18,9 @@ func NewLine(points []Point, index int) *Line {
 
 // Move ...
 func (line *Line) Move(deltaX, deltaY float64) *Line {
+	if line == nil {
+		return nil
+	}
 	nline := new(Line)
 	nline.baseSeries = *line.baseSeries.Move(deltaX, deltaY).(*baseSeries)
 	return nline
@@ -25,6 +28,9 @@ func (line *Line) Move(deltaX, deltaY float64) *Line {
 
 // ContainsPoint ...
 func (line *Line) ContainsPoint(point Point) bool {
+	if line == nil {
+		return false
+	}
 	contains := false
 	line.Search(Rect{point, point}, func(seg Segment, index int) bool {
 		if seg.Raycast(point).On {
@@ -38,23 +44,32 @@ func (line *Line) ContainsPoint(point Point) bool {
 
 // IntersectsPoint ...
 func (line *Line) IntersectsPoint(point Point) bool {
+	if line == nil {
+		return false
+	}
 	return line.ContainsPoint(point)
 }
 
 // ContainsRect ...
 func (line *Line) ContainsRect(rect Rect) bool {
+	if line == nil {
+		return false
+	}
 	// Convert rect into a poly
 	return line.ContainsPoly(&Poly{Exterior: rect})
 }
 
 // IntersectsRect ...
 func (line *Line) IntersectsRect(rect Rect) bool {
+	if line == nil {
+		return false
+	}
 	return rect.IntersectsLine(line)
 }
 
 // ContainsLine ...
 func (line *Line) ContainsLine(other *Line) bool {
-	if line.Empty() || other.Empty() {
+	if line == nil || other == nil || line.Empty() || other.Empty() {
 		return false
 	}
 	// locate the first "other" segment that contains the first "line" segment.
@@ -97,7 +112,7 @@ func (line *Line) ContainsLine(other *Line) bool {
 
 // IntersectsLine ...
 func (line *Line) IntersectsLine(other *Line) bool {
-	if line.Empty() || other.Empty() {
+	if line == nil || other == nil || line.Empty() || other.Empty() {
 		return false
 	}
 	if !line.Rect().IntersectsRect(other.Rect()) {
@@ -126,7 +141,7 @@ func (line *Line) IntersectsLine(other *Line) bool {
 
 // ContainsPoly ...
 func (line *Line) ContainsPoly(poly *Poly) bool {
-	if line.Empty() || poly.Empty() {
+	if line == nil || poly == nil || line.Empty() || poly.Empty() {
 		return false
 	}
 	rect := poly.Rect()

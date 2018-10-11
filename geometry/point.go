@@ -46,20 +46,32 @@ func (point Point) IntersectsRect(rect Rect) bool {
 
 // ContainsLine ...
 func (point Point) ContainsLine(line *Line) bool {
+	if line == nil {
+		return false
+	}
 	return !line.Empty() && line.Rect() == point.Rect()
 }
 
 // IntersectsLine ...
 func (point Point) IntersectsLine(line *Line) bool {
+	if line == nil {
+		return false
+	}
 	return line.IntersectsPoint(point)
 }
 
 // ContainsPoly ...
 func (point Point) ContainsPoly(poly *Poly) bool {
+	if poly == nil {
+		return false
+	}
 	return !poly.Empty() && poly.Rect() == point.Rect()
 }
 
 // IntersectsPoly ...
 func (point Point) IntersectsPoly(poly *Poly) bool {
+	if poly == nil {
+		return false
+	}
 	return poly.IntersectsPoint(point)
 }

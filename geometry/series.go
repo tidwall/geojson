@@ -82,6 +82,9 @@ func (series *baseSeries) Move(deltaX, deltaY float64) Series {
 
 // Empty returns true if the series does not take up space.
 func (series *baseSeries) Empty() bool {
+	if series == nil {
+		return true
+	}
 	return (series.closed && len(series.points) < 3) || len(series.points) < 2
 }
 

@@ -186,3 +186,20 @@ func parseJSONPointCoords(
 func (g *Point) Clipped(obj Object) Object {
 	return g
 }
+
+// Distance ...
+func (g *Point) Distance(obj Object) float64 {
+	return obj.distancePoint(g.base)
+}
+func (g *Point) distancePoint(point geometry.Point) float64 {
+	return geoDistancePoints(g.Center(), point)
+}
+func (g *Point) distanceRect(rect geometry.Rect) float64 {
+	return geoDistancePoints(g.Center(), rect.Center())
+}
+func (g *Point) distanceLine(line *geometry.Line) float64 {
+	return geoDistancePoints(g.Center(), line.Rect().Center())
+}
+func (g *Point) distancePoly(poly *geometry.Poly) float64 {
+	return geoDistancePoints(g.Center(), poly.Rect().Center())
+}

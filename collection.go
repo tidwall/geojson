@@ -307,3 +307,20 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 func (g *collection) Clipped(obj Object) Object {
 	return g
 }
+
+// Distance ...
+func (g *collection) Distance(obj Object) float64 {
+	return obj.distancePoint(g.Center())
+}
+func (g *collection) distancePoint(point geometry.Point) float64 {
+	return geoDistancePoints(g.Center(), point)
+}
+func (g *collection) distanceRect(rect geometry.Rect) float64 {
+	return geoDistancePoints(g.Center(), rect.Center())
+}
+func (g *collection) distanceLine(line *geometry.Line) float64 {
+	return geoDistancePoints(g.Center(), line.Rect().Center())
+}
+func (g *collection) distancePoly(poly *geometry.Poly) float64 {
+	return geoDistancePoints(g.Center(), poly.Rect().Center())
+}

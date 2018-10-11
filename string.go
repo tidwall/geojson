@@ -103,3 +103,20 @@ func (g *String) NumPoints() int {
 func (g *String) Clipped(obj Object) Object {
 	return g
 }
+
+// Distance ...
+func (g *String) Distance(obj Object) float64 {
+	return 0
+}
+func (g *String) distancePoint(point geometry.Point) float64 {
+	return 0
+}
+func (g *String) distanceRect(rect geometry.Rect) float64 {
+	return 0
+}
+func (g *String) distanceLine(line *geometry.Line) float64 {
+	return 0
+}
+func (g *String) distancePoly(poly *geometry.Poly) float64 {
+	return 0
+}

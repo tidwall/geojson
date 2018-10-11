@@ -153,20 +153,32 @@ func (rect Rect) IntersectsRect(other Rect) bool {
 
 // ContainsLine ...
 func (rect Rect) ContainsLine(line *Line) bool {
+	if line == nil {
+		return false
+	}
 	return !line.Empty() && rect.ContainsRect(line.Rect())
 }
 
 // IntersectsLine ...
 func (rect Rect) IntersectsLine(line *Line) bool {
+	if line == nil {
+		return false
+	}
 	return ringIntersectsLine(rect, line, true)
 }
 
 // ContainsPoly ...
 func (rect Rect) ContainsPoly(poly *Poly) bool {
+	if poly == nil {
+		return false
+	}
 	return !poly.Empty() && rect.ContainsRect(poly.Rect())
 }
 
 // IntersectsPoly ...
 func (rect Rect) IntersectsPoly(poly *Poly) bool {
+	if poly == nil {
+		return false
+	}
 	return poly.IntersectsRect(rect)
 }

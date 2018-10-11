@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/tidwall/geojson/geo"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/pretty"
 
@@ -36,8 +37,9 @@ type Object interface {
 	Intersects(other Object) bool
 	AppendJSON(dst []byte) []byte
 	String() string
-	NumPoints() int
 	Clipped(obj Object) Object
+	Distance(obj Object) float64
+	NumPoints() int
 
 	forEach(iter func(geom Object) bool) bool
 	withinRect(rect geometry.Rect) bool
@@ -48,6 +50,10 @@ type Object interface {
 	intersectsPoint(point geometry.Point) bool
 	intersectsLine(line *geometry.Line) bool
 	intersectsPoly(poly *geometry.Poly) bool
+	distanceRect(rect geometry.Rect) float64
+	distancePoint(point geometry.Point) float64
+	distanceLine(line *geometry.Line) float64
+	distancePoly(poly *geometry.Poly) float64
 }
 
 var _ = []Object{
@@ -258,3 +264,14 @@ func unionRects(a, b geometry.Rect) geometry.Rect {
 	}
 	return a
 }
+
+func geoDistancePoints(a, b geometry.Point) float64 {
+	return geo.DistanceTo(a.Y, a.X, b.Y, b.X)
+}
+
+// func geoDistanceCenterToPoint(obj Object, point geometry.Point) float64 {
+// 	if obj.Empty() {
+// 		return 0
+// 	}
+// 	return geoDistancePointsA(obj.Center(), point)
+// }

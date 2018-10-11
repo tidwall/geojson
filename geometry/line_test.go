@@ -11,6 +11,24 @@ func TestLineNewLine(t *testing.T) {
 	expect(t, !line.Empty())
 }
 
+func TestLineGeometryDefaults(t *testing.T) {
+	g := Geometry(&Line{})
+	expect(t, g.Empty())
+	expect(t, g.Rect() == R(0, 0, 0, 0))
+	expect(t, !g.ContainsLine(nil))
+	expect(t, !g.ContainsLine(&Line{}))
+	expect(t, !g.ContainsPoint(Point{}))
+	expect(t, !g.ContainsPoly(nil))
+	expect(t, !g.ContainsPoly(&Poly{}))
+	expect(t, !g.ContainsRect(Rect{}))
+	expect(t, !g.IntersectsLine(nil))
+	expect(t, !g.IntersectsLine(&Line{}))
+	expect(t, !g.IntersectsPoint(Point{}))
+	expect(t, !g.IntersectsPoly(nil))
+	expect(t, !g.IntersectsPoly(&Poly{}))
+	expect(t, !g.IntersectsRect(Rect{}))
+}
+
 func TestLineMove(t *testing.T) {
 	ln1 := L(P(0, 1), P(2, 3), P(4, 5))
 	ln2 := ln1.Move(7, 8)
@@ -18,6 +36,10 @@ func TestLineMove(t *testing.T) {
 	for i := 0; i < ln2.NumPoints(); i++ {
 		expect(t, ln2.PointAt(i) == ln1.PointAt(i).Move(7, 8))
 	}
+
+	var line *Line
+	expect(t, line.Move(0, 0) == nil)
+	expect(t, (&Line{}).Move(0, 0) != nil)
 }
 
 func TestLineContainsPoint(t *testing.T) {
@@ -31,6 +53,9 @@ func TestLineContainsPoint(t *testing.T) {
 	expect(t, !line.ContainsPoint(P(0, 0)))
 	expect(t, line.ContainsPoint(P(5, 0)))
 	expect(t, line.ContainsPoint(P(2.5, 5)))
+	line = nil
+	expect(t, !line.ContainsPoint(Point{}))
+	expect(t, !(&Line{}).ContainsPoint(Point{}))
 }
 
 func TestLineIntersectsPoint(t *testing.T) {
@@ -39,6 +64,9 @@ func TestLineIntersectsPoint(t *testing.T) {
 	expect(t, !line.IntersectsPoint(P(0, 0)))
 	expect(t, line.IntersectsPoint(P(5, 0)))
 	expect(t, line.IntersectsPoint(P(2.5, 5)))
+	line = nil
+	expect(t, !line.IntersectsPoint(Point{}))
+	expect(t, !(&Line{}).IntersectsPoint(Point{}))
 }
 
 func TestLineContainsRect(t *testing.T) {
@@ -47,6 +75,9 @@ func TestLineContainsRect(t *testing.T) {
 	expect(t, line.ContainsRect(R(0, 10, 0, 10)))
 	line = NewLine(u1, DefaultIndex)
 	expect(t, line.ContainsRect(R(0, 0, 0, 10)))
+	line = nil
+	expect(t, !line.ContainsRect(Rect{}))
+	expect(t, !(&Line{}).ContainsRect(Rect{}))
 }
 
 func TestLineIntersectsRect(t *testing.T) {
@@ -54,6 +85,9 @@ func TestLineIntersectsRect(t *testing.T) {
 	expect(t, line.IntersectsRect(R(0, 0, 10, 10)))
 	expect(t, line.IntersectsRect(R(0, 0, 2.5, 5)))
 	expect(t, !line.IntersectsRect(R(0, 0, 2.4, 5)))
+	line = nil
+	expect(t, !line.IntersectsRect(Rect{}))
+	expect(t, !(&Line{}).IntersectsRect(Rect{}))
 }
 
 func TestLineContainsLine(t *testing.T) {

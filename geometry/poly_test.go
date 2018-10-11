@@ -48,6 +48,24 @@ func TestPolyNewPoly(t *testing.T) {
 	})
 }
 
+func TestPolyGeometryDefaults(t *testing.T) {
+	g := Geometry(&Poly{})
+	expect(t, g.Empty())
+	expect(t, g.Rect() == R(0, 0, 0, 0))
+	expect(t, !g.ContainsLine(nil))
+	expect(t, !g.ContainsLine(&Line{}))
+	expect(t, !g.ContainsPoint(Point{}))
+	expect(t, !g.ContainsPoly(nil))
+	expect(t, !g.ContainsPoly(&Poly{}))
+	expect(t, !g.ContainsRect(Rect{}))
+	expect(t, !g.IntersectsLine(nil))
+	expect(t, !g.IntersectsLine(&Line{}))
+	expect(t, !g.IntersectsPoint(Point{}))
+	expect(t, !g.IntersectsPoly(nil))
+	expect(t, !g.IntersectsPoly(&Poly{}))
+	expect(t, !g.IntersectsRect(Rect{}))
+}
+
 func TestPolyRect(t *testing.T) {
 	dualPolyTest(t, octagon, nil, func(t *testing.T, poly *Poly) {
 		expect(t, poly.Rect() == R(0, 0, 10, 10))
@@ -69,6 +87,10 @@ func TestPolyMove(t *testing.T) {
 	expect(t, poly2.Rect() == R(5, 8, 15, 18))
 	expect(t, len(poly2.Holes) == 1)
 	expect(t, poly2.Holes[0].Rect() == R(7, 10, 13, 16))
+
+	poly = nil
+	expect(t, poly.Move(0, 0) == nil)
+	expect(t, (&Poly{}).Move(0, 0) != nil)
 }
 
 func TestPolyContainsPoint(t *testing.T) {
@@ -89,6 +111,9 @@ func TestPolyIntersectsPoint(t *testing.T) {
 		expect(t, poly.IntersectsPoint(P(3, 5)))
 		expect(t, !poly.IntersectsPoint(P(5, 5)))
 	})
+	var poly *Poly
+	expect(t, !poly.IntersectsPoint(Point{}))
+	expect(t, !(&Poly{}).IntersectsPoint(Point{}))
 }
 func TestPolyContainsRect(t *testing.T) {
 	ring := []Point{{0, 0}, {10, 0}, {10, 10}, {0, 10}, {0, 0}}
@@ -100,6 +125,10 @@ func TestPolyContainsRect(t *testing.T) {
 		expect(t, !poly.ContainsRect(R(4.1, 4.1, 5.9, 5.9)))
 		expect(t, !poly.ContainsRect(R(4.1, 4.1, 5.9, 5.9)))
 	})
+
+	var poly *Poly
+	expect(t, !poly.ContainsRect(Rect{}))
+	expect(t, !poly.IntersectsRect(Rect{}))
 }
 
 func TestPolyIntersectsRect(t *testing.T) {
@@ -156,4 +185,6 @@ func TestPolyContainsPoly(t *testing.T) {
 
 func TestPolyClockwise(t *testing.T) {
 	expect(t, !NewPoly(bowtie, nil, DefaultIndex).Clockwise())
+	var poly *Poly
+	expect(t, !poly.Clockwise())
 }

@@ -215,3 +215,20 @@ func parseJSONPolygonCoords(
 func (g *Polygon) Clipped(obj Object) Object {
 	return g
 }
+
+// Distance ...
+func (g *Polygon) Distance(obj Object) float64 {
+	return obj.distancePoly(&g.base)
+}
+func (g *Polygon) distancePoint(point geometry.Point) float64 {
+	return geoDistancePoints(g.Center(), point)
+}
+func (g *Polygon) distanceRect(rect geometry.Rect) float64 {
+	return geoDistancePoints(g.Center(), rect.Center())
+}
+func (g *Polygon) distanceLine(line *geometry.Line) float64 {
+	return geoDistancePoints(g.Center(), line.Rect().Center())
+}
+func (g *Polygon) distancePoly(poly *geometry.Poly) float64 {
+	return geoDistancePoints(g.Center(), poly.Rect().Center())
+}
