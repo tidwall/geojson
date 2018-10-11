@@ -114,7 +114,10 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 
 // Clipped ...
 func (g *Feature) Clipped(obj Object) Object {
-	return g
+	feature := new(Feature)
+	feature.base = g.base.Clipped(obj)
+	feature.extra = g.extra
+	return feature
 }
 
 // Distance ...

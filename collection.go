@@ -305,7 +305,18 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 
 // Clipped ...
 func (g *collection) Clipped(obj Object) Object {
-	return g
+	var newChildren []Object
+	for _, child := range g.children {
+		newChild := child.Clipped(obj)
+		if _, ok := newChild.(*Feature); !ok {
+			newChild = &Feature{base: newChild}
+		}
+		newChildren = append(newChildren, newChild)
+	}
+	multi := new(FeatureCollection)
+	multi.children = newChildren
+	multi.parseInitRectIndex(DefaultParseOptions)
+	return multi
 }
 
 // Distance ...

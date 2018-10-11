@@ -184,7 +184,12 @@ func parseJSONPointCoords(
 
 // Clipped ...
 func (g *Point) Clipped(obj Object) Object {
-	return g
+	if obj == nil || g.intersectsRect(obj.Rect()) {
+		return g
+	}
+	multi := new(MultiPoint)
+	multi.parseInitRectIndex(DefaultParseOptions)
+	return multi
 }
 
 // Distance ...

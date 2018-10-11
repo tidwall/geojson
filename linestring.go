@@ -194,7 +194,42 @@ func parseJSONLineStringCoords(
 
 // Clipped ...
 func (g *LineString) Clipped(obj Object) Object {
-	return g
+	bbox := obj.Rect()
+	var newPoints [][]geometry.Point
+	var clipped geometry.Segment
+	var rejected bool
+	var line []geometry.Point
+	nSegments := g.base.NumSegments()
+	for i := 0; i < nSegments; i++ {
+		clipped, rejected = ClipSegment(g.base.SegmentAt(i), bbox)
+		if rejected {
+			continue
+		}
+		if len(line) > 0 && line[len(line)-1] != clipped.A {
+			newPoints = append(newPoints, line)
+			line = []geometry.Point{clipped.A}
+		} else if len(line) == 0 {
+			line = append(line, clipped.A)
+		}
+		line = append(line, clipped.B)
+	}
+	if len(line) > 0 {
+		newPoints = append(newPoints, line)
+	}
+	var children []Object
+	for _, points := range newPoints {
+		var lineString = new(LineString)
+		line := geometry.NewLine(points, geometry.DefaultIndex)
+		lineString.base = *line
+		children = append(children, lineString)
+	}
+	if len(children) == 1 {
+		return children[0]
+	}
+	multi := new(MultiLineString)
+	multi.children = children
+	multi.parseInitRectIndex(DefaultParseOptions)
+	return multi
 }
 
 // Distance ...
