@@ -11,8 +11,8 @@ type Point struct {
 	extra *extra
 }
 
-// forEach ...
-func (g *Point) forEach(iter func(geom Object) bool) bool {
+// ForEach ...
+func (g *Point) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)
 }
 
@@ -39,6 +39,11 @@ func (g *Point) Rect() geometry.Rect {
 	return g.base.Rect()
 }
 
+// Spatial ...
+func (g *Point) Spatial() Spatial {
+	return g
+}
+
 // Center ...
 func (g *Point) Center() geometry.Point {
 	return g.base
@@ -63,11 +68,6 @@ func (g *Point) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// IsSpatial ...
-func (g *Point) IsSpatial() bool {
-	return true
-}
-
 // Within ...
 func (g *Point) Within(obj Object) bool {
 	return obj.Contains(g)
@@ -75,43 +75,51 @@ func (g *Point) Within(obj Object) bool {
 
 // Contains ...
 func (g *Point) Contains(obj Object) bool {
-	return obj.withinPoint(g.base)
+	return obj.Spatial().WithinPoint(g.base)
 }
 
 // Intersects ...
 func (g *Point) Intersects(obj Object) bool {
-	return obj.intersectsPoint(g.base)
+	return obj.Spatial().IntersectsPoint(g.base)
 }
 
-func (g *Point) withinRect(rect geometry.Rect) bool {
+// WithinRect ...
+func (g *Point) WithinRect(rect geometry.Rect) bool {
 	return rect.ContainsPoint(g.base)
 }
 
-func (g *Point) withinPoint(point geometry.Point) bool {
+// WithinPoint ...
+func (g *Point) WithinPoint(point geometry.Point) bool {
 	return point.ContainsPoint(g.base)
 }
 
-func (g *Point) withinLine(line *geometry.Line) bool {
+// WithinLine ...
+func (g *Point) WithinLine(line *geometry.Line) bool {
 	return line.ContainsPoint(g.base)
 }
 
-func (g *Point) withinPoly(poly *geometry.Poly) bool {
+// WithinPoly ...
+func (g *Point) WithinPoly(poly *geometry.Poly) bool {
 	return poly.ContainsPoint(g.base)
 }
 
-func (g *Point) intersectsPoint(point geometry.Point) bool {
+// IntersectsPoint ...
+func (g *Point) IntersectsPoint(point geometry.Point) bool {
 	return g.base.IntersectsPoint(point)
 }
 
-func (g *Point) intersectsRect(rect geometry.Rect) bool {
+// IntersectsRect ...
+func (g *Point) IntersectsRect(rect geometry.Rect) bool {
 	return g.base.IntersectsRect(rect)
 }
 
-func (g *Point) intersectsLine(line *geometry.Line) bool {
+// IntersectsLine ...
+func (g *Point) IntersectsLine(line *geometry.Line) bool {
 	return g.base.IntersectsLine(line)
 }
 
-func (g *Point) intersectsPoly(poly *geometry.Poly) bool {
+// IntersectsPoly ...
+func (g *Point) IntersectsPoly(poly *geometry.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
@@ -192,29 +200,37 @@ func parseJSONPointCoords(
 	return coords, ex, nil
 }
 
-// Clipped ...
-func (g *Point) Clipped(obj Object) Object {
-	if obj == nil || g.intersectsRect(obj.Rect()) {
-		return g
-	}
-	multi := new(MultiPoint)
-	multi.parseInitRectIndex(DefaultParseOptions)
-	return multi
-}
+// // Clipped ...
+// func (g *Point) Clipped(obj Object) Object {
+// 	if obj == nil || g.intersectsRect(obj.Rect()) {
+// 		return g
+// 	}
+// 	multi := new(MultiPoint)
+// 	multi.parseInitRectIndex(DefaultParseOptions)
+// 	return multi
+// }
 
 // Distance ...
 func (g *Point) Distance(obj Object) float64 {
-	return obj.distancePoint(g.base)
+	return obj.Spatial().DistancePoint(g.base)
 }
-func (g *Point) distancePoint(point geometry.Point) float64 {
+
+// DistancePoint ...
+func (g *Point) DistancePoint(point geometry.Point) float64 {
 	return geoDistancePoints(g.Center(), point)
 }
-func (g *Point) distanceRect(rect geometry.Rect) float64 {
+
+// DistanceRect ...
+func (g *Point) DistanceRect(rect geometry.Rect) float64 {
 	return geoDistancePoints(g.Center(), rect.Center())
 }
-func (g *Point) distanceLine(line *geometry.Line) float64 {
+
+// DistanceLine ...
+func (g *Point) DistanceLine(line *geometry.Line) float64 {
 	return geoDistancePoints(g.Center(), line.Rect().Center())
 }
-func (g *Point) distancePoly(poly *geometry.Poly) float64 {
+
+// DistancePoly ...
+func (g *Point) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }

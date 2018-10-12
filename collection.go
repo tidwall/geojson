@@ -22,10 +22,9 @@ func (g *collection) Children() []Object {
 }
 
 // forEach ...
-func (g *collection) forEach(iter func(geom Object) bool) bool {
+func (g *collection) ForEach(iter func(geom Object) bool) bool {
 	for _, child := range g.children {
-
-		if !child.forEach(iter) {
+		if !child.ForEach(iter) {
 			return false
 		}
 	}
@@ -86,11 +85,6 @@ func (g *collection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// IsSpatial ...
-func (g *collection) IsSpatial() bool {
-	return true
-}
-
 // Within ...
 func (g *collection) Within(obj Object) bool {
 	return obj.Contains(g)
@@ -103,7 +97,7 @@ func (g *collection) Contains(obj Object) bool {
 	}
 	// all of obj must be contained by any number of the collection children
 	var objContained bool
-	obj.forEach(func(geom Object) bool {
+	obj.ForEach(func(geom Object) bool {
 		if geom.Empty() {
 			// ignore empties
 			return true
@@ -129,13 +123,15 @@ func (g *collection) Contains(obj Object) bool {
 	return objContained
 }
 
-func (g *collection) withinRect(rect geometry.Rect) bool {
+func (g *collection) Spatial() Spatial { return g }
+
+func (g *collection) WithinRect(rect geometry.Rect) bool {
 	if g.Empty() {
 		return false
 	}
 	var withinCount int
 	g.Search(rect, func(child Object) bool {
-		if child.withinRect(rect) {
+		if child.Spatial().WithinRect(rect) {
 			withinCount++
 			return true
 		}
@@ -144,13 +140,13 @@ func (g *collection) withinRect(rect geometry.Rect) bool {
 	return withinCount == len(g.children)
 }
 
-func (g *collection) withinPoint(point geometry.Point) bool {
+func (g *collection) WithinPoint(point geometry.Point) bool {
 	if g.Empty() {
 		return false
 	}
 	var withinCount int
 	g.Search(point.Rect(), func(child Object) bool {
-		if child.withinPoint(point) {
+		if child.Spatial().WithinPoint(point) {
 			withinCount++
 			return true
 		}
@@ -159,13 +155,13 @@ func (g *collection) withinPoint(point geometry.Point) bool {
 	return withinCount == len(g.children)
 }
 
-func (g *collection) withinLine(line *geometry.Line) bool {
+func (g *collection) WithinLine(line *geometry.Line) bool {
 	if g.Empty() {
 		return false
 	}
 	var withinCount int
 	g.Search(line.Rect(), func(child Object) bool {
-		if child.withinLine(line) {
+		if child.Spatial().WithinLine(line) {
 			withinCount++
 			return true
 		}
@@ -174,13 +170,13 @@ func (g *collection) withinLine(line *geometry.Line) bool {
 	return withinCount == len(g.children)
 }
 
-func (g *collection) withinPoly(poly *geometry.Poly) bool {
+func (g *collection) WithinPoly(poly *geometry.Poly) bool {
 	if g.Empty() {
 		return false
 	}
 	var withinCount int
 	g.Search(poly.Rect(), func(child Object) bool {
-		if child.withinPoly(poly) {
+		if child.Spatial().WithinPoly(poly) {
 			withinCount++
 			return true
 		}
@@ -193,7 +189,7 @@ func (g *collection) withinPoly(poly *geometry.Poly) bool {
 func (g *collection) Intersects(obj Object) bool {
 	// check if any of obj intersects with any of collection
 	var intersects bool
-	obj.forEach(func(geom Object) bool {
+	obj.ForEach(func(geom Object) bool {
 		if geom.Empty() {
 			// ignore the empties
 			return true
@@ -213,10 +209,10 @@ func (g *collection) Intersects(obj Object) bool {
 	return intersects
 }
 
-func (g *collection) intersectsPoint(point geometry.Point) bool {
+func (g *collection) IntersectsPoint(point geometry.Point) bool {
 	var intersects bool
 	g.Search(point.Rect(), func(child Object) bool {
-		if child.intersectsPoint(point) {
+		if child.Spatial().IntersectsPoint(point) {
 			intersects = true
 			return false
 		}
@@ -225,10 +221,10 @@ func (g *collection) intersectsPoint(point geometry.Point) bool {
 	return intersects
 }
 
-func (g *collection) intersectsRect(rect geometry.Rect) bool {
+func (g *collection) IntersectsRect(rect geometry.Rect) bool {
 	var intersects bool
 	g.Search(rect, func(child Object) bool {
-		if child.intersectsRect(rect) {
+		if child.Spatial().IntersectsRect(rect) {
 			intersects = true
 			return false
 		}
@@ -237,10 +233,10 @@ func (g *collection) intersectsRect(rect geometry.Rect) bool {
 	return intersects
 }
 
-func (g *collection) intersectsLine(line *geometry.Line) bool {
+func (g *collection) IntersectsLine(line *geometry.Line) bool {
 	var intersects bool
 	g.Search(line.Rect(), func(child Object) bool {
-		if child.intersectsLine(line) {
+		if child.Spatial().IntersectsLine(line) {
 			intersects = true
 			return false
 		}
@@ -249,10 +245,10 @@ func (g *collection) intersectsLine(line *geometry.Line) bool {
 	return intersects
 }
 
-func (g *collection) intersectsPoly(poly *geometry.Poly) bool {
+func (g *collection) IntersectsPoly(poly *geometry.Poly) bool {
 	var intersects bool
 	g.Search(poly.Rect(), func(child Object) bool {
-		if child.intersectsPoly(poly) {
+		if child.Spatial().IntersectsPoly(poly) {
 			intersects = true
 			return false
 		}
@@ -325,17 +321,17 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 
 // Distance ...
 func (g *collection) Distance(obj Object) float64 {
-	return obj.distancePoint(g.Center())
+	return obj.Spatial().DistancePoint(g.Center())
 }
-func (g *collection) distancePoint(point geometry.Point) float64 {
+func (g *collection) DistancePoint(point geometry.Point) float64 {
 	return geoDistancePoints(g.Center(), point)
 }
-func (g *collection) distanceRect(rect geometry.Rect) float64 {
+func (g *collection) DistanceRect(rect geometry.Rect) float64 {
 	return geoDistancePoints(g.Center(), rect.Center())
 }
-func (g *collection) distanceLine(line *geometry.Line) float64 {
+func (g *collection) DistanceLine(line *geometry.Line) float64 {
 	return geoDistancePoints(g.Center(), line.Rect().Center())
 }
-func (g *collection) distancePoly(poly *geometry.Poly) float64 {
+func (g *collection) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }

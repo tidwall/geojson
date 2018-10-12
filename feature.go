@@ -8,9 +8,9 @@ type Feature struct {
 	extra *extra
 }
 
-// forEach ...
-func (g *Feature) forEach(iter func(geom Object) bool) bool {
-	return g.base.forEach(iter)
+// ForEach ...
+func (g *Feature) ForEach(iter func(geom Object) bool) bool {
+	return g.base.ForEach(iter)
 }
 
 // Empty ...
@@ -48,9 +48,9 @@ func (g *Feature) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// IsSpatial ...
-func (g *Feature) IsSpatial() bool {
-	return true
+// Spatial ...
+func (g *Feature) Spatial() Spatial {
+	return g
 }
 
 // Within ...
@@ -63,20 +63,24 @@ func (g *Feature) Contains(obj Object) bool {
 	return obj.Within(g.base)
 }
 
-func (g *Feature) withinRect(rect geometry.Rect) bool {
-	return g.base.withinRect(rect)
+// WithinRect ...
+func (g *Feature) WithinRect(rect geometry.Rect) bool {
+	return g.base.Spatial().WithinRect(rect)
 }
 
-func (g *Feature) withinPoint(point geometry.Point) bool {
-	return g.base.withinPoint(point)
+// WithinPoint ...
+func (g *Feature) WithinPoint(point geometry.Point) bool {
+	return g.base.Spatial().WithinPoint(point)
 }
 
-func (g *Feature) withinLine(line *geometry.Line) bool {
-	return g.base.withinLine(line)
+// WithinLine ...
+func (g *Feature) WithinLine(line *geometry.Line) bool {
+	return g.base.Spatial().WithinLine(line)
 }
 
-func (g *Feature) withinPoly(poly *geometry.Poly) bool {
-	return g.base.withinPoly(poly)
+// WithinPoly ...
+func (g *Feature) WithinPoly(poly *geometry.Poly) bool {
+	return g.base.Spatial().WithinPoly(poly)
 }
 
 // Intersects ...
@@ -84,20 +88,24 @@ func (g *Feature) Intersects(obj Object) bool {
 	return obj.Intersects(g.base)
 }
 
-func (g *Feature) intersectsPoint(point geometry.Point) bool {
-	return g.base.intersectsPoint(point)
+// IntersectsPoint ...
+func (g *Feature) IntersectsPoint(point geometry.Point) bool {
+	return g.base.Spatial().IntersectsPoint(point)
 }
 
-func (g *Feature) intersectsRect(rect geometry.Rect) bool {
-	return g.base.intersectsRect(rect)
+// IntersectsRect ...
+func (g *Feature) IntersectsRect(rect geometry.Rect) bool {
+	return g.base.Spatial().IntersectsRect(rect)
 }
 
-func (g *Feature) intersectsLine(line *geometry.Line) bool {
-	return g.base.intersectsLine(line)
+// IntersectsLine ...
+func (g *Feature) IntersectsLine(line *geometry.Line) bool {
+	return g.base.Spatial().IntersectsLine(line)
 }
 
-func (g *Feature) intersectsPoly(poly *geometry.Poly) bool {
-	return g.base.intersectsPoly(poly)
+// IntersectsPoly ...
+func (g *Feature) IntersectsPoly(poly *geometry.Poly) bool {
+	return g.base.Spatial().IntersectsPoly(poly)
 }
 
 // NumPoints ...
@@ -134,15 +142,23 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 func (g *Feature) Distance(obj Object) float64 {
 	return g.base.Distance(obj)
 }
-func (g *Feature) distancePoint(point geometry.Point) float64 {
-	return g.base.distancePoint(point)
+
+// DistancePoint ...
+func (g *Feature) DistancePoint(point geometry.Point) float64 {
+	return g.base.Spatial().DistancePoint(point)
 }
-func (g *Feature) distanceRect(rect geometry.Rect) float64 {
-	return g.base.distanceRect(rect)
+
+// DistanceRect ...
+func (g *Feature) DistanceRect(rect geometry.Rect) float64 {
+	return g.base.Spatial().DistanceRect(rect)
 }
-func (g *Feature) distanceLine(line *geometry.Line) float64 {
-	return g.base.distanceLine(line)
+
+// DistanceLine ...
+func (g *Feature) DistanceLine(line *geometry.Line) float64 {
+	return g.base.Spatial().DistanceLine(line)
 }
-func (g *Feature) distancePoly(poly *geometry.Poly) float64 {
-	return g.base.distancePoly(poly)
+
+// DistancePoly ...
+func (g *Feature) DistancePoly(poly *geometry.Poly) float64 {
+	return g.base.Spatial().DistancePoly(poly)
 }

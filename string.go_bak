@@ -62,35 +62,35 @@ func (g *String) Intersects(obj Object) bool {
 	return false
 }
 
-func (g *String) withinRect(rect geometry.Rect) bool {
+func (g *String) WithinRect(rect geometry.Rect) bool {
 	return false
 }
 
-func (g *String) withinPoint(point geometry.Point) bool {
+func (g *String) WithinPoint(point geometry.Point) bool {
 	return false
 }
 
-func (g *String) withinLine(line *geometry.Line) bool {
+func (g *String) WithinLine(line *geometry.Line) bool {
 	return false
 }
 
-func (g *String) withinPoly(poly *geometry.Poly) bool {
+func (g *String) WithinPoly(poly *geometry.Poly) bool {
 	return false
 }
 
-func (g *String) intersectsPoint(point geometry.Point) bool {
+func (g *String) IntersectsPoint(point geometry.Point) bool {
 	return false
 }
 
-func (g *String) intersectsRect(rect geometry.Rect) bool {
+func (g *String) IntersectsRect(rect geometry.Rect) bool {
 	return false
 }
 
-func (g *String) intersectsLine(line *geometry.Line) bool {
+func (g *String) IntersectsLine(line *geometry.Line) bool {
 	return false
 }
 
-func (g *String) intersectsPoly(poly *geometry.Poly) bool {
+func (g *String) IntersectsPoly(poly *geometry.Poly) bool {
 	return false
 }
 

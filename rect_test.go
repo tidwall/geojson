@@ -18,7 +18,7 @@ func TestRect(t *testing.T) {
 	expect(t, rect.Rect() == R(10, 20, 30, 40))
 	expect(t, rect.Center() == P(20, 30))
 	var g Object
-	rect.forEach(func(o Object) bool {
+	rect.ForEach(func(o Object) bool {
 		expect(t, g == nil)
 		g = o
 		return true

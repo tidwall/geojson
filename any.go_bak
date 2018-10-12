@@ -42,10 +42,6 @@ func (g Any) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// IsSpatial ...
-func (g Any) IsSpatial() bool {
-	return false
-}
 
 // Within ...
 func (g Any) Within(obj Object) bool {
@@ -62,35 +58,35 @@ func (g Any) Intersects(obj Object) bool {
 	return false
 }
 
-func (g Any) withinRect(rect geometry.Rect) bool {
+func (g Any) WithinRect(rect geometry.Rect) bool {
 	return false
 }
 
-func (g Any) withinPoint(point geometry.Point) bool {
+func (g Any) WithinPoint(point geometry.Point) bool {
 	return false
 }
 
-func (g Any) withinLine(line *geometry.Line) bool {
+func (g Any) WithinLine(line *geometry.Line) bool {
 	return false
 }
 
-func (g Any) withinPoly(poly *geometry.Poly) bool {
+func (g Any) WithinPoly(poly *geometry.Poly) bool {
 	return false
 }
 
-func (g Any) intersectsPoint(point geometry.Point) bool {
+func (g Any) IntersectsPoint(point geometry.Point) bool {
 	return false
 }
 
-func (g Any) intersectsRect(rect geometry.Rect) bool {
+func (g Any) IntersectsRect(rect geometry.Rect) bool {
 	return false
 }
 
-func (g Any) intersectsLine(line *geometry.Line) bool {
+func (g Any) IntersectsLine(line *geometry.Line) bool {
 	return false
 }
 
-func (g Any) intersectsPoly(poly *geometry.Poly) bool {
+func (g Any) IntersectsPoly(poly *geometry.Poly) bool {
 	return false
 }
 

@@ -40,21 +40,8 @@ type Object interface {
 	String() string
 	Distance(obj Object) float64
 	NumPoints() int
-	IsSpatial() bool
-
-	forEach(iter func(geom Object) bool) bool
-	withinRect(rect geometry.Rect) bool
-	withinPoint(point geometry.Point) bool
-	withinLine(line *geometry.Line) bool
-	withinPoly(poly *geometry.Poly) bool
-	intersectsRect(rect geometry.Rect) bool
-	intersectsPoint(point geometry.Point) bool
-	intersectsLine(line *geometry.Line) bool
-	intersectsPoly(poly *geometry.Poly) bool
-	distanceRect(rect geometry.Rect) float64
-	distancePoint(point geometry.Point) float64
-	distanceLine(line *geometry.Line) float64
-	distancePoly(poly *geometry.Poly) float64
+	ForEach(iter func(geom Object) bool) bool
+	Spatial() Spatial
 }
 
 var _ = []Object{
