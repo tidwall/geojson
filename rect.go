@@ -44,9 +44,19 @@ func (g *Rect) AppendJSON(dst []byte) []byte {
 	return gPoly.AppendJSON(dst)
 }
 
+// JSON ...
+func (g *Rect) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 // String ...
 func (g *Rect) String() string {
 	return string(g.AppendJSON(nil))
+}
+
+// IsSpatial ...
+func (g *Rect) IsSpatial() bool {
+	return true
 }
 
 // Within ...
@@ -101,21 +111,21 @@ func (g *Rect) NumPoints() int {
 	return 2
 }
 
-// Clipped ...
-func (g *Rect) Clipped(obj Object) Object {
-	if obj == nil {
-		return g
-	}
-	// convert rect into a polygon
-	points := make([]geometry.Point, g.base.NumPoints())
-	for i := 0; i < len(points); i++ {
-		points[i] = g.base.PointAt(i)
-	}
-	poly := geometry.NewPoly(points, nil, geometry.DefaultIndex)
-	var polygon Polygon
-	polygon.base = *poly
-	return polygon.Clipped(obj)
-}
+// // Clipped ...
+// func (g *Rect) Clipped(obj Object) Object {
+// 	if obj == nil {
+// 		return g
+// 	}
+// 	// convert rect into a polygon
+// 	points := make([]geometry.Point, g.base.NumPoints())
+// 	for i := 0; i < len(points); i++ {
+// 		points[i] = g.base.PointAt(i)
+// 	}
+// 	poly := geometry.NewPoly(points, nil, geometry.DefaultIndex)
+// 	var polygon Polygon
+// 	polygon.base = *poly
+// 	return polygon.Clipped(obj)
+// }
 
 // Distance ...
 func (g *Rect) Distance(obj Object) float64 {

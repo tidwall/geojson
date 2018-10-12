@@ -1,0 +1,117 @@
+package geojson
+
+import (
+	"github.com/tidwall/geojson/geometry"
+)
+
+// Any is a not a geojson object, but rather a container for an interface{}
+type Any struct{ Thing interface{} }
+
+// forEach ...
+func (g Any) forEach(iter func(geom Object) bool) bool {
+	return iter(g)
+}
+
+// Empty ...
+func (g Any) Empty() bool {
+	return true
+}
+
+// Rect ...
+func (g Any) Rect() geometry.Rect {
+	return geometry.Rect{}
+}
+
+// Center ...
+func (g Any) Center() geometry.Point {
+	return geometry.Point{}
+}
+
+// AppendJSON ...
+func (g Any) AppendJSON(dst []byte) []byte {
+	return append(dst, "null"...)
+}
+
+// JSON ...
+func (g Any) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
+// String ...
+func (g Any) String() string {
+	return string(g.AppendJSON(nil))
+}
+
+// IsSpatial ...
+func (g Any) IsSpatial() bool {
+	return false
+}
+
+// Within ...
+func (g Any) Within(obj Object) bool {
+	return false
+}
+
+// Contains ...
+func (g Any) Contains(obj Object) bool {
+	return false
+}
+
+// Intersects ...
+func (g Any) Intersects(obj Object) bool {
+	return false
+}
+
+func (g Any) withinRect(rect geometry.Rect) bool {
+	return false
+}
+
+func (g Any) withinPoint(point geometry.Point) bool {
+	return false
+}
+
+func (g Any) withinLine(line *geometry.Line) bool {
+	return false
+}
+
+func (g Any) withinPoly(poly *geometry.Poly) bool {
+	return false
+}
+
+func (g Any) intersectsPoint(point geometry.Point) bool {
+	return false
+}
+
+func (g Any) intersectsRect(rect geometry.Rect) bool {
+	return false
+}
+
+func (g Any) intersectsLine(line *geometry.Line) bool {
+	return false
+}
+
+func (g Any) intersectsPoly(poly *geometry.Poly) bool {
+	return false
+}
+
+// NumPoints ...
+func (g Any) NumPoints() int {
+	return 0
+}
+
+// Distance ...
+func (g Any) Distance(obj Object) float64 {
+	return 0
+}
+func (g Any) distancePoint(point geometry.Point) float64 {
+	return 0
+}
+func (g Any) distanceRect(rect geometry.Rect) float64 {
+	return 0
+}
+func (g Any) distanceLine(line *geometry.Line) float64 {
+	return 0
+}
+func (g Any) distancePoly(poly *geometry.Poly) float64 {
+	return 0
+}

@@ -43,6 +43,16 @@ func (g *Feature) String() string {
 	return string(g.AppendJSON(nil))
 }
 
+// JSON ...
+func (g *Feature) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
+// IsSpatial ...
+func (g *Feature) IsSpatial() bool {
+	return true
+}
+
 // Within ...
 func (g *Feature) Within(obj Object) bool {
 	return obj.Contains(g)
@@ -112,13 +122,13 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	return &g, nil
 }
 
-// Clipped ...
-func (g *Feature) Clipped(obj Object) Object {
-	feature := new(Feature)
-	feature.base = g.base.Clipped(obj)
-	feature.extra = g.extra
-	return feature
-}
+// // Clipped ...
+// func (g *Feature) Clipped(obj Object) Object {
+// 	feature := new(Feature)
+// 	feature.base = g.base.Clipped(obj)
+// 	feature.extra = g.extra
+// 	return feature
+// }
 
 // Distance ...
 func (g *Feature) Distance(obj Object) float64 {

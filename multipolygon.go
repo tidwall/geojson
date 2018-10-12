@@ -31,6 +31,11 @@ func (g *MultiPolygon) String() string {
 	return string(g.AppendJSON(nil))
 }
 
+// JSON ...
+func (g *MultiPolygon) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONMultiPolygon(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {

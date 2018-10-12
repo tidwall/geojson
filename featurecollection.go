@@ -32,6 +32,11 @@ func (g *FeatureCollection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
+// JSON ...
+func (g *FeatureCollection) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONFeatureCollection(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {

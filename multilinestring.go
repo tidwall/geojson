@@ -32,6 +32,11 @@ func (g *MultiLineString) String() string {
 	return string(g.AppendJSON(nil))
 }
 
+// JSON ...
+func (g *MultiLineString) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONMultiLineString(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {

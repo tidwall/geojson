@@ -10,10 +10,10 @@ func TestRect(t *testing.T) {
 	expect(t, string(rect.AppendJSON(nil)) ==
 		`{"type":"Polygon","coordinates":[[[10,20],[30,20],[30,40],[10,40],[10,20]]]}`)
 	expect(t, rect.String() == string(rect.AppendJSON(nil)))
-	expect(t, !rect.Contains(NewString("")))
-	expect(t, !rect.Within(NewString("")))
-	expect(t, !rect.Intersects(NewString("")))
-	expect(t, rect.Distance(NewString("")) == 0)
+	// expect(t, !rect.Contains(NewString("")))
+	// expect(t, !rect.Within(NewString("")))
+	// expect(t, !rect.Intersects(NewString("")))
+	// expect(t, rect.Distance(NewString("")) == 0)
 
 	expect(t, rect.Rect() == R(10, 20, 30, 40))
 	expect(t, rect.Center() == P(20, 30))
@@ -26,7 +26,7 @@ func TestRect(t *testing.T) {
 	expect(t, g == rect)
 
 	expect(t, rect.NumPoints() == 2)
-	expect(t, rect.Clipped(nil) == rect)
+	// expect(t, rect.Clipped(nil) == rect)
 
 	expect(t, !(&Point{}).Contains(rect))
 	expect(t, !(&Rect{}).Contains(rect))

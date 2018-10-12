@@ -53,9 +53,19 @@ func (g *Point) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
+// JSON ...
+func (g *Point) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 // String ...
 func (g *Point) String() string {
 	return string(g.AppendJSON(nil))
+}
+
+// IsSpatial ...
+func (g *Point) IsSpatial() bool {
+	return true
 }
 
 // Within ...

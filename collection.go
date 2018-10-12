@@ -5,13 +5,6 @@ import (
 	"github.com/tidwall/geojson/geometry"
 )
 
-// Collection is a searchable with children
-type Collection interface {
-	Children() []Object
-	Indexed() bool
-	Search(rect geometry.Rect, iter func(child Object) bool)
-}
-
 type collection struct {
 	children []Object
 	extra    *extra
@@ -31,6 +24,7 @@ func (g *collection) Children() []Object {
 // forEach ...
 func (g *collection) forEach(iter func(geom Object) bool) bool {
 	for _, child := range g.children {
+
 		if !child.forEach(iter) {
 			return false
 		}
@@ -82,9 +76,19 @@ func (g *collection) AppendJSON(dst []byte) []byte {
 	return append(dst, "null"...)
 }
 
+// JSON ...
+func (g *collection) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 // String ...
 func (g *collection) String() string {
 	return string(g.AppendJSON(nil))
+}
+
+// IsSpatial ...
+func (g *collection) IsSpatial() bool {
+	return true
 }
 
 // Within ...
@@ -303,21 +307,21 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 	}
 }
 
-// Clipped ...
-func (g *collection) Clipped(obj Object) Object {
-	var newChildren []Object
-	for _, child := range g.children {
-		newChild := child.Clipped(obj)
-		if _, ok := newChild.(*Feature); !ok {
-			newChild = &Feature{base: newChild}
-		}
-		newChildren = append(newChildren, newChild)
-	}
-	multi := new(FeatureCollection)
-	multi.children = newChildren
-	multi.parseInitRectIndex(DefaultParseOptions)
-	return multi
-}
+// // Clipped ...
+// func (g *collection) Clipped(obj Object) Object {
+// 	var newChildren []Object
+// 	for _, child := range g.children {
+// 		newChild := child.Clipped(obj)
+// 		if _, ok := newChild.(*Feature); !ok {
+// 			newChild = &Feature{base: newChild}
+// 		}
+// 		newChildren = append(newChildren, newChild)
+// 	}
+// 	multi := new(FeatureCollection)
+// 	multi.children = newChildren
+// 	multi.parseInitRectIndex(DefaultParseOptions)
+// 	return multi
+// }
 
 // Distance ...
 func (g *collection) Distance(obj Object) float64 {

@@ -43,9 +43,19 @@ func (g *Polygon) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
+// JSON ...
+func (g *Polygon) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 // String ...
 func (g *Polygon) String() string {
 	return string(g.AppendJSON(nil))
+}
+
+// IsSpatial ...
+func (g *Polygon) IsSpatial() bool {
+	return true
 }
 
 // forEach ...
@@ -211,37 +221,37 @@ func parseJSONPolygonCoords(
 	return coords, ex, err
 }
 
-// Clipped ...
-func (g *Polygon) Clipped(obj Object) Object {
-	rect := obj.Rect()
-	var newPoints [][]geometry.Point
-	rings := []geometry.Ring{g.base.Exterior}
-	rings = append(rings, g.base.Holes...)
-	for _, ring := range rings {
-		ringPoints := make([]geometry.Point, ring.NumPoints())
-		for i := 0; i < len(ringPoints); i++ {
-			ringPoints[i] = ring.PointAt(i)
-		}
-		newPoints = append(newPoints, ClipRing(ringPoints, rect))
-	}
-	polygon := new(Polygon)
-	var exterior []geometry.Point
-	var holes [][]geometry.Point
-	if len(newPoints) > 0 {
-		exterior = newPoints[0]
-	}
-	if len(newPoints) > 1 {
-		holes = newPoints[1:]
-	}
-	poly := geometry.NewPoly(exterior, holes, geometry.DefaultIndex)
-	polygon.base = *poly
-	if poly.Empty() {
-		multi := new(MultiPolygon)
-		multi.parseInitRectIndex(DefaultParseOptions)
-		return multi
-	}
-	return polygon
-}
+// // Clipped ...
+// func (g *Polygon) Clipped(obj Object) Object {
+// 	rect := obj.Rect()
+// 	var newPoints [][]geometry.Point
+// 	rings := []geometry.Ring{g.base.Exterior}
+// 	rings = append(rings, g.base.Holes...)
+// 	for _, ring := range rings {
+// 		ringPoints := make([]geometry.Point, ring.NumPoints())
+// 		for i := 0; i < len(ringPoints); i++ {
+// 			ringPoints[i] = ring.PointAt(i)
+// 		}
+// 		newPoints = append(newPoints, ClipRing(ringPoints, rect))
+// 	}
+// 	polygon := new(Polygon)
+// 	var exterior []geometry.Point
+// 	var holes [][]geometry.Point
+// 	if len(newPoints) > 0 {
+// 		exterior = newPoints[0]
+// 	}
+// 	if len(newPoints) > 1 {
+// 		holes = newPoints[1:]
+// 	}
+// 	poly := geometry.NewPoly(exterior, holes, geometry.DefaultIndex)
+// 	polygon.base = *poly
+// 	if poly.Empty() {
+// 		multi := new(MultiPolygon)
+// 		multi.parseInitRectIndex(DefaultParseOptions)
+// 		return multi
+// 	}
+// 	return polygon
+// }
 
 // Distance ...
 func (g *Polygon) Distance(obj Object) float64 {

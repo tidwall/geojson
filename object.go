@@ -27,7 +27,7 @@ var (
 	errGeometriesInvalid  = errors.New("invalid geometries")
 )
 
-// Object ...
+// Object is a GeoJSON type
 type Object interface {
 	Empty() bool
 	Rect() geometry.Rect
@@ -36,10 +36,11 @@ type Object interface {
 	Within(other Object) bool
 	Intersects(other Object) bool
 	AppendJSON(dst []byte) []byte
+	JSON() string
 	String() string
-	Clipped(obj Object) Object
 	Distance(obj Object) float64
 	NumPoints() int
+	IsSpatial() bool
 
 	forEach(iter func(geom Object) bool) bool
 	withinRect(rect geometry.Rect) bool
@@ -60,7 +61,19 @@ var _ = []Object{
 	&Point{}, &LineString{}, &Polygon{}, &Feature{},
 	&MultiPoint{}, &MultiLineString{}, &MultiPolygon{},
 	&GeometryCollection{}, &FeatureCollection{},
-	&Rect{}, &String{}, &Circle{},
+	&Rect{}, &Circle{},
+}
+
+// Collection is a searchable collection type.
+type Collection interface {
+	Children() []Object
+	Indexed() bool
+	Search(rect geometry.Rect, iter func(child Object) bool)
+}
+
+var _ = []Collection{
+	&MultiPoint{}, &MultiLineString{}, &MultiPolygon{},
+	&FeatureCollection{}, &GeometryCollection{},
 }
 
 type extra struct {

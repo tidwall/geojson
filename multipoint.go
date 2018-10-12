@@ -31,6 +31,11 @@ func (g *MultiPoint) String() string {
 	return string(g.AppendJSON(nil))
 }
 
+// JSON ...
+func (g *MultiPoint) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
 func parseJSONMultiPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	var g MultiPoint
 	var err error
