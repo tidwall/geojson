@@ -36,7 +36,7 @@ func RO(minX, minY, maxX, maxY float64) *Rect {
 }
 
 func LO(points []geometry.Point) *LineString {
-	return NewLineString(points)
+	return NewLineString(geometry.NewLine(points, geometry.DefaultIndex))
 }
 
 func PPO(exterior []geometry.Point, holes [][]geometry.Point) *Polygon {

@@ -121,22 +121,6 @@ func (g *Rect) Spatial() Spatial {
 	return g
 }
 
-// // Clipped ...
-// func (g *Rect) Clipped(obj Object) Object {
-// 	if obj == nil {
-// 		return g
-// 	}
-// 	// convert rect into a polygon
-// 	points := make([]geometry.Point, g.base.NumPoints())
-// 	for i := 0; i < len(points); i++ {
-// 		points[i] = g.base.PointAt(i)
-// 	}
-// 	poly := geometry.NewPoly(points, nil, geometry.DefaultIndex)
-// 	var polygon Polygon
-// 	polygon.base = *poly
-// 	return polygon.Clipped(obj)
-// }
-
 // Distance ...
 func (g *Rect) Distance(obj Object) float64 {
 	return obj.Spatial().DistanceRect(g.base)

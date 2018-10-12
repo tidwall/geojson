@@ -8,6 +8,16 @@ import (
 // MultiPolygon ...
 type MultiPolygon struct{ collection }
 
+// NewMultiPolygon ...
+func NewMultiPolygon(polys []*geometry.Poly) *MultiPolygon {
+	g := new(MultiPolygon)
+	for _, poly := range polys {
+		g.children = append(g.children, NewPolygon(poly))
+	}
+	g.parseInitRectIndex(DefaultParseOptions)
+	return g
+}
+
 // AppendJSON ...
 func (g *MultiPolygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiPolygon","coordinates":[`...)

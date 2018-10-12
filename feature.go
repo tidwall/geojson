@@ -60,6 +60,14 @@ func (g *Feature) Base() Object {
 	return g.base
 }
 
+// Members ...
+func (g *Feature) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
+}
+
 // AppendJSON ...
 func (g *Feature) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Feature","geometry":`...)
@@ -161,14 +169,6 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	}
 	return &g, nil
 }
-
-// // Clipped ...
-// func (g *Feature) Clipped(obj Object) Object {
-// 	feature := new(Feature)
-// 	feature.base = g.base.Clipped(obj)
-// 	feature.extra = g.extra
-// 	return feature
-// }
 
 // Distance ...
 func (g *Feature) Distance(obj Object) float64 {

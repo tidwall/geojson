@@ -8,6 +8,16 @@ import (
 // MultiLineString ...
 type MultiLineString struct{ collection }
 
+// NewMultiLineString ...
+func NewMultiLineString(lines []*geometry.Line) *MultiLineString {
+	g := new(MultiLineString)
+	for _, line := range lines {
+		g.children = append(g.children, NewLineString(line))
+	}
+	g.parseInitRectIndex(DefaultParseOptions)
+	return g
+}
+
 // AppendJSON ...
 func (g *MultiLineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiLineString","coordinates":[`...)

@@ -26,7 +26,6 @@ func TestRect(t *testing.T) {
 	expect(t, g == rect)
 
 	expect(t, rect.NumPoints() == 2)
-	// expect(t, rect.Clipped(nil) == rect)
 
 	expect(t, !(&Point{}).Contains(rect))
 	expect(t, !(&Rect{}).Contains(rect))

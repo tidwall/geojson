@@ -292,7 +292,7 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 		}
 		count++
 	}
-	if opts.IndexChildren != 0 && count >= opts.IndexChildren {
+	if count > 0 && opts.IndexChildren != 0 && count >= opts.IndexChildren {
 		g.tree = new(d2.BoxTree)
 		for _, child := range g.children {
 			if child.Empty() {
@@ -307,22 +307,6 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 		}
 	}
 }
-
-// // Clipped ...
-// func (g *collection) Clipped(obj Object) Object {
-// 	var newChildren []Object
-// 	for _, child := range g.children {
-// 		newChild := child.Clipped(obj)
-// 		if _, ok := newChild.(*Feature); !ok {
-// 			newChild = &Feature{base: newChild}
-// 		}
-// 		newChildren = append(newChildren, newChild)
-// 	}
-// 	multi := new(FeatureCollection)
-// 	multi.children = newChildren
-// 	multi.parseInitRectIndex(DefaultParseOptions)
-// 	return multi
-// }
 
 // Distance ...
 func (g *collection) Distance(obj Object) float64 {

@@ -205,16 +205,6 @@ func parseJSONPointCoords(
 	return coords, ex, nil
 }
 
-// // Clipped ...
-// func (g *Point) Clipped(obj Object) Object {
-// 	if obj == nil || g.intersectsRect(obj.Rect()) {
-// 		return g
-// 	}
-// 	multi := new(MultiPoint)
-// 	multi.parseInitRectIndex(DefaultParseOptions)
-// 	return multi
-// }
-
 // Distance ...
 func (g *Point) Distance(obj Object) float64 {
 	return obj.Spatial().DistancePoint(g.base)
