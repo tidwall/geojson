@@ -17,7 +17,7 @@ func TestPointParse(t *testing.T) {
 }
 
 func TestPointVarious(t *testing.T) {
-	var g Object = NewPoint(10, 20)
+	var g Object = PO(10, 20)
 	expect(t, string(g.AppendJSON(nil)) == `{"type":"Point","coordinates":[10,20]}`)
 	expect(t, g.Rect() == R(10, 20, 10, 20))
 	expect(t, g.Center() == P(10, 20))

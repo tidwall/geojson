@@ -21,7 +21,7 @@ func (g *collection) Children() []Object {
 	return g.children
 }
 
-// forEach ...
+// ForEach ...
 func (g *collection) ForEach(iter func(geom Object) bool) bool {
 	for _, child := range g.children {
 		if !child.ForEach(iter) {
@@ -29,6 +29,11 @@ func (g *collection) ForEach(iter func(geom Object) bool) bool {
 		}
 	}
 	return true
+}
+
+// Base ...
+func (g *collection) Base() []Object {
+	return g.children
 }
 
 func (g *collection) Search(rect geometry.Rect, iter func(child Object) bool) {

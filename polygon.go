@@ -11,6 +11,11 @@ type Polygon struct {
 	extra *extra
 }
 
+// NewPolygon ...
+func NewPolygon(poly *geometry.Poly) *Polygon {
+	return &Polygon{base: *poly}
+}
+
 // Empty ...
 func (g *Polygon) Empty() bool {
 	return g.base.Empty()
@@ -24,6 +29,11 @@ func (g *Polygon) Rect() geometry.Rect {
 // Center ...
 func (g *Polygon) Center() geometry.Point {
 	return g.Rect().Center()
+}
+
+// Base ...
+func (g *Polygon) Base() *geometry.Poly {
+	return &g.base
 }
 
 // AppendJSON ...

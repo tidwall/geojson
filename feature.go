@@ -1,11 +1,34 @@
 package geojson
 
-import "github.com/tidwall/geojson/geometry"
+import (
+	"github.com/tidwall/pretty"
+
+	"github.com/tidwall/geojson/geometry"
+	"github.com/tidwall/gjson"
+)
 
 // Feature ...
 type Feature struct {
 	base  Object
 	extra *extra
+}
+
+// NewFeature returns a new GeoJSON Feature. The members must be a valid json
+// object such as `{}` or `{"id":"391","properties":{}}`, or it must be empty.
+func NewFeature(geometry Object, members string) *Feature {
+	g := new(Feature)
+	g.base = geometry
+	if members != "" {
+		res := gjson.Parse(members)
+		if res.Exists() {
+			if !gjson.Valid(members) || !res.IsObject() {
+				panic("members is not a JSON object")
+			}
+			g.extra = new(extra)
+			g.extra.members = string(pretty.UglyInPlace([]byte(members)))
+		}
+	}
+	return g
 }
 
 // ForEach ...
@@ -26,6 +49,11 @@ func (g *Feature) Rect() geometry.Rect {
 // Center ...
 func (g *Feature) Center() geometry.Point {
 	return g.Rect().Center()
+}
+
+// Base ...
+func (g *Feature) Base() Object {
+	return g.base
 }
 
 // AppendJSON ...

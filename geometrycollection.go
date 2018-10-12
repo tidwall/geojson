@@ -9,6 +9,14 @@ import (
 // GeometryCollection ...
 type GeometryCollection struct{ collection }
 
+// NewGeometryCollection ...
+func NewGeometryCollection(geometries []Object) *GeometryCollection {
+	g := new(GeometryCollection)
+	g.children = geometries
+	g.parseInitRectIndex(DefaultParseOptions)
+	return g
+}
+
 // AppendJSON appends the GeoJSON reprensentation to dst
 func (g *GeometryCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"GeometryCollection","geometries":[`...)

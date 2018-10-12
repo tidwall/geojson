@@ -25,7 +25,7 @@ func NewCircle(x, y, meters float64, steps int) *Circle {
 	g.meters = meters
 	g.steps = steps
 	if meters == 0 {
-		g.Object = NewPoint(x, y)
+		g.Object = NewPoint(geometry.Point{X: x, Y: y})
 	} else {
 		var points []geometry.Point
 		step := 360.0 / float64(steps)
@@ -39,10 +39,9 @@ func NewCircle(x, y, meters float64, steps int) *Circle {
 		// is needed, but when the circle bounds passes the 90/180 lines, we need
 		// to create a multipolygon
 		points = append(points, points[0])
-		poly := geometry.NewPoly(points, nil, geometry.DefaultIndex)
-		gPoly := new(Polygon)
-		gPoly.base = *poly
-		g.Object = gPoly
+		g.Object = NewPolygon(
+			geometry.NewPoly(points, nil, geometry.DefaultIndex),
+		)
 	}
 	return g
 }

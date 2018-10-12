@@ -5,7 +5,7 @@ import (
 )
 
 func TestRect(t *testing.T) {
-	rect := NewRect(10, 20, 30, 40)
+	rect := RO(10, 20, 30, 40)
 	expect(t, !rect.Empty())
 	expect(t, string(rect.AppendJSON(nil)) ==
 		`{"type":"Polygon","coordinates":[[[10,20],[30,20],[30,40],[10,40],[10,20]]]}`)

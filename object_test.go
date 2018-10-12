@@ -26,26 +26,21 @@ func R(minX, minY, maxX, maxY float64) geometry.Rect {
 func P(x, y float64) geometry.Point {
 	return geometry.Point{X: x, Y: y}
 }
+
 func PO(x, y float64) *Point {
-	return NewPoint(x, y)
+	return NewPoint(P(x, y))
 }
 
 func RO(minX, minY, maxX, maxY float64) *Rect {
-	return NewRect(minX, minY, maxX, maxY)
+	return NewRect(R(minX, minY, maxX, maxY))
 }
 
 func LO(points []geometry.Point) *LineString {
-	line := geometry.NewLine(points, geometry.DefaultIndex)
-	return &LineString{
-		base: *line,
-	}
+	return NewLineString(points)
 }
 
 func PPO(exterior []geometry.Point, holes [][]geometry.Point) *Polygon {
-	poly := geometry.NewPoly(exterior, holes, geometry.DefaultIndex)
-	return &Polygon{
-		base: *poly,
-	}
+	return NewPolygon(geometry.NewPoly(exterior, holes, geometry.DefaultIndex))
 }
 
 func expectJSON(t testing.TB, data string, expect interface{}) Object {

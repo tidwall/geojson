@@ -10,11 +10,8 @@ type Rect struct {
 }
 
 // NewRect ...
-func NewRect(minX, minY, maxX, maxY float64) *Rect {
-	return &Rect{base: geometry.Rect{
-		Min: geometry.Point{X: minX, Y: minY},
-		Max: geometry.Point{X: maxX, Y: maxY},
-	}}
+func NewRect(rect geometry.Rect) *Rect {
+	return &Rect{base: rect}
 }
 
 // ForEach ...
@@ -29,6 +26,11 @@ func (g *Rect) Empty() bool {
 
 // Rect ...
 func (g *Rect) Rect() geometry.Rect {
+	return g.base
+}
+
+// Base ...
+func (g *Rect) Base() geometry.Rect {
 	return g.base
 }
 

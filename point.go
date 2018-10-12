@@ -11,22 +11,22 @@ type Point struct {
 	extra *extra
 }
 
-// ForEach ...
-func (g *Point) ForEach(iter func(geom Object) bool) bool {
-	return iter(g)
-}
-
 // NewPoint ...
-func NewPoint(x, y float64) *Point {
-	return &Point{base: geometry.Point{X: x, Y: y}}
+func NewPoint(point geometry.Point) *Point {
+	return &Point{base: point}
 }
 
 // NewPointZ ...
-func NewPointZ(x, y, z float64) *Point {
+func NewPointZ(point geometry.Point, z float64) *Point {
 	return &Point{
-		base:  geometry.Point{X: x, Y: y},
+		base:  point,
 		extra: &extra{dims: 1, values: []float64{z}},
 	}
+}
+
+// ForEach ...
+func (g *Point) ForEach(iter func(geom Object) bool) bool {
+	return iter(g)
 }
 
 // Empty ...
@@ -46,6 +46,11 @@ func (g *Point) Spatial() Spatial {
 
 // Center ...
 func (g *Point) Center() geometry.Point {
+	return g.base
+}
+
+// Base ...
+func (g *Point) Base() geometry.Point {
 	return g.base
 }
 

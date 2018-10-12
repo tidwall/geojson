@@ -8,6 +8,16 @@ import (
 // MultiPoint ...
 type MultiPoint struct{ collection }
 
+// NewMultiPoint ...
+func NewMultiPoint(points []geometry.Point) *MultiPoint {
+	g := new(MultiPoint)
+	for _, point := range points {
+		g.children = append(g.children, NewPoint(point))
+	}
+	g.parseInitRectIndex(DefaultParseOptions)
+	return g
+}
+
 // AppendJSON ...
 func (g *MultiPoint) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiPoint","coordinates":[`...)

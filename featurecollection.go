@@ -9,6 +9,14 @@ import (
 // FeatureCollection ...
 type FeatureCollection struct{ collection }
 
+// NewFeatureCollection ...
+func NewFeatureCollection(features []Object) *FeatureCollection {
+	g := new(FeatureCollection)
+	g.children = features
+	g.parseInitRectIndex(DefaultParseOptions)
+	return g
+}
+
 // AppendJSON appends the GeoJSON reprensentation to dst
 func (g *FeatureCollection) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"FeatureCollection","features":[`...)

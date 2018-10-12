@@ -70,7 +70,6 @@ func parseJSONMultiPolygon(
 			holes = coords[1:]
 		}
 		poly := geometry.NewPoly(exterior, holes, opts.IndexGeometry)
-
 		g.children = append(g.children, &Polygon{base: *poly, extra: ex})
 		return true
 	})
