@@ -15,23 +15,22 @@ type Circle struct {
 }
 
 // NewCircle returns an circle object
-func NewCircle(x, y, meters float64, steps int) *Circle {
+func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 	if steps < 3 {
 		steps = 3
 	}
 	g := new(Circle)
-	g.center.X = x
-	g.center.Y = y
+	g.center = center
 	g.meters = meters
 	g.steps = steps
-	if meters == 0 {
-		g.Object = NewPoint(geometry.Point{X: x, Y: y})
+	if meters <= 0 {
+		g.Object = NewPoint(center)
 	} else {
 		var points []geometry.Point
 		step := 360.0 / float64(steps)
 		i := 0
 		for deg := 360.0; deg > 0; deg -= step {
-			lat, lon := geo.DestinationPoint(y, x, meters, deg)
+			lat, lon := geo.DestinationPoint(center.Y, center.X, meters, deg)
 			points = append(points, geometry.Point{X: lon, Y: lat})
 			i++
 		}
