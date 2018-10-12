@@ -1,8 +1,6 @@
 package geojson
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestLineStringParse(t *testing.T) {
 	expectJSON(t, `{"type":"LineString","coordinates":[[1,2,3]]}`, errCoordinatesInvalid)

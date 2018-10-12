@@ -1,8 +1,6 @@
 package geojson
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestPointParse(t *testing.T) {
 	p := expectJSON(t, `{"type":"Point","coordinates":[1,2,3]}`, nil)

@@ -1,8 +1,6 @@
 package geojson
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestFeatureCollection(t *testing.T) {
 	p := expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point","coordinates":[1,2,3]}]}`, nil)

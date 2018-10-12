@@ -1,8 +1,6 @@
 package geojson
 
-import (
-	"github.com/tidwall/geojson/geometry"
-)
+import "github.com/tidwall/geojson/geometry"
 
 // Rect ...
 type Rect struct {

@@ -1,8 +1,6 @@
 package geojson
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestRect(t *testing.T) {
 	rect := RO(10, 20, 30, 40)
