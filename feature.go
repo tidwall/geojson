@@ -1,6 +1,10 @@
 package geojson
 
 import (
+	"strings"
+
+	"github.com/tidwall/sjson"
+
 	"github.com/tidwall/pretty"
 
 	"github.com/tidwall/geojson/geometry"
@@ -13,16 +17,18 @@ type Feature struct {
 	extra *extra
 }
 
-// NewFeature returns a new GeoJSON Feature. The members must be a valid json
-// object such as `{}` or `{"id":"391","properties":{}}`, or it must be empty.
+// NewFeature returns a new GeoJSON Feature.
+// The members must be a valid json object such as
+// `{"id":"391","properties":{}}`, or it must be an empty string. It should not
+// contain a "feature" member.
 func NewFeature(geometry Object, members string) *Feature {
 	g := new(Feature)
 	g.base = geometry
-	if members != "" {
-		res := gjson.Parse(members)
-		if res.Exists() {
-			if !gjson.Valid(members) || !res.IsObject() {
-				panic("members is not a JSON object")
+	members = strings.TrimSpace(members)
+	if members != "" && members != "{}" {
+		if gjson.Valid(members) && gjson.Parse(members).IsObject() {
+			if gjson.Get(members, "feature").Exists() {
+				members, _ = sjson.Delete(members, "feature")
 			}
 			g.extra = new(extra)
 			g.extra.members = string(pretty.UglyInPlace([]byte(members)))
