@@ -1,6 +1,8 @@
 package geojson
 
 import (
+	"strconv"
+
 	"github.com/tidwall/geojson/geo"
 	"github.com/tidwall/geojson/geometry"
 )
@@ -11,6 +13,7 @@ type Circle struct {
 	center geometry.Point
 	meters float64
 	steps  int
+	km     bool
 	extra  *extra
 }
 
@@ -43,4 +46,27 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 		)
 	}
 	return g
+}
+
+// AppendJSON ...
+func (g *Circle) AppendJSON(dst []byte) []byte {
+	dst = append(dst, `{"type":"Feature","geometry":`...)
+	dst = append(dst, `{"type":"Point","coordinates":[`...)
+	dst = strconv.AppendFloat(dst, g.center.X, 'f', -1, 64)
+	dst = append(dst, ',')
+	dst = strconv.AppendFloat(dst, g.center.Y, 'f', -1, 64)
+	dst = append(dst, `]},"properties":{"type":"Circle","radius":`...)
+	dst = strconv.AppendFloat(dst, g.meters, 'f', -1, 64)
+	dst = append(dst, `",radius_units":"m"}}`...)
+	return dst
+}
+
+// JSON ...
+func (g *Circle) JSON() string {
+	return string(g.AppendJSON(nil))
+}
+
+// String ...
+func (g *Circle) String() string {
+	return string(g.AppendJSON(nil))
 }

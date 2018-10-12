@@ -12,18 +12,19 @@ import (
 )
 
 var (
-	fmtErrTypeIsUnknown   = "type '%s' is unknown"
-	errDataInvalid        = errors.New("invalid data")
-	errTypeInvalid        = errors.New("invalid type")
-	errTypeMissing        = errors.New("missing type")
-	errCoordinatesInvalid = errors.New("invalid coordinates")
-	errCoordinatesMissing = errors.New("missing coordinates")
-	errGeometryInvalid    = errors.New("invalid geometry")
-	errGeometryMissing    = errors.New("missing geometry")
-	errFeaturesMissing    = errors.New("missing features")
-	errFeaturesInvalid    = errors.New("invalid features")
-	errGeometriesMissing  = errors.New("missing geometries")
-	errGeometriesInvalid  = errors.New("invalid geometries")
+	fmtErrTypeIsUnknown         = "type '%s' is unknown"
+	errDataInvalid              = errors.New("invalid data")
+	errTypeInvalid              = errors.New("invalid type")
+	errTypeMissing              = errors.New("missing type")
+	errCoordinatesInvalid       = errors.New("invalid coordinates")
+	errCoordinatesMissing       = errors.New("missing coordinates")
+	errGeometryInvalid          = errors.New("invalid geometry")
+	errGeometryMissing          = errors.New("missing geometry")
+	errFeaturesMissing          = errors.New("missing features")
+	errFeaturesInvalid          = errors.New("invalid features")
+	errGeometriesMissing        = errors.New("missing geometries")
+	errGeometriesInvalid        = errors.New("invalid geometries")
+	errCircleRadiusUnitsInvalid = errors.New("invalid circle radius units")
 )
 
 // Object is a GeoJSON type

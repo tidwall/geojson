@@ -167,6 +167,24 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
+	if point, ok := g.base.(*Point); ok {
+		if g.extra != nil {
+			members := g.extra.members
+			if gjson.Get(members, "properties.type").String() == "Circle" {
+				// Circle
+				radius := gjson.Get(members, "properties.radius").Float()
+				units := gjson.Get(members, "properties.radius_units").String()
+				switch units {
+				case "", "m":
+				case "km":
+					radius *= 1000
+				default:
+					return nil, errCircleRadiusUnitsInvalid
+				}
+				return NewCircle(point.base, radius, 64), nil
+			}
+		}
+	}
 	return &g, nil
 }
 
