@@ -97,7 +97,7 @@ func TestCollectionBostonSubset(t *testing.T) {
 
 func TestCollectionUSASubset(t *testing.T) {
 	data, err := ioutil.ReadFile("test_files/usa.geojson")
-	if err == nil {
+	if err != nil {
 		fmt.Printf("test_files/usa.geojson missing\n")
 		return
 	}
