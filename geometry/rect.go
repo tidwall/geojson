@@ -17,6 +17,11 @@ func (rect Rect) Move(deltaX, deltaY float64) Rect {
 	}
 }
 
+// Index ...
+func (rect Rect) Index() interface{} {
+	return nil
+}
+
 // Clockwise ...
 func (rect Rect) Clockwise() bool {
 	return false

@@ -34,6 +34,16 @@ func TestSeriesEmpty(t *testing.T) {
 	expect(t, series2.Empty())
 }
 
+func TestSeriesIndex(t *testing.T) {
+	series := makeSeries(nil, false, false, 0)
+	expect(t, series.Index() == nil)
+	series = makeSeries([]Point{
+		P(0, 0), P(10, 0), P(10, 10), P(0, 10), P(0, 0),
+	}, true, true, 1)
+
+	expect(t, series.Index() != nil)
+}
+
 func TestSeriesClockwise(t *testing.T) {
 	var series baseSeries
 	series = makeSeries([]Point{

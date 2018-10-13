@@ -21,6 +21,10 @@ func TestRectMove(t *testing.T) {
 	expect(t, R(1, 2, 3, 4).Move(5, 6) == R(6, 8, 8, 10))
 }
 
+func TestRectIndex(t *testing.T) {
+	expect(t, (Rect{}).Index() == nil)
+}
+
 func TestRectNumPoints(t *testing.T) {
 	expect(t, R(0, 0, 10, 10).NumPoints() == 5)
 }

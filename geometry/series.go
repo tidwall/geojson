@@ -24,6 +24,7 @@ type Series interface {
 	PointAt(index int) Point
 	SegmentAt(index int) Segment
 	Search(rect Rect, iter func(seg Segment, index int) bool)
+	Index() interface{}
 }
 
 func seriesCopyPoints(series Series) []Point {
@@ -41,7 +42,7 @@ type baseSeries struct {
 	convex    bool        // points create a convex shape
 	rect      Rect        // minumum bounding rectangle
 	points    []Point     // original points
-	tree      *d2.BoxTree // segment tree
+	tree      *d2.BoxTree // segment tree.
 }
 
 // makeSeries returns a processed baseSeries.
@@ -60,6 +61,14 @@ func makeSeries(points []Point, copyPoints, closed bool, index int) baseSeries {
 	series.convex, series.rect, series.clockwise =
 		processPoints(points, closed, series.tree)
 	return series
+}
+
+// Index ...
+func (series *baseSeries) Index() interface{} {
+	if series.tree == nil {
+		return nil
+	}
+	return series.tree
 }
 
 // Clockwise ...
