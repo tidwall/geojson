@@ -3,6 +3,10 @@ package geojson
 import "testing"
 
 func TestCircle(t *testing.T) {
+	expectJSON(t,
+		`{"type":"Feature","geometry":{"type":"Point","coordinates":[-112,33]},"properties":{"type":"Circle","radius":"5000"}}`,
+		`{"type":"Feature","geometry":{"type":"Point","coordinates":[-112,33]},"properties":{"type":"Circle","radius":5000,"radius_units":"m"}}`,
+	)
 	g, err := Parse(`{
 	"type":"Feature",
 	"geometry":{"type":"Point","coordinates":[-112.2693,33.5123]},  
@@ -14,5 +18,5 @@ func TestCircle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(g.Contains(PO(-112.26, 33.51)))
+	expect(t, g.Contains(PO(-112.26, 33.51)))
 }

@@ -57,7 +57,7 @@ func (g *Circle) AppendJSON(dst []byte) []byte {
 	dst = strconv.AppendFloat(dst, g.center.Y, 'f', -1, 64)
 	dst = append(dst, `]},"properties":{"type":"Circle","radius":`...)
 	dst = strconv.AppendFloat(dst, g.meters, 'f', -1, 64)
-	dst = append(dst, `",radius_units":"m"}}`...)
+	dst = append(dst, `,"radius_units":"m"}}`...)
 	return dst
 }
 
