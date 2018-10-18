@@ -191,5 +191,10 @@ func (poly *Poly) IntersectsPoly(other *Poly) bool {
 			return false
 		}
 	}
+	for _, hole := range other.Holes {
+		if ringContainsRing(hole, poly.Exterior, false) {
+			return false
+		}
+	}
 	return true
 }
