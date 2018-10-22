@@ -4,12 +4,53 @@
 
 package geometry
 
-import "github.com/tidwall/boxtree/d2"
+import (
+	"encoding/binary"
+	"reflect"
+	"unsafe"
+)
 
-// DefaultIndex are the minumum number of points required before it makes
-// sense to index the segments.
-// 64 seems to be the sweet spot
-const DefaultIndex = 64
+// IndexKind is the kind of index to use in the options.
+type IndexKind byte
+
+// IndexKind types
+const (
+	None IndexKind = iota
+	RTree
+	RTreeCompressed
+	QuadTree
+	QuadTreeCompressed
+)
+
+func (kind IndexKind) String() string {
+	switch kind {
+	default:
+		return "Unknown"
+	case None:
+		return "None"
+	case RTree:
+		return "RTree"
+	case RTreeCompressed:
+		return "RTreeCompressed"
+	case QuadTree:
+		return "QuadTree"
+	case QuadTreeCompressed:
+		return "QuadTreeCompressed"
+	}
+
+}
+
+// IndexOptions are segment indexing options
+type IndexOptions struct {
+	Kind      IndexKind
+	MinPoints int
+}
+
+// DefaultIndexOptions ...
+var DefaultIndexOptions = &IndexOptions{
+	Kind:      QuadTree,
+	MinPoints: 64,
+}
 
 // Series is just a series of points with utilities for efficiently accessing
 // segments from rectangle queries, making stuff like point-in-polygon lookups
@@ -40,13 +81,19 @@ type baseSeries struct {
 	closed    bool        // points create a closed shape
 	clockwise bool        // points move clockwise
 	convex    bool        // points create a convex shape
+	indexKind IndexKind   // index kind
+	index     interface{} // actual index
 	rect      Rect        // minumum bounding rectangle
 	points    []Point     // original points
-	tree      *d2.BoxTree // segment tree.
 }
 
 // makeSeries returns a processed baseSeries.
-func makeSeries(points []Point, copyPoints, closed bool, index int) baseSeries {
+func makeSeries(
+	points []Point, copyPoints, closed bool, opts *IndexOptions,
+) baseSeries {
+	if opts == nil {
+		opts = DefaultIndexOptions
+	}
 	var series baseSeries
 	series.closed = closed
 	if copyPoints {
@@ -55,20 +102,17 @@ func makeSeries(points []Point, copyPoints, closed bool, index int) baseSeries {
 	} else {
 		series.points = points
 	}
-	if index != 0 && len(points) >= int(index) {
-		series.tree = new(d2.BoxTree)
+	series.convex, series.rect, series.clockwise = processPoints(points, closed)
+	if opts.MinPoints != 0 && len(points) >= opts.MinPoints {
+		series.indexKind = opts.Kind
+		series.buildIndex()
 	}
-	series.convex, series.rect, series.clockwise =
-		processPoints(points, closed, series.tree)
 	return series
 }
 
 // Index ...
 func (series *baseSeries) Index() interface{} {
-	if series.tree == nil {
-		return nil
-	}
-	return series.tree
+	return series.index
 }
 
 // Clockwise ...
@@ -82,9 +126,10 @@ func (series *baseSeries) Move(deltaX, deltaY float64) Series {
 		points[i].X = series.points[i].X + deltaX
 		points[i].Y = series.points[i].Y + deltaY
 	}
-	nseries := makeSeries(points, false, series.closed, 0)
-	if series.tree != nil {
-		nseries.buildTree()
+	nseries := makeSeries(points, false, series.closed, nil)
+	nseries.indexKind = series.indexKind
+	if series.Index() != nil {
+		nseries.buildIndex()
 	}
 	return &nseries
 }
@@ -123,8 +168,11 @@ func (series *baseSeries) PointAt(index int) Point {
 }
 
 // Search finds a searches for segments that intersect the provided rectangle
-func (series *baseSeries) Search(rect Rect, iter func(seg Segment, idx int) bool) {
-	if series.tree == nil {
+func (series *baseSeries) Search(
+	rect Rect, iter func(seg Segment, idx int) bool,
+) {
+	switch v := series.index.(type) {
+	default:
 		n := series.NumSegments()
 		for i := 0; i < n; i++ {
 			seg := series.SegmentAt(i)
@@ -134,8 +182,8 @@ func (series *baseSeries) Search(rect Rect, iter func(seg Segment, idx int) bool
 				}
 			}
 		}
-	} else {
-		series.tree.Search(
+	case *rTree:
+		v.Search(
 			[]float64{rect.Min.X, rect.Min.Y},
 			[]float64{rect.Max.X, rect.Max.Y},
 			func(_, _ []float64, value interface{}) bool {
@@ -153,6 +201,24 @@ func (series *baseSeries) Search(rect Rect, iter func(seg Segment, idx int) bool
 				return true
 			},
 		)
+	case *qNode:
+		v.search(series, series.rect, rect, iter)
+	case *byte:
+		// convert the byte pointer back to a valid slice
+		data := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
+			Data: uintptr(unsafe.Pointer(v)),
+			Len:  0xFFFFFFFF,
+			Cap:  0xFFFFFFFF,
+		}))
+		n := binary.LittleEndian.Uint32(data[1:])
+		data = data[:n:n]
+		switch data[0] {
+		case 1:
+			rCompressSearch(data, 5, series, rect, iter)
+		case 2:
+			qCompressSearch(data, 5, series, series.rect, rect, iter)
+		}
+
 	}
 }
 
@@ -185,16 +251,9 @@ func (series *baseSeries) SegmentAt(index int) Segment {
 	return seg
 }
 
-func (series *baseSeries) buildTree() {
-	if series.tree == nil {
-		series.tree = new(d2.BoxTree)
-		processPoints(series.points, series.closed, series.tree)
-	}
-}
-
 // processPoints tests if the ring is convex, calculates the outer
 // rectangle, and inserts segments into a boxtree in one pass.
-func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
+func processPoints(points []Point, closed bool) (
 	convex bool, rect Rect, clockwise bool,
 ) {
 	if (closed && len(points) < 3) || len(points) < 2 {
@@ -203,33 +262,9 @@ func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 	var concave bool
 	var dir int
 	var a, b, c Point
-	var segCount int
 	var cwc float64
-	if closed {
-		segCount = len(points)
-	} else {
-		segCount = len(points) - 1
-	}
 
 	for i := 0; i < len(points); i++ {
-		// process the segments for tree insertion
-		if tree != nil && i < segCount {
-			var seg Segment
-			seg.A = points[i]
-			if closed && i == len(points)-1 {
-				if seg.A == points[0] {
-					break
-				}
-				seg.B = points[0]
-			} else {
-				seg.B = points[i+1]
-			}
-			rect := seg.Rect()
-			tree.Insert(
-				[]float64{rect.Min.X, rect.Min.Y},
-				[]float64{rect.Max.X, rect.Max.Y}, i)
-		}
-
 		// process the rectangle inflation
 		if i == 0 {
 			rect = Rect{points[i], points[i]}
@@ -285,4 +320,55 @@ func processPoints(points []Point, closed bool, tree *d2.BoxTree) (
 		}
 	}
 	return !concave, rect, cwc > 0
+}
+
+func (series *baseSeries) clearIndex() {
+	series.index = nil
+}
+
+func (series *baseSeries) setCompressed(data []byte) {
+	binary.LittleEndian.PutUint32(data[1:], uint32(len(data)))
+	smaller := make([]byte, len(data))
+	copy(smaller, data)
+	// use the byte point instead of a double reference to the byte slice
+	series.index = &smaller[0]
+}
+
+func (series *baseSeries) buildIndex() {
+	if series.index != nil {
+		// already built
+		return
+	}
+	switch series.indexKind {
+	case RTree, RTreeCompressed:
+		tr := new(rTree)
+		n := series.NumSegments()
+		for i := 0; i < n; i++ {
+			rect := series.SegmentAt(i).Rect()
+			tr.Insert(
+				[]float64{rect.Min.X, rect.Min.Y},
+				[]float64{rect.Max.X, rect.Max.Y}, i)
+		}
+		if series.indexKind == RTreeCompressed {
+			series.setCompressed(
+				tr.compress([]byte{1, 0, 0, 0, 0}),
+			)
+		} else {
+			series.index = tr
+		}
+	case QuadTree, QuadTreeCompressed:
+		root := new(qNode)
+		n := series.NumSegments()
+		for i := 0; i < n; i++ {
+			seg := series.SegmentAt(i)
+			root.insert(series, series.rect, seg.Rect(), i, 0)
+		}
+		if series.indexKind == QuadTreeCompressed {
+			series.setCompressed(
+				root.compress([]byte{2, 0, 0, 0, 0}, series.rect),
+			)
+		} else {
+			series.index = root
+		}
+	}
 }

@@ -79,7 +79,8 @@ func parseJSONMultiPolygon(
 		if len(coords) > 1 {
 			holes = coords[1:]
 		}
-		poly := geometry.NewPoly(exterior, holes, opts.IndexGeometry)
+		gopts := toGeometryOpts(opts)
+		poly := geometry.NewPoly(exterior, holes, &gopts)
 		g.children = append(g.children, &Polygon{base: *poly, extra: ex})
 		return true
 	})

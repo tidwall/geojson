@@ -37,12 +37,12 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 			points = append(points, geometry.Point{X: lon, Y: lat})
 			i++
 		}
-		// TODO: account for the pole and antimerdian. In most cases only a polygon
-		// is needed, but when the circle bounds passes the 90/180 lines, we need
-		// to create a multipolygon
+		// TODO: account for the pole and antimerdian. In most cases only a
+		// polygon is needed, but when the circle bounds passes the 90/180
+		// lines, we need to create a multipolygon
 		points = append(points, points[0])
 		g.Object = NewPolygon(
-			geometry.NewPoly(points, nil, geometry.DefaultIndex),
+			geometry.NewPoly(points, nil, geometry.DefaultIndexOptions),
 		)
 	}
 	return g

@@ -9,19 +9,19 @@ import (
 )
 
 func newPolyIndexed(exterior []Point, holes [][]Point) *Poly {
-	poly := NewPoly(exterior, holes, DefaultIndex)
-	poly.Exterior.(*baseSeries).buildTree()
+	poly := NewPoly(exterior, holes, DefaultIndexOptions)
+	poly.Exterior.(*baseSeries).buildIndex()
 	for _, hole := range poly.Holes {
-		hole.(*baseSeries).buildTree()
+		hole.(*baseSeries).buildIndex()
 	}
 	return poly
 }
 
 func newPolySimple(exterior []Point, holes [][]Point) *Poly {
-	poly := NewPoly(exterior, holes, DefaultIndex)
-	poly.Exterior.(*baseSeries).tree = nil
+	poly := NewPoly(exterior, holes, DefaultIndexOptions)
+	poly.Exterior.(*baseSeries).clearIndex()
 	for _, hole := range poly.Holes {
-		hole.(*baseSeries).tree = nil
+		hole.(*baseSeries).clearIndex()
 	}
 	return poly
 }
@@ -169,22 +169,22 @@ func TestPolyIntersectsLine(t *testing.T) {
 func TestPolyContainsPoly(t *testing.T) {
 	holes1 := [][]Point{[]Point{{4, 4}, {6, 4}, {6, 6}, {4, 6}, {4, 4}}}
 	holes2 := [][]Point{[]Point{{5, 4}, {7, 4}, {7, 6}, {5, 6}, {5, 4}}}
-	poly1 := NewPoly(octagon, holes1, DefaultIndex)
-	poly2 := NewPoly(octagon, holes2, DefaultIndex)
+	poly1 := NewPoly(octagon, holes1, DefaultIndexOptions)
+	poly2 := NewPoly(octagon, holes2, DefaultIndexOptions)
 
-	expect(t, !poly1.ContainsPoly(NewPoly(holes2[0], nil, DefaultIndex)))
+	expect(t, !poly1.ContainsPoly(NewPoly(holes2[0], nil, DefaultIndexOptions)))
 	expect(t, !poly1.ContainsPoly(poly2))
 
 	dualPolyTest(t, octagon, holes1, func(t *testing.T, poly *Poly) {
 		expect(t, poly.ContainsPoly(poly1))
 		expect(t, !poly.ContainsPoly(poly1.Move(1, 0)))
-		expect(t, poly.ContainsPoly(NewPoly(holes1[0], nil, DefaultIndex)))
-		expect(t, !poly.ContainsPoly(NewPoly(holes2[0], nil, DefaultIndex)))
+		expect(t, poly.ContainsPoly(NewPoly(holes1[0], nil, DefaultIndexOptions)))
+		expect(t, !poly.ContainsPoly(NewPoly(holes2[0], nil, DefaultIndexOptions)))
 	})
 }
 
 func TestPolyClockwise(t *testing.T) {
-	expect(t, !NewPoly(bowtie, nil, DefaultIndex).Clockwise())
+	expect(t, !NewPoly(bowtie, nil, DefaultIndexOptions).Clockwise())
 	var poly *Poly
 	expect(t, !poly.Clockwise())
 }
@@ -212,28 +212,28 @@ func Test369(t *testing.T) {
 			{-122.44109272956847, 37.7326855231885},
 			{-122.44109272956847, 37.731870943026074},
 		},
-	}, DefaultIndex)
+	}, DefaultIndexOptions)
 	a := NewPoly([]Point{
 		{-122.4408378, 37.7341129},
 		{-122.4408378, 37.733},
 		{-122.44, 37.733},
 		{-122.44, 37.7343129},
 		{-122.4408378, 37.7341129},
-	}, nil, DefaultIndex)
+	}, nil, DefaultIndexOptions)
 	b := NewPoly([]Point{
 		{-122.44091033935547, 37.731981251280985},
 		{-122.43994474411011, 37.731981251280985},
 		{-122.43994474411011, 37.73254976045042},
 		{-122.44091033935547, 37.73254976045042},
 		{-122.44091033935547, 37.731981251280985},
-	}, nil, DefaultIndex)
+	}, nil, DefaultIndexOptions)
 	c := NewPoly([]Point{
 		{-122.4408378, 37.7341129},
 		{-122.4408378, 37.733},
 		{-122.44, 37.733},
 		{-122.44, 37.7341129},
 		{-122.4408378, 37.7341129},
-	}, nil, DefaultIndex)
+	}, nil, DefaultIndexOptions)
 	expect(t, polyHoles.IntersectsPoly(a))
 	expect(t, !polyHoles.IntersectsPoly(b))
 	expect(t, !polyHoles.IntersectsPoly(c))

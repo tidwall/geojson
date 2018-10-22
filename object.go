@@ -84,12 +84,16 @@ type ParseOptions struct {
 	// disable indexing.
 	// The default is 64.
 	IndexGeometry int
+	// IndexGeometryKind is the kind of index implementation.
+	// Default is QuadTreeCompressed
+	IndexGeometryKind geometry.IndexKind
 }
 
 // DefaultParseOptions ...
 var DefaultParseOptions = &ParseOptions{
-	IndexChildren: geometry.DefaultIndex,
-	IndexGeometry: geometry.DefaultIndex,
+	IndexChildren:     64,
+	IndexGeometry:     64,
+	IndexGeometryKind: geometry.QuadTreeCompressed,
 }
 
 // Parse a GeoJSON object
@@ -122,6 +126,17 @@ func Parse(data string, opts *ParseOptions) (Object, error) {
 			return parseJSON(data, opts)
 		}
 	}
+}
+
+func toGeometryOpts(opts *ParseOptions) geometry.IndexOptions {
+	var gopts geometry.IndexOptions
+	if opts == nil {
+		gopts = *geometry.DefaultIndexOptions
+	} else {
+		gopts.Kind = opts.IndexGeometryKind
+		gopts.MinPoints = opts.IndexGeometry
+	}
+	return gopts
 }
 
 type parseKeys struct {

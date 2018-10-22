@@ -74,17 +74,17 @@ func TestPointIntersectsLine(t *testing.T) {
 }
 
 func TestPointContainsPoly(t *testing.T) {
-	expect(t, !P(5, 5).ContainsPoly(NewPoly(nil, nil, DefaultIndex)))
-	expect(t, !P(5, 5).ContainsPoly(NewPoly([]Point{P(0, 0), P(10, 0)}, nil, DefaultIndex)))
+	expect(t, !P(5, 5).ContainsPoly(NewPoly(nil, nil, DefaultIndexOptions)))
+	expect(t, !P(5, 5).ContainsPoly(NewPoly([]Point{P(0, 0), P(10, 0)}, nil, DefaultIndexOptions)))
 	expect(t, !P(5, 5).ContainsPoly(&Poly{Exterior: R(0, 0, 10, 10)}))
 	expect(t, P(5, 5).ContainsPoly(&Poly{Exterior: R(5, 5, 5, 5)}))
 }
 
 func TestPointIntersectsPoly(t *testing.T) {
-	octa := NewPoly(octagon, nil, DefaultIndex)
-	concave1 := NewPoly(concave1, nil, DefaultIndex)
-	expect(t, !P(5, 5).IntersectsPoly(NewPoly(nil, nil, DefaultIndex)))
-	expect(t, !P(5, 5).IntersectsPoly(NewPoly([]Point{P(0, 0), P(10, 0)}, nil, DefaultIndex)))
+	octa := NewPoly(octagon, nil, DefaultIndexOptions)
+	concave1 := NewPoly(concave1, nil, DefaultIndexOptions)
+	expect(t, !P(5, 5).IntersectsPoly(NewPoly(nil, nil, DefaultIndexOptions)))
+	expect(t, !P(5, 5).IntersectsPoly(NewPoly([]Point{P(0, 0), P(10, 0)}, nil, DefaultIndexOptions)))
 	expect(t, P(5, 5).IntersectsPoly(octa))
 	expect(t, P(0, 5).IntersectsPoly(octa))
 	expect(t, !P(1, 1).IntersectsPoly(octa))

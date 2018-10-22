@@ -69,7 +69,8 @@ func parseJSONMultiLineString(
 			err = errCoordinatesInvalid
 			return false
 		}
-		line := geometry.NewLine(coords, opts.IndexGeometry)
+		gopts := toGeometryOpts(opts)
+		line := geometry.NewLine(coords, &gopts)
 		g.children = append(g.children, &LineString{base: *line, extra: ex})
 		return true
 	})

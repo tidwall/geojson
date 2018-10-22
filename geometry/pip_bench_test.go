@@ -17,10 +17,10 @@ func testBig(
 ) {
 	N, T := 100000, 4
 
-	simple := newRing(points, DefaultIndex)
-	simple.(*baseSeries).tree = nil
-	tree := newRing(points, DefaultIndex)
-	tree.(*baseSeries).buildTree()
+	simple := newRing(points, DefaultIndexOptions)
+	simple.(*baseSeries).clearIndex()
+	tree := newRing(points, DefaultIndexOptions)
+	tree.(*baseSeries).buildIndex()
 	pointOn := points[len(points)/2]
 
 	// ioutil.WriteFile(label+".svg", []byte(tools.SVG(tree.(*baseSeries).tree)), 0666)

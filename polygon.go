@@ -156,7 +156,8 @@ func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	if len(coords) > 1 {
 		holes = coords[1:]
 	}
-	poly := geometry.NewPoly(exterior, holes, opts.IndexGeometry)
+	gopts := toGeometryOpts(opts)
+	poly := geometry.NewPoly(exterior, holes, &gopts)
 	g.base = *poly
 	g.extra = ex
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {

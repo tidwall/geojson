@@ -11,13 +11,13 @@ type Poly struct {
 }
 
 // NewPoly ...
-func NewPoly(exterior []Point, holes [][]Point, index int) *Poly {
+func NewPoly(exterior []Point, holes [][]Point, opts *IndexOptions) *Poly {
 	poly := new(Poly)
-	poly.Exterior = newRing(exterior, index)
+	poly.Exterior = newRing(exterior, opts)
 	if len(holes) > 0 {
 		poly.Holes = make([]Ring, len(holes))
 		for i := range holes {
-			poly.Holes[i] = newRing(holes[i], index)
+			poly.Holes[i] = newRing(holes[i], opts)
 		}
 	}
 	return poly
@@ -60,7 +60,7 @@ func (poly *Poly) Move(deltaX, deltaY float64) *Poly {
 		npoly.Exterior = Ring(series.Move(deltaX, deltaY))
 	} else {
 		nseries := makeSeries(
-			seriesCopyPoints(poly.Exterior), false, true, DefaultIndex)
+			seriesCopyPoints(poly.Exterior), false, true, DefaultIndexOptions)
 		npoly.Exterior = Ring(nseries.Move(deltaX, deltaY))
 	}
 	if len(poly.Holes) > 0 {
@@ -70,7 +70,7 @@ func (poly *Poly) Move(deltaX, deltaY float64) *Poly {
 				npoly.Holes[i] = Ring(series.Move(deltaX, deltaY))
 			} else {
 				nseries := makeSeries(
-					seriesCopyPoints(hole), false, true, DefaultIndex)
+					seriesCopyPoints(hole), false, true, DefaultIndexOptions)
 				npoly.Holes[i] = Ring(nseries.Move(deltaX, deltaY))
 			}
 		}

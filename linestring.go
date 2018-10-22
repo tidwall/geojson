@@ -138,7 +138,8 @@ func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
 		// https://tools.ietf.org/html/rfc7946#section-3.1.4
 		return nil, errCoordinatesInvalid
 	}
-	line := geometry.NewLine(points, opts.IndexGeometry)
+	gopts := toGeometryOpts(opts)
+	line := geometry.NewLine(points, &gopts)
 	g.base = *line
 	g.extra = ex
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {

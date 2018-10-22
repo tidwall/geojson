@@ -150,22 +150,22 @@ func TestRectIntersectsLine(t *testing.T) {
 }
 
 func TestRectContainsPoly(t *testing.T) {
-	oct := NewPoly(octagon, nil, DefaultIndex)
+	oct := NewPoly(octagon, nil, DefaultIndexOptions)
 	expect(t, R(0, 0, 10, 10).ContainsPoly(oct))
 	expect(t, !R(0, 0, 10, 10).ContainsPoly(oct.Move(1, 0)))
 	expect(t, !R(0, 0, 10, 10).ContainsPoly(oct.Move(1, 1)))
-	expect(t, !R(0, 0, 10, 10).ContainsPoly(NewPoly(nil, nil, DefaultIndex)))
+	expect(t, !R(0, 0, 10, 10).ContainsPoly(NewPoly(nil, nil, DefaultIndexOptions)))
 }
 
 func TestRectIntersectsPoly(t *testing.T) {
-	oct := NewPoly(octagon, nil, DefaultIndex)
+	oct := NewPoly(octagon, nil, DefaultIndexOptions)
 	expect(t, R(0, 0, 10, 10).IntersectsPoly(oct))
 	expect(t, R(0, 0, 10, 10).IntersectsPoly(oct.Move(1, 0)))
 	expect(t, R(0, 0, 10, 10).IntersectsPoly(oct.Move(0, 1)))
 	expect(t, !R(0, 0, 10, 10).IntersectsPoly(oct.Move(10, 10)))
 	expect(t, !R(0, 0, 10, 10).IntersectsPoly(oct.Move(11, 10)))
 	expect(t, !R(0, 0, 10, 10).IntersectsPoly(oct.Move(-11, 0)))
-	expect(t, !R(0, 0, 10, 10).IntersectsPoly(NewPoly(nil, nil, DefaultIndex)))
+	expect(t, !R(0, 0, 10, 10).IntersectsPoly(NewPoly(nil, nil, DefaultIndexOptions)))
 }
 
 func TestRectClockwise(t *testing.T) {

@@ -13,8 +13,8 @@ const complexRingMinPoints = 16
 // Ring ...
 type Ring = Series
 
-func newRing(points []Point, index int) Ring {
-	series := makeSeries(points, true, true, index)
+func newRing(points []Point, opts *IndexOptions) Ring {
+	series := makeSeries(points, true, true, opts)
 	return &series
 }
 

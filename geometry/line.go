@@ -10,9 +10,9 @@ type Line struct {
 }
 
 // NewLine creates a new Line
-func NewLine(points []Point, index int) *Line {
+func NewLine(points []Point, opts *IndexOptions) *Line {
 	line := new(Line)
-	line.baseSeries = makeSeries(points, true, false, index)
+	line.baseSeries = makeSeries(points, true, false, opts)
 	return line
 }
 
