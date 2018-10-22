@@ -6,63 +6,102 @@ package geometry
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
+	"runtime"
+	"runtime/debug"
 	"testing"
+	"time"
 
 	"github.com/tidwall/lotsa"
 )
+
+func (kind IndexKind) shortString() string {
+	switch kind {
+	default:
+		return "unkn"
+	case None:
+		return "none"
+	case RTree:
+		return "rtre"
+	case RTreeCompressed:
+		return "rtrc"
+	case QuadTree:
+		return "quad"
+	case QuadTreeCompressed:
+		return "quac"
+	}
+}
 
 func testBig(
 	t *testing.T, label string, points []Point, pointIn, pointOut Point,
 ) {
 	N, T := 100000, 4
 
-	simple := newRing(points, DefaultIndexOptions)
-	simple.(*baseSeries).clearIndex()
-	tree := newRing(points, DefaultIndexOptions)
-	tree.(*baseSeries).buildIndex()
-	pointOn := points[len(points)/2]
-
-	// ioutil.WriteFile(label+".svg", []byte(tools.SVG(tree.(*baseSeries).tree)), 0666)
-
-	expect(t, ringContainsPoint(simple, pointIn, true).hit)
-	expect(t, ringContainsPoint(tree, pointIn, true).hit)
-
-	expect(t, ringContainsPoint(simple, pointOn, true).hit)
-	expect(t, ringContainsPoint(tree, pointOn, true).hit)
-
-	expect(t, !ringContainsPoint(simple, pointOn, false).hit)
-	expect(t, !ringContainsPoint(tree, pointOn, false).hit)
-
-	expect(t, !ringContainsPoint(simple, pointOut, true).hit)
-	expect(t, !ringContainsPoint(tree, pointOut, true).hit)
-	if os.Getenv("PIPBENCH") == "1" {
-		lotsa.Output = os.Stderr
-		fmt.Printf(label + "/simp/in  ")
-		lotsa.Ops(N, T, func(_, _ int) {
-			ringContainsPoint(simple, pointIn, true)
-		})
-		fmt.Printf(label + "/tree/in  ")
-		lotsa.Ops(N, T, func(_, _ int) {
-			ringContainsPoint(tree, pointIn, true)
-		})
-		fmt.Printf(label + "/simp/on  ")
-		lotsa.Ops(N, T, func(_, _ int) {
-			ringContainsPoint(simple, pointOn, true)
-		})
-		fmt.Printf(label + "/tree/on  ")
-		lotsa.Ops(N, T, func(_, _ int) {
-			ringContainsPoint(tree, pointOn, true)
-		})
-		fmt.Printf(label + "/simp/out ")
-		lotsa.Ops(N, T, func(_, _ int) {
-			ringContainsPoint(simple, pointOut, true)
-		})
-		fmt.Printf(label + "/tree/out ")
-		lotsa.Ops(N, T, func(_, _ int) {
-			ringContainsPoint(tree, pointOut, true)
-		})
+	opts := []IndexOptions{
+		IndexOptions{Kind: None, MinPoints: 64},
+		IndexOptions{Kind: QuadTreeCompressed, MinPoints: 64},
+		IndexOptions{Kind: QuadTree, MinPoints: 64},
+		IndexOptions{Kind: RTreeCompressed, MinPoints: 64},
+		IndexOptions{Kind: RTree, MinPoints: 64},
 	}
+	for _, opts := range opts {
+		var ms1, ms2 runtime.MemStats
+		runtime.GC()
+		debug.FreeOSMemory()
+		runtime.ReadMemStats(&ms1)
+		start := time.Now()
+		ring := newRing(points, &opts)
+		dur := time.Since(start)
+		runtime.GC()
+		debug.FreeOSMemory()
+		runtime.ReadMemStats(&ms2)
+
+		var randPoints []Point
+		if os.Getenv("PIPBENCH") == "1" {
+			rect := ring.Rect()
+			randPoints = make([]Point, N)
+			for i := 0; i < N; i++ {
+				randPoints[i] = Point{
+					X: (rect.Max.X-rect.Min.X)*rand.Float64() + rect.Min.X,
+					Y: (rect.Max.Y-rect.Min.Y)*rand.Float64() + rect.Min.Y,
+				}
+			}
+		}
+
+		pointOn := points[len(points)/2]
+
+		// tests
+		expect(t, ringContainsPoint(ring, pointIn, true).hit)
+		expect(t, ringContainsPoint(ring, pointOn, true).hit)
+		expect(t, !ringContainsPoint(ring, pointOn, false).hit)
+		expect(t, !ringContainsPoint(ring, pointOut, true).hit)
+		if os.Getenv("PIPBENCH") == "1" {
+			fmt.Printf("%s/%s     ", label, opts.Kind.shortString())
+			mem := ms2.Alloc - ms1.Alloc
+			fmt.Printf("created in %s using %d bytes\n", dur, mem)
+
+			lotsa.Output = os.Stdout
+			fmt.Printf("%s/%s/in  ", label, opts.Kind.shortString())
+			lotsa.Ops(N, T, func(_, _ int) {
+				ringContainsPoint(ring, pointIn, true)
+			})
+			fmt.Printf("%s/%s/on  ", label, opts.Kind.shortString())
+			lotsa.Ops(N, T, func(_, _ int) {
+				ringContainsPoint(ring, pointOn, true)
+			})
+			fmt.Printf("%s/%s/out ", label, opts.Kind.shortString())
+			lotsa.Ops(N, T, func(_, _ int) {
+				ringContainsPoint(ring, pointOut, true)
+			})
+			fmt.Printf("%s/%s/rnd ", label, opts.Kind.shortString())
+			lotsa.Ops(N, T, func(i, _ int) {
+				ringContainsPoint(ring, randPoints[i], true)
+			})
+		}
+
+	}
+
 }
 
 func TestBigArizona(t *testing.T) {

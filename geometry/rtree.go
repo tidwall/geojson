@@ -279,6 +279,14 @@ func appendFloat(dst []byte, num float64) []byte {
 	return append(dst, buf[:]...)
 }
 
+func (tr *rTree) compress(dst []byte) []byte {
+	if tr.root.data == nil {
+		return dst
+	}
+	dst = append(dst, byte(tr.height))
+	return tr.root.compress(dst, tr.height)
+}
+
 func (r *rRect) compress(dst []byte, height int) []byte {
 	n := r.data.(*rNode)
 	dst = appendFloat(dst, r.min[0])
@@ -310,14 +318,6 @@ func (r *rRect) compress(dst []byte, height int) []byte {
 		dst = n.rects[i].compress(dst, height-1)
 	}
 	return dst
-}
-
-func (tr *rTree) compress(dst []byte) []byte {
-	if tr.root.data == nil {
-		return dst
-	}
-	dst = append(dst, byte(tr.height))
-	return tr.root.compress(dst, tr.height)
 }
 
 func rCompressSearch(
