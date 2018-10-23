@@ -17,9 +17,7 @@ type IndexKind byte
 const (
 	None IndexKind = iota
 	RTree
-	RTreeCompressed
 	QuadTree
-	QuadTreeCompressed
 )
 
 func (kind IndexKind) String() string {
@@ -30,12 +28,8 @@ func (kind IndexKind) String() string {
 		return "None"
 	case RTree:
 		return "RTree"
-	case RTreeCompressed:
-		return "RTreeCompressed"
 	case QuadTree:
 		return "QuadTree"
-	case QuadTreeCompressed:
-		return "QuadTreeCompressed"
 	}
 
 }
@@ -182,27 +176,6 @@ func (series *baseSeries) Search(
 				}
 			}
 		}
-	case *rTree:
-		v.Search(
-			[]float64{rect.Min.X, rect.Min.Y},
-			[]float64{rect.Max.X, rect.Max.Y},
-			func(_, _ []float64, value interface{}) bool {
-				index := value.(int)
-				var seg Segment
-				seg.A = series.points[index]
-				if series.closed && index == len(series.points)-1 {
-					seg.B = series.points[0]
-				} else {
-					seg.B = series.points[index+1]
-				}
-				if !iter(seg, index) {
-					return false
-				}
-				return true
-			},
-		)
-	case *qNode:
-		v.search(series, series.rect, rect, iter)
 	case *byte:
 		// convert the byte pointer back to a valid slice
 		data := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
@@ -340,7 +313,7 @@ func (series *baseSeries) buildIndex() {
 		return
 	}
 	switch series.indexKind {
-	case RTree, RTreeCompressed:
+	case RTree:
 		tr := new(rTree)
 		n := series.NumSegments()
 		for i := 0; i < n; i++ {
@@ -349,26 +322,18 @@ func (series *baseSeries) buildIndex() {
 				[]float64{rect.Min.X, rect.Min.Y},
 				[]float64{rect.Max.X, rect.Max.Y}, i)
 		}
-		if series.indexKind == RTreeCompressed {
-			series.setCompressed(
-				tr.compress([]byte{1, 0, 0, 0, 0}),
-			)
-		} else {
-			series.index = tr
-		}
-	case QuadTree, QuadTreeCompressed:
+		series.setCompressed(
+			tr.compress([]byte{1, 0, 0, 0, 0}),
+		)
+	case QuadTree:
 		root := new(qNode)
 		n := series.NumSegments()
 		for i := 0; i < n; i++ {
 			seg := series.SegmentAt(i)
 			root.insert(series, series.rect, seg.Rect(), i, 0)
 		}
-		if series.indexKind == QuadTreeCompressed {
-			series.setCompressed(
-				root.compress([]byte{2, 0, 0, 0, 0}, series.rect),
-			)
-		} else {
-			series.index = root
-		}
+		series.setCompressed(
+			root.compress([]byte{2, 0, 0, 0, 0}, series.rect),
+		)
 	}
 }

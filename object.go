@@ -93,7 +93,7 @@ type ParseOptions struct {
 var DefaultParseOptions = &ParseOptions{
 	IndexChildren:     64,
 	IndexGeometry:     64,
-	IndexGeometryKind: geometry.QuadTreeCompressed,
+	IndexGeometryKind: geometry.QuadTree,
 }
 
 // Parse a GeoJSON object

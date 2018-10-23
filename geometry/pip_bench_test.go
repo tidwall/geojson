@@ -24,12 +24,8 @@ func (kind IndexKind) shortString() string {
 		return "none"
 	case RTree:
 		return "rtre"
-	case RTreeCompressed:
-		return "rtrc"
 	case QuadTree:
 		return "quad"
-	case QuadTreeCompressed:
-		return "quac"
 	}
 }
 
@@ -40,9 +36,7 @@ func testBig(
 
 	opts := []IndexOptions{
 		IndexOptions{Kind: None, MinPoints: 64},
-		IndexOptions{Kind: QuadTreeCompressed, MinPoints: 64},
 		IndexOptions{Kind: QuadTree, MinPoints: 64},
-		IndexOptions{Kind: RTreeCompressed, MinPoints: 64},
 		IndexOptions{Kind: RTree, MinPoints: 64},
 	}
 	for _, opts := range opts {
@@ -79,8 +73,8 @@ func testBig(
 		if os.Getenv("PIPBENCH") == "1" {
 			fmt.Printf("%s/%s     ", label, opts.Kind.shortString())
 			mem := ms2.Alloc - ms1.Alloc
-			fmt.Printf("created in %s using %d bytes\n", dur, mem)
-
+			fmt.Printf("%d points created in %s using %d bytes\n",
+				ring.NumPoints(), dur, mem)
 			lotsa.Output = os.Stdout
 			fmt.Printf("%s/%s/in  ", label, opts.Kind.shortString())
 			lotsa.Ops(N, T, func(_, _ int) {
@@ -99,9 +93,7 @@ func testBig(
 				ringContainsPoint(ring, randPoints[i], true)
 			})
 		}
-
 	}
-
 }
 
 func TestBigArizona(t *testing.T) {

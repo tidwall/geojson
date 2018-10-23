@@ -1,8 +1,10 @@
 package geometry
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
-const qMaxItems = 16
+const qMaxItems = 32
 const qMaxDepth = 16
 
 type qNode struct {
