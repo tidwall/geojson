@@ -70,3 +70,11 @@ func (g *Circle) JSON() string {
 func (g *Circle) String() string {
 	return string(g.AppendJSON(nil))
 }
+
+func (g *Circle) Meters() float64 {
+	return g.meters
+}
+
+func (g *Circle) Center() geometry.Point {
+	return g.center
+}
