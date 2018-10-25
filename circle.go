@@ -11,7 +11,7 @@ import (
 type Circle struct {
 	Object
 	center geometry.Point
-	Meters float64
+	meters float64
 	steps  int
 	km     bool
 	extra  *extra
@@ -24,7 +24,7 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 	}
 	g := new(Circle)
 	g.center = center
-	g.Meters = meters
+	g.meters = meters
 	g.steps = steps
 	if meters <= 0 {
 		g.Object = NewPoint(center)
@@ -56,7 +56,7 @@ func (g *Circle) AppendJSON(dst []byte) []byte {
 	dst = append(dst, ',')
 	dst = strconv.AppendFloat(dst, g.center.Y, 'f', -1, 64)
 	dst = append(dst, `]},"properties":{"type":"Circle","radius":`...)
-	dst = strconv.AppendFloat(dst, g.Meters, 'f', -1, 64)
+	dst = strconv.AppendFloat(dst, g.meters, 'f', -1, 64)
 	dst = append(dst, `,"radius_units":"m"}}`...)
 	return dst
 }
@@ -69,4 +69,12 @@ func (g *Circle) JSON() string {
 // String ...
 func (g *Circle) String() string {
 	return string(g.AppendJSON(nil))
+}
+
+func (g *Circle) Meters() float64 {
+	return g.meters
+}
+
+func (g *Circle) Center() geometry.Point {
+	return g.center
 }
