@@ -169,19 +169,19 @@ func (g *Circle) Intersects(obj Object) bool {
 	// Not sure if polygon already does this?
 	if mp, ok := obj.(*MultiPoint); ok {
 		for _, p := range mp.Children() {
-			if !g.Intersects(p) {
-				return false
+			if g.Intersects(p) {
+				return true
 			}
 		}
-		return true
+		return false
 	}
 	if mls, ok := obj.(*MultiLineString); ok {
 		for _, p := range mls.Children() {
-			if !g.Intersects(p) {
-				return false
+			if g.Intersects(p) {
+				return true
 			}
 		}
-		return true
+		return false
 	}
 
 	// No simple cases, so using polygon approximation.
