@@ -78,3 +78,112 @@ func (g *Circle) Meters() float64 {
 func (g *Circle) Center() geometry.Point {
 	return g.center
 }
+
+func (g *Circle) Contains(obj Object) bool {
+	if p, ok := obj.(*Point); ok {
+		return p.Distance(g) < g.Meters()
+	}
+	if c, ok := obj.(*Circle); ok {
+		return c.Distance(g) < (c.Meters() + g.Meters())
+	}
+	if ls, ok := obj.(*LineString); ok {
+		for i := 0; i < ls.base.NumPoints() ; i++ {
+			if geoDistancePoints(ls.base.PointAt(i), g.Center()) > g.Meters() {
+				return false
+			}
+		}
+		return true
+	}
+
+	// Not sure if polygon already does this?
+	if mp, ok := obj.(*MultiPoint); ok {
+		for _, p := range mp.Children() {
+			if !g.Contains(p) {
+				return false
+			}
+		}
+		return true
+	}
+	if mls, ok := obj.(*MultiLineString); ok {
+		for _, p := range mls.Children() {
+			if !g.Contains(p) {
+				return false
+			}
+		}
+		return true
+	}
+
+	// No simple cases, so using polygon approximation.
+	return g.Object.Contains(g)
+}
+
+func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
+	start, end := seg.A, seg.B
+	center := g.Center()
+	meters := g.Meters()
+
+	// These are faster checks.  If they succeed there's no need do complicate things.
+	if geoDistancePoints(center, start) <= meters {
+		return true
+	}
+	if geoDistancePoints(center, end) <= meters {
+		return true
+	}
+
+	// Distance between start and end
+	l := geo.DistanceTo(start.Y, start.X, end.Y, end.X)
+
+	// Unit direction vector
+	dx := (end.X - start.X) / l
+	dy := (end.Y - start.Y) / l
+
+	// Point of the line closest to the center
+	t := dx * (center.X - start.X) + dy * (center.Y - start.Y)
+	px := t * dx + start.X
+	py := t * dy + start.Y
+	if px < start.X || px > end.X || py < start.Y || py > end.Y {
+		// closest point is outside the segment
+		return false
+	}
+
+	// Distance from the closest point to the center
+	return geo.DistanceTo(center.Y, center.X, py, px) <= meters
+}
+
+func (g *Circle) Intersects(obj Object) bool {
+	if p, ok := obj.(*Point); ok {
+		return p.Distance(g) <= g.Meters()
+	}
+	if c, ok := obj.(*Circle); ok {
+		return c.Distance(g) <= (c.Meters() + g.Meters())
+	}
+	if ls, ok := obj.(*LineString); ok {
+		for i := 0; i < ls.base.NumSegments() ; i++ {
+			if g.intersectsSegment(ls.base.SegmentAt(i)) {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Not sure if polygon already does this?
+	if mp, ok := obj.(*MultiPoint); ok {
+		for _, p := range mp.Children() {
+			if !g.Intersects(p) {
+				return false
+			}
+		}
+		return true
+	}
+	if mls, ok := obj.(*MultiLineString); ok {
+		for _, p := range mls.Children() {
+			if !g.Intersects(p) {
+				return false
+			}
+		}
+		return true
+	}
+
+	// No simple cases, so using polygon approximation.
+	return g.Object.Intersects(g)
+}
