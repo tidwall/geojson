@@ -114,7 +114,7 @@ func (g *Circle) Contains(obj Object) bool {
 	}
 
 	// No simple cases, so using polygon approximation.
-	return g.Object.Contains(g)
+	return g.Object.Contains(obj)
 }
 
 func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
@@ -183,5 +183,5 @@ func (g *Circle) Intersects(obj Object) bool {
 	}
 
 	// No simple cases, so using polygon approximation.
-	return g.Object.Intersects(g)
+	return g.Object.Intersects(obj)
 }
