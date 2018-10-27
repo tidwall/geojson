@@ -98,11 +98,8 @@ func (g *Circle) Within(obj Object) bool {
 }
 
 // This is a quicker test than comparing the distances,
-func (g *Circle) containsPoint(p geometry.Point, allowOnEdge bool) bool {
+func (g *Circle) containsPoint(p geometry.Point) bool {
 	h := geo.Haversine(p.Y, p.X, g.center.Y, g.center.X)
-	if allowOnEdge {
-		return h <= g.haversine
-	}
 	return h < g.haversine
 }
 
@@ -110,12 +107,12 @@ func (g *Circle) containsPoint(p geometry.Point, allowOnEdge bool) bool {
 func (g *Circle) Contains(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
-		return g.containsPoint(other.Center(), true)
+		return g.containsPoint(other.Center())
 	case *Circle:
 		return other.Distance(g) < (other.meters + g.meters)
 	case *LineString:
 		for i := 0; i < other.base.NumPoints(); i++ {
-			if !g.containsPoint(other.base.PointAt(i), true) {
+			if !g.containsPoint(other.base.PointAt(i)) {
 				return false
 			}
 		}
@@ -137,10 +134,10 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	start, end := seg.A, seg.B
 
 	// These are faster checks.  If they succeed there's no need do complicate things.
-	if g.containsPoint(start, true) {
+	if g.containsPoint(start) {
 		return true
 	}
-	if g.containsPoint(end, true) {
+	if g.containsPoint(end) {
 		return true
 	}
 
@@ -161,14 +158,14 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	}
 
 	// Distance from the closest point to the center
-	return g.containsPoint(geometry.Point{X: px, Y: py}, true)
+	return g.containsPoint(geometry.Point{X: px, Y: py})
 }
 
 // Intersects returns true the circle intersects other object
 func (g *Circle) Intersects(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
-		return g.containsPoint(other.Center(), true)
+		return g.containsPoint(other.Center())
 	case *Circle:
 		return other.Distance(g) <= (other.meters + g.meters)
 	case *LineString:
