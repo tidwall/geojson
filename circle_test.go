@@ -163,11 +163,11 @@ func TestCircleIntersects(t *testing.T) {
 // This snippet tests 100M comparisons.
 // On my box this takes 24.5s without haversine trick, and 13.7s with the trick.
 //
-//func TestCircle_Performance(t *testing.T) {
+//func TestCirclePerformance(t *testing.T) {
 //	g := NewCircle(P(-122.4412, 37.7335), 1000, 64)
 //	r := rand.New(rand.NewSource(42))
 //	for i:= 0; i < 100000000; i++ {
-//		g.Contains(PO((r.Float64() - 0.5) * 180, r.Float64() * 90))
+//		g.Contains(PO(r.Float64()*360 - 180, r.Float64()*180 - 90))
 //	}
 //	expect(t, true)
 //}
