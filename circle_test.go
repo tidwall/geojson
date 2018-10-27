@@ -6,26 +6,30 @@ import (
 	"github.com/tidwall/geojson/geometry"
 )
 
-func TestCircle(t *testing.T) {
+func TestCircleNew(t *testing.T) {
 	expectJSON(t,
 		`{"type":"Feature","geometry":{"type":"Point","coordinates":[-112,33]},"properties":{"type":"Circle","radius":"5000"}}`,
 		`{"type":"Feature","geometry":{"type":"Point","coordinates":[-112,33]},"properties":{"type":"Circle","radius":5000,"radius_units":"m"}}`,
 	)
 	g, err := Parse(`{
-	"type":"Feature",
-	"geometry":{"type":"Point","coordinates":[-112.2693,33.5123]},  
-	"properties": { 
-	  "type": "Circle",
-	  "radius": 1000
-	 }
-  }`, nil)
+		"type":"Feature",
+		"geometry":{"type":"Point","coordinates":[-112.2693,33.5123]},
+		"properties": {
+		  "type": "Circle",
+		  "radius": 1000
+		 }
+	  }`, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	expect(t, g.Contains(PO(-112.26, 33.51)))
+
+	circle := NewCircle(P(-112, 33), 123456.654321, 64)
+	expectJSON(t, circle.JSON(), `{"type":"Feature","geometry":{"type":"Point","coordinates":[-112,33]},"properties":{"type":"Circle","radius":123456.654321,"radius_units":"m"}}`)
+
 }
 
-func TestCircle_Contains(t *testing.T) {
+func TestCircleContains(t *testing.T) {
 	g := NewCircle(P(-122.4412, 37.7335), 1000, 64)
 	expect(t, g.Contains(PO(-122.4412, 37.7335)))
 	expect(t, g.Contains(PO(-122.44121, 37.7335)))
@@ -93,7 +97,7 @@ func TestCircle_Contains(t *testing.T) {
 		[][]geometry.Point{})))
 }
 
-func TestCircle_Intersects(t *testing.T) {
+func TestCircleIntersects(t *testing.T) {
 	g := NewCircle(P(-122.4412, 37.7335), 1000, 64)
 	expect(t, g.Intersects(PO(-122.4412, 37.7335)))
 	expect(t, g.Intersects(PO(-122.44121, 37.7335)))

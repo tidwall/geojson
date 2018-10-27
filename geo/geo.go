@@ -12,10 +12,11 @@ const (
 	earthRadius = 6371e3
 	radians     = math.Pi / 180
 	degrees     = 180 / math.Pi
-	piR			= math.Pi * earthRadius
-	twoPiR		= 2 * piR
+	piR         = math.Pi * earthRadius
+	twoPiR      = 2 * piR
 )
 
+// Haversine ...
 func Haversine(latA, lonA, latB, lonB float64) float64 {
 	φ1 := latA * radians
 	λ1 := lonA * radians
@@ -23,11 +24,12 @@ func Haversine(latA, lonA, latB, lonB float64) float64 {
 	λ2 := lonB * radians
 	Δφ := φ2 - φ1
 	Δλ := λ2 - λ1
-	sΔφ2 := math.Sin(Δφ/2)
-	sΔλ2 := math.Sin(Δλ/2)
-	return sΔφ2 * sΔφ2 + math.Cos(φ1)*math.Cos(φ2)*sΔλ2 * sΔλ2
+	sΔφ2 := math.Sin(Δφ / 2)
+	sΔλ2 := math.Sin(Δλ / 2)
+	return sΔφ2*sΔφ2 + math.Cos(φ1)*math.Cos(φ2)*sΔλ2*sΔλ2
 }
 
+// NormalizeDistance ...
 func NormalizeDistance(meters float64) float64 {
 	m1 := math.Mod(meters, twoPiR)
 	if m1 <= piR {
@@ -36,6 +38,7 @@ func NormalizeDistance(meters float64) float64 {
 	return twoPiR - m1
 }
 
+// DistanceToHaversine ...
 func DistanceToHaversine(meters float64) float64 {
 	// convert the given distance to its haversine
 	sin := math.Sin(0.5 * meters / earthRadius)
