@@ -12,18 +12,39 @@ const (
 	earthRadius = 6371e3
 	radians     = math.Pi / 180
 	degrees     = 180 / math.Pi
+	piR			= math.Pi * earthRadius
+	twoPiR		= 2 * piR
 )
 
-// DistanceTo return the distance in meteres between two point.
-func DistanceTo(latA, lonA, latB, lonB float64) (meters float64) {
+func Haversine(latA, lonA, latB, lonB float64) float64 {
 	φ1 := latA * radians
 	λ1 := lonA * radians
 	φ2 := latB * radians
 	λ2 := lonB * radians
 	Δφ := φ2 - φ1
 	Δλ := λ2 - λ1
-	a := math.Sin(Δφ/2)*math.Sin(Δφ/2) +
-		math.Cos(φ1)*math.Cos(φ2)*math.Sin(Δλ/2)*math.Sin(Δλ/2)
+	sΔφ2 := math.Sin(Δφ/2)
+	sΔλ2 := math.Sin(Δλ/2)
+	return sΔφ2 * sΔφ2 + math.Cos(φ1)*math.Cos(φ2)*sΔλ2 * sΔλ2
+}
+
+func NormalizeDistance(meters float64) float64 {
+	m1 := math.Mod(meters, twoPiR)
+	if m1 <= piR {
+		return m1
+	}
+	return twoPiR - m1
+}
+
+func DistanceToHaversine(meters float64) float64 {
+	// convert the given distance to its haversine
+	sin := math.Sin(0.5 * meters / earthRadius)
+	return sin * sin
+}
+
+// DistanceTo return the distance in meteres between two point.
+func DistanceTo(latA, lonA, latB, lonB float64) (meters float64) {
+	a := Haversine(latA, lonA, latB, lonB)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return earthRadius * c
 }
@@ -60,36 +81,3 @@ func BearingTo(latA, lonA, latB, lonB float64) float64 {
 
 	return math.Mod(θ*degrees+360, 360)
 }
-
-// // SegmentIntersectsCircle ...
-// func SegmentIntersectsCircle(
-// 	startLat, startLon, endLat, endLon, centerLat, centerLon, meters float64,
-// ) bool {
-// 	// These are faster checks.
-// 	// If they succeed there's no need do complicate things.
-// 	if DistanceTo(startLat, startLon, centerLat, centerLon) <= meters {
-// 		return true
-// 	}
-// 	if DistanceTo(endLat, endLon, centerLat, centerLon) <= meters {
-// 		return true
-// 	}
-
-// 	// Distance between start and end
-// 	l := DistanceTo(startLat, startLon, endLat, endLon)
-
-// 	// Unit direction vector
-// 	dLat := (endLat - startLat) / l
-// 	dLon := (endLon - startLon) / l
-
-// 	// Point of the line closest to the center
-// 	t := dLon*(centerLon-startLon) + dLat*(centerLat-startLat)
-// 	pLat := t*dLat + startLat
-// 	pLon := t*dLon + startLon
-// 	if pLon < startLon || pLon > endLon || pLat < startLat || pLat > endLat {
-// 		// closest point is outside the segment
-// 		return false
-// 	}
-
-// 	// Distance from the closest point to the center
-// 	return DistanceTo(centerLat, centerLon, pLat, pLon) <= meters
-// }
