@@ -12,6 +12,7 @@ type Circle struct {
 	Object
 	center geometry.Point
 	meters float64
+	haversine float64
 	steps  int
 	km     bool
 	extra  *extra
@@ -29,6 +30,7 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 	if meters <= 0 {
 		g.Object = NewPoint(center)
 	} else {
+		meters = geo.NormalizeDistance(meters)
 		var points []geometry.Point
 		step := 360.0 / float64(steps)
 		i := 0
@@ -44,6 +46,7 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 		g.Object = NewPolygon(
 			geometry.NewPoly(points, nil, geometry.DefaultIndexOptions),
 		)
+		g.haversine = geo.DistanceToHaversine(meters)
 	}
 	return g
 }
@@ -79,15 +82,23 @@ func (g *Circle) Center() geometry.Point {
 	return g.center
 }
 
+func (g *Circle) contains(p geometry.Point, allowOnEdge bool) bool {
+	h := geo.Haversine(p.Y, p.X, g.center.Y, g.center.X)
+	if allowOnEdge {
+		return h <= g.haversine
+	}
+	return h < g.haversine
+}
+
 func (g *Circle) Contains(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
-		return other.Distance(g) < g.meters
+		return g.contains(other.Center(), false)
 	case *Circle:
 		return other.Distance(g) < (other.meters + g.meters)
 	case *LineString:
 		for i := 0; i < other.base.NumPoints() ; i++ {
-			if geoDistancePoints(other.base.PointAt(i), g.center) > g.meters {
+			if !g.contains(other.base.PointAt(i), false) {
 				return false
 			}
 		}
@@ -109,10 +120,10 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	start, end := seg.A, seg.B
 
 	// These are faster checks.  If they succeed there's no need do complicate things.
-	if geoDistancePoints(g.center, start) <= g.meters {
+	if g.contains(start, true) {
 		return true
 	}
-	if geoDistancePoints(g.center, end) <= g.meters {
+	if g.contains(end, true) {
 		return true
 	}
 
@@ -133,13 +144,13 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	}
 
 	// Distance from the closest point to the center
-	return geo.DistanceTo(g.center.Y, g.center.X, py, px) <= g.meters
+	return g.contains(geometry.Point{px, py}, true)
 }
 
 func (g *Circle) Intersects(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
-		return other.Distance(g) <= g.meters
+		return g.contains(other.Center(), true)
 	case *Circle:
 		return other.Distance(g) <= (other.meters + g.meters)
 	case *LineString:
