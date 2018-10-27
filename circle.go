@@ -80,41 +80,29 @@ func (g *Circle) Center() geometry.Point {
 }
 
 func (g *Circle) Contains(obj Object) bool {
-	if p, ok := obj.(*Point); ok {
-		return p.Distance(g) < g.meters
-	}
-	if c, ok := obj.(*Circle); ok {
-		return c.Distance(g) < (c.meters + g.meters)
-	}
-	if ls, ok := obj.(*LineString); ok {
-		for i := 0; i < ls.base.NumPoints() ; i++ {
-			if geoDistancePoints(ls.base.PointAt(i), g.center) > g.meters {
+	switch other := obj.(type) {
+	case *Point:
+		return other.Distance(g) < g.meters
+	case *Circle:
+		return other.Distance(g) < (other.meters + g.meters)
+	case *LineString:
+		for i := 0; i < other.base.NumPoints() ; i++ {
+			if geoDistancePoints(other.base.PointAt(i), g.center) > g.meters {
 				return false
 			}
 		}
 		return true
-	}
-
-	// Not sure if polygon already does this?
-	if mp, ok := obj.(*MultiPoint); ok {
-		for _, p := range mp.Children() {
+	case Collection:
+		for _, p := range other.Children() {
 			if !g.Contains(p) {
 				return false
 			}
 		}
 		return true
+	default:
+		// No simple cases, so using polygon approximation.
+		return g.Object.Contains(other)
 	}
-	if mls, ok := obj.(*MultiLineString); ok {
-		for _, p := range mls.Children() {
-			if !g.Contains(p) {
-				return false
-			}
-		}
-		return true
-	}
-
-	// No simple cases, so using polygon approximation.
-	return g.Object.Contains(obj)
 }
 
 func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
@@ -149,39 +137,27 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 }
 
 func (g *Circle) Intersects(obj Object) bool {
-	if p, ok := obj.(*Point); ok {
-		return p.Distance(g) <= g.meters
-	}
-	if c, ok := obj.(*Circle); ok {
-		return c.Distance(g) <= (c.meters + g.meters)
-	}
-	if ls, ok := obj.(*LineString); ok {
-		for i := 0; i < ls.base.NumSegments() ; i++ {
-			if g.intersectsSegment(ls.base.SegmentAt(i)) {
+	switch other := obj.(type) {
+	case *Point:
+		return other.Distance(g) <= g.meters
+	case *Circle:
+		return other.Distance(g) <= (other.meters + g.meters)
+	case *LineString:
+		for i := 0; i < other.base.NumSegments() ; i++ {
+			if g.intersectsSegment(other.base.SegmentAt(i)) {
 				return true
 			}
 		}
 		return false
-	}
-
-	// Not sure if polygon already does this?
-	if mp, ok := obj.(*MultiPoint); ok {
-		for _, p := range mp.Children() {
+	case Collection:
+		for _, p := range other.Children() {
 			if g.Intersects(p) {
 				return true
 			}
 		}
 		return false
+	default:
+		// No simple cases, so using polygon approximation.
+		return g.Object.Intersects(obj)
 	}
-	if mls, ok := obj.(*MultiLineString); ok {
-		for _, p := range mls.Children() {
-			if g.Intersects(p) {
-				return true
-			}
-		}
-		return false
-	}
-
-	// No simple cases, so using polygon approximation.
-	return g.Object.Intersects(obj)
 }
