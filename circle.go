@@ -71,14 +71,22 @@ func (g *Circle) String() string {
 	return string(g.AppendJSON(nil))
 }
 
+// Meters returns the circle's radius
 func (g *Circle) Meters() float64 {
 	return g.meters
 }
 
+// Center returns the circle's center point
 func (g *Circle) Center() geometry.Point {
 	return g.center
 }
 
+// Within returns true if circle is contained inside object
+func (g *Circle) Within(obj Object) bool {
+	return obj.Contains(g)
+}
+
+// Contains returns true if the circle contains other object
 func (g *Circle) Contains(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
@@ -86,7 +94,7 @@ func (g *Circle) Contains(obj Object) bool {
 	case *Circle:
 		return other.Distance(g) < (other.meters + g.meters)
 	case *LineString:
-		for i := 0; i < other.base.NumPoints() ; i++ {
+		for i := 0; i < other.base.NumPoints(); i++ {
 			if geoDistancePoints(other.base.PointAt(i), g.center) > g.meters {
 				return false
 			}
@@ -124,9 +132,9 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	dy := (end.Y - start.Y) / l
 
 	// Point of the line closest to the center
-	t := dx * (g.center.X - start.X) + dy * (g.center.Y - start.Y)
-	px := t * dx + start.X
-	py := t * dy + start.Y
+	t := dx*(g.center.X-start.X) + dy*(g.center.Y-start.Y)
+	px := t*dx + start.X
+	py := t*dy + start.Y
 	if px < start.X || px > end.X || py < start.Y || py > end.Y {
 		// closest point is outside the segment
 		return false
@@ -136,6 +144,7 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	return geo.DistanceTo(g.center.Y, g.center.X, py, px) <= g.meters
 }
 
+// Intersects returns true the circle intersects other object
 func (g *Circle) Intersects(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
@@ -143,7 +152,7 @@ func (g *Circle) Intersects(obj Object) bool {
 	case *Circle:
 		return other.Distance(g) <= (other.meters + g.meters)
 	case *LineString:
-		for i := 0; i < other.base.NumSegments() ; i++ {
+		for i := 0; i < other.base.NumSegments(); i++ {
 			if g.intersectsSegment(other.base.SegmentAt(i)) {
 				return true
 			}
