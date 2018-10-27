@@ -84,13 +84,21 @@ func (g *Circle) Center() geometry.Point {
 	return g.center
 }
 
+func (g *Circle) Haversine() float64 {
+	return g.haversine
+}
+
+func (g *Circle) HaversineTo(p geometry.Point) float64 {
+	return geo.Haversine(p.Y, p.X, g.center.Y, g.center.X)
+}
+
 // Within returns true if circle is contained inside object
 func (g *Circle) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
 // This is a quicker test than comparing the distances,
-func (g *Circle) ContainsPoint(p geometry.Point, allowOnEdge bool) bool {
+func (g *Circle) containsPoint(p geometry.Point, allowOnEdge bool) bool {
 	h := geo.Haversine(p.Y, p.X, g.center.Y, g.center.X)
 	if allowOnEdge {
 		return h <= g.haversine
@@ -102,12 +110,12 @@ func (g *Circle) ContainsPoint(p geometry.Point, allowOnEdge bool) bool {
 func (g *Circle) Contains(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
-		return g.ContainsPoint(other.Center(), true)
+		return g.containsPoint(other.Center(), true)
 	case *Circle:
 		return other.Distance(g) < (other.meters + g.meters)
 	case *LineString:
 		for i := 0; i < other.base.NumPoints(); i++ {
-			if !g.ContainsPoint(other.base.PointAt(i), true) {
+			if !g.containsPoint(other.base.PointAt(i), true) {
 				return false
 			}
 		}
@@ -129,10 +137,10 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	start, end := seg.A, seg.B
 
 	// These are faster checks.  If they succeed there's no need do complicate things.
-	if g.ContainsPoint(start, true) {
+	if g.containsPoint(start, true) {
 		return true
 	}
-	if g.ContainsPoint(end, true) {
+	if g.containsPoint(end, true) {
 		return true
 	}
 
@@ -153,14 +161,14 @@ func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	}
 
 	// Distance from the closest point to the center
-	return g.ContainsPoint(geometry.Point{X: px, Y: py}, true)
+	return g.containsPoint(geometry.Point{X: px, Y: py}, true)
 }
 
 // Intersects returns true the circle intersects other object
 func (g *Circle) Intersects(obj Object) bool {
 	switch other := obj.(type) {
 	case *Point:
-		return g.ContainsPoint(other.Center(), true)
+		return g.containsPoint(other.Center(), true)
 	case *Circle:
 		return other.Distance(g) <= (other.meters + g.meters)
 	case *LineString:
