@@ -45,7 +45,7 @@ func DistanceToHaversine(meters float64) float64 {
 	return sin * sin
 }
 
-// DistanceTo return the distance in meteres between two point.
+// DistanceTo return the distance in meters between two point.
 func DistanceTo(latA, lonA, latB, lonB float64) (meters float64) {
 	a := Haversine(latA, lonA, latB, lonB)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))

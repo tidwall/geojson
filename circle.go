@@ -84,10 +84,12 @@ func (g *Circle) Center() geometry.Point {
 	return g.center
 }
 
+// Haversine returns the haversine corresponding to circle's radius
 func (g *Circle) Haversine() float64 {
 	return g.haversine
 }
 
+// HaversineTo returns the haversine from a given point to circle's center
 func (g *Circle) HaversineTo(p geometry.Point) float64 {
 	return geo.Haversine(p.Y, p.X, g.center.Y, g.center.X)
 }
@@ -97,10 +99,10 @@ func (g *Circle) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
-// This is a quicker test than comparing the distances,
+// containsPoint returns true if circle contains a given point
 func (g *Circle) containsPoint(p geometry.Point) bool {
 	h := geo.Haversine(p.Y, p.X, g.center.Y, g.center.X)
-	return h < g.haversine
+	return h <= g.haversine
 }
 
 // Contains returns true if the circle contains other object
@@ -130,14 +132,13 @@ func (g *Circle) Contains(obj Object) bool {
 	}
 }
 
+// intersectsSegment returns true if the circle intersects a given segment
 func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
 	start, end := seg.A, seg.B
 
-	// These are faster checks.  If they succeed there's no need do complicate things.
-	if g.containsPoint(start) {
-		return true
-	}
-	if g.containsPoint(end) {
+	// These are faster checks.
+	// If they succeed there's no need do complicate things.
+	if g.containsPoint(start) || g.containsPoint(end) {
 		return true
 	}
 
