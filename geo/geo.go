@@ -45,15 +45,15 @@ func DistanceToHaversine(meters float64) float64 {
 	return sin * sin
 }
 
-// HaversineToDistance...
-func HaversineToDistance(haversine float64) float64 {
+// DistanceFromHaversine...
+func DistanceFromHaversine(haversine float64) float64 {
 	return earthRadius * 2 * math.Asin(math.Sqrt(haversine))
 }
 
 // DistanceTo return the distance in meters between two point.
 func DistanceTo(latA, lonA, latB, lonB float64) (meters float64) {
 	a := Haversine(latA, lonA, latB, lonB)
-	return HaversineToDistance(a)
+	return DistanceFromHaversine(a)
 }
 
 // DestinationPoint return the destination from a point based on a
