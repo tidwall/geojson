@@ -5,6 +5,7 @@
 package geo
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"testing"
@@ -88,4 +89,24 @@ func TestNormalizeDistance(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestHaversinePerformance(t *testing.T) {
+	latA := rand.Float64()*180 - 90
+	lonA := rand.Float64()*360 - 180
+	start := time.Now()
+	for i := 0; i < 1000; i++ {
+		latB := rand.Float64()*180 - 90
+		lonB := rand.Float64()*360 - 180
+		_ = Haversine(latA, lonA, latB, lonB)
+	}
+	fmt.Printf("Haversine time: %v\n", time.Since(start))
+
+	start = time.Now()
+	for i := 0; i < 1000; i++ {
+		latB := rand.Float64()*180 - 90
+		lonB := rand.Float64()*360 - 180
+		_ = DistanceTo(latA, lonA, latB, lonB)
+	}
+	fmt.Printf("Distance time: %v\n", time.Since(start))
 }
