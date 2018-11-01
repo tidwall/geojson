@@ -5,7 +5,6 @@
 package geo
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"testing"
@@ -78,12 +77,12 @@ func TestHaversine(t *testing.T) {
 
 func TestNormalizeDistance(t *testing.T) {
 	start := time.Now()
-	for time.Since(start) < time.Second/4 {
+	for time.Since(start) < time.Second {
 		for i := 0; i < 1000; i++ {
-			meters1 := rand.Float64() * 100000000
+			meters1 := rand.Float64() * earthRadius * 3 // wrap three times
 			meters2 := NormalizeDistance(meters1)
-			dist1 := math.Floor(DistanceToHaversine(meters2) * 100000000.0)
-			dist2 := math.Floor(DistanceToHaversine(meters1) * 100000000.0)
+			dist1 := math.Floor(DistanceToHaversine(meters2) * 1e8)
+			dist2 := math.Floor(DistanceToHaversine(meters1) * 1e8)
 			if dist1 != dist2 {
 				t.Fatalf("expected %f, got %f", dist2, dist1)
 			}
@@ -91,22 +90,38 @@ func TestNormalizeDistance(t *testing.T) {
 	}
 }
 
-func TestHaversinePerformance(t *testing.T) {
-	latA := rand.Float64()*180 - 90
-	lonA := rand.Float64()*360 - 180
-	start := time.Now()
-	for i := 0; i < 1000; i++ {
-		latB := rand.Float64()*180 - 90
-		lonB := rand.Float64()*360 - 180
-		_ = Haversine(latA, lonA, latB, lonB)
-	}
-	fmt.Printf("Haversine time: %v\n", time.Since(start))
+type point struct {
+	lat, lon float64
+}
 
-	start = time.Now()
-	for i := 0; i < 1000; i++ {
-		latB := rand.Float64()*180 - 90
-		lonB := rand.Float64()*360 - 180
-		_ = DistanceTo(latA, lonA, latB, lonB)
+func BenchmarkHaversine(b *testing.B) {
+	pointA := point{
+		lat: rand.Float64()*180 - 90,
+		lon: rand.Float64()*360 - 180,
 	}
-	fmt.Printf("Distance time: %v\n", time.Since(start))
+	points := make([]point, b.N)
+	for i := 0; i < b.N; i++ {
+		points[i].lat = rand.Float64()*180 - 90
+		points[i].lon = rand.Float64()*360 - 180
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Haversine(pointA.lat, pointA.lon, points[i].lat, points[i].lon)
+	}
+}
+
+func BenchmarkDistanceTo(b *testing.B) {
+	pointA := point{
+		lat: rand.Float64()*180 - 90,
+		lon: rand.Float64()*360 - 180,
+	}
+	points := make([]point, b.N)
+	for i := 0; i < b.N; i++ {
+		points[i].lat = rand.Float64()*180 - 90
+		points[i].lon = rand.Float64()*360 - 180
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		DistanceTo(pointA.lat, pointA.lon, points[i].lat, points[i].lon)
+	}
 }
