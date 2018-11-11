@@ -1,6 +1,7 @@
 package geojson
 
 import (
+	"math"
 	"strconv"
 
 	"github.com/tidwall/geojson/geo"
@@ -9,7 +10,7 @@ import (
 
 // Circle ...
 type Circle struct {
-	Object
+	object    Object
 	center    geometry.Point
 	meters    float64
 	haversine float64
@@ -27,25 +28,8 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 	g.center = center
 	g.meters = meters
 	g.steps = steps
-	if meters <= 0 {
-		g.Object = NewPoint(center)
-	} else {
+	if meters > 0 {
 		meters = geo.NormalizeDistance(meters)
-		var points []geometry.Point
-		step := 360.0 / float64(steps)
-		i := 0
-		for deg := 360.0; deg > 0; deg -= step {
-			lat, lon := geo.DestinationPoint(center.Y, center.X, meters, deg)
-			points = append(points, geometry.Point{X: lon, Y: lat})
-			i++
-		}
-		// TODO: account for the pole and antimerdian. In most cases only a
-		// polygon is needed, but when the circle bounds passes the 90/180
-		// lines, we need to create a multipolygon
-		points = append(points, points[0])
-		g.Object = NewPolygon(
-			geometry.NewPoly(points, nil, geometry.DefaultIndexOptions),
-		)
 		g.haversine = geo.DistanceToHaversine(meters)
 	}
 	return g
@@ -128,7 +112,7 @@ func (g *Circle) Contains(obj Object) bool {
 		return true
 	default:
 		// No simple cases, so using polygon approximation.
-		return g.Object.Contains(other)
+		return g.getObject().Contains(other)
 	}
 }
 
@@ -185,6 +169,81 @@ func (g *Circle) Intersects(obj Object) bool {
 		return false
 	default:
 		// No simple cases, so using polygon approximation.
-		return g.Object.Intersects(obj)
+		return g.getObject().Intersects(obj)
 	}
+}
+
+// Empty ...
+func (g *Circle) Empty() bool {
+	return false
+}
+
+// ForEach ...
+func (g *Circle) ForEach(iter func(geom Object) bool) bool {
+	return iter(g)
+}
+
+// NumPoints ...
+func (g *Circle) NumPoints() int {
+	// should this be g.steps?
+	return 1
+}
+
+// Distance ...
+func (g *Circle) Distance(other Object) float64 {
+	return g.getObject().Distance(other)
+}
+
+// Rect ...
+func (g *Circle) Rect() geometry.Rect {
+	return g.getObject().Rect()
+}
+
+// Spatial ...
+func (g *Circle) Spatial() Spatial {
+	return g.getObject().Spatial()
+}
+
+func (g *Circle) getObject() Object {
+	if g.object != nil {
+		return g.object
+	}
+	return makeCircleObject(g.center, g.meters, g.steps)
+}
+
+func makeCircleObject(center geometry.Point, meters float64, steps int) Object {
+	if meters <= 0 {
+		return NewPoint(center)
+	}
+	meters = geo.NormalizeDistance(meters)
+	points := make([]geometry.Point, 0, steps+1)
+
+	// calc the four corners
+	maxY, _ := geo.DestinationPoint(center.Y, center.X, meters, 0)
+	_, maxX := geo.DestinationPoint(center.Y, center.X, meters, 90)
+	minY, _ := geo.DestinationPoint(center.Y, center.X, meters, 180)
+	_, minX := geo.DestinationPoint(center.Y, center.X, meters, 270)
+
+	// TODO: detect of pole and antimeridian crossing and generate a
+	// valid multigeometry
+
+	// use the half width of the lat and lon
+	lons := (maxX - minX) / 2
+	lats := (maxY - minY) / 2
+
+	// generate the
+	for th := 0.0; th <= 360.0; th += 360.0 / float64(steps) {
+		radians := (math.Pi / 180) * th
+		x := center.X + lats*math.Cos(radians)
+		y := center.Y + lons*math.Sin(radians)
+		points = append(points, geometry.Point{X: x, Y: y})
+	}
+	// add last connecting point, make a total of steps+1
+	points = append(points, points[0])
+
+	return NewPolygon(
+		geometry.NewPoly(points, nil, &geometry.IndexOptions{
+			Kind: geometry.None,
+		}),
+	)
 }
