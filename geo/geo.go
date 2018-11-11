@@ -45,7 +45,7 @@ func DistanceToHaversine(meters float64) float64 {
 	return sin * sin
 }
 
-// DistanceFromHaversine...
+// DistanceFromHaversine ...
 func DistanceFromHaversine(haversine float64) float64 {
 	return earthRadius * 2 * math.Asin(math.Sqrt(haversine))
 }
@@ -87,4 +87,85 @@ func BearingTo(latA, lonA, latB, lonB float64) float64 {
 	θ := math.Atan2(y, x)
 
 	return math.Mod(θ*degrees+360, 360)
+}
+
+// RectFromCenter calculates the bounding box surrounding a circle.
+func RectFromCenter(lat, lon, meters float64) (
+	minLat, minLon, maxLat, maxLon float64,
+) {
+
+	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Latitude
+	lat *= radians
+	lon *= radians
+
+	r := meters / earthRadius // angular radius
+
+	minLat = lat - r
+	maxLat = lat + r
+
+	latT := math.Asin(math.Sin(lat) / math.Cos(r))
+	lonΔ := math.Acos((math.Cos(r) - math.Sin(latT)*math.Sin(lat)) / (math.Cos(latT) * math.Cos(lat)))
+
+	minLon = lon - lonΔ
+	maxLon = lon + lonΔ
+
+	// Adjust for north poll
+	if maxLat > math.Pi/2 {
+		minLon = -math.Pi
+		maxLat = math.Pi / 2
+		maxLon = math.Pi
+	}
+
+	// Adjust for south poll
+	if minLat < -math.Pi/2 {
+		minLat = -math.Pi / 2
+		minLon = -math.Pi
+		maxLon = math.Pi
+	}
+
+	// Adjust for wraparound. Remove this if the commented-out condition below this block is added.
+	if minLon < -math.Pi || maxLon > math.Pi {
+		minLon = -math.Pi
+		maxLon = math.Pi
+	}
+
+	/*
+	   	// Consider splitting area into two bboxes, using the below checks, and erasing above block for performance. See http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
+	   	// Adjust for wraparound if minimum longitude is less than -180 degrees.
+	   	if lonMin < -math.Pi {
+	   // box 1:
+	   		latMin = latMin
+	   		latMax = latMax
+	   		lonMin += 2*math.Pi
+	   		lonMax = math.Pi
+	   // box 2:
+	   		latMin = latMin
+	   		latMax = latMax
+	   		lonMin = -math.Pi
+	   		lonMax = lonMax
+	   	}
+	   	// Adjust for wraparound if maximum longitude is greater than 180 degrees.
+	   	if lonMax > math.Pi {
+	   // box 1:
+	   		latMin = latMin
+	   		latMax = latMax
+	   		lonMin = lonMin
+	   		lonMax = -math.Pi
+	   // box 2:
+	   		latMin = latMin
+	   		latMax = latMax
+	   		lonMin = -math.Pi
+	   		lonMax -= 2*math.Pi
+	   	}
+	*/
+
+	minLon = math.Mod(minLon+3*math.Pi, 2*math.Pi) - math.Pi // normalise to -180..+180°
+	maxLon = math.Mod(maxLon+3*math.Pi, 2*math.Pi) - math.Pi
+
+	minLat *= degrees
+	minLon *= degrees
+	maxLat *= degrees
+	maxLon *= degrees
+	return
+
 }
