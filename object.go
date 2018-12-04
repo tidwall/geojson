@@ -269,12 +269,14 @@ func appendJSONSeries(
 func unionRects(a, b geometry.Rect) geometry.Rect {
 	if b.Min.X < a.Min.X {
 		a.Min.X = b.Min.X
-	} else if b.Max.X > a.Max.X {
+	}
+	if b.Max.X > a.Max.X {
 		a.Max.X = b.Max.X
 	}
 	if b.Min.Y < a.Min.Y {
 		a.Min.Y = b.Min.Y
-	} else if b.Max.Y > a.Max.Y {
+	}
+	if b.Max.Y > a.Max.Y {
 		a.Max.Y = b.Max.Y
 	}
 	return a
