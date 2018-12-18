@@ -8,6 +8,7 @@ package geometry
 type Geometry interface {
 	Rect() Rect
 	Empty() bool
+	Valid() bool
 	ContainsPoint(point Point) bool
 	IntersectsPoint(point Point) bool
 	ContainsRect(rect Rect) bool
@@ -20,3 +21,8 @@ type Geometry interface {
 
 // require conformance
 var _ = []Geometry{Point{}, Rect{}, &Line{}, &Poly{}}
+
+// WorldPolygon is the maximum bounds for any GeoPoint
+var WorldPolygon = NewPoly([]Point{
+	{-180, -90}, {-180, 90}, {180, 90}, {180, -90}, {-180, -90},
+}, nil, &IndexOptions{})

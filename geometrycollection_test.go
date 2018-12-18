@@ -16,3 +16,9 @@ func TestGeometryCollectionPoly(t *testing.T) {
 	expect(t, p.Intersects(PO(1, 2)))
 	expect(t, p.Contains(PO(1, 2)))
 }
+
+func TestGeometryCollectionValid(t *testing.T) {
+	json := `{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[1,200]}]}`
+	expectJSON(t, json, nil)
+	expectJSONOpts(t, json, errCoordinatesInvalid, &ParseOptions{RequireValid: true})
+}

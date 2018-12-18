@@ -19,6 +19,14 @@ func (point Point) Empty() bool {
 	return false
 }
 
+// Valid ...
+func (point Point) Valid() bool {
+	if !WorldPolygon.ContainsPoint(point) {
+		return false
+	}
+	return true
+}
+
 // Rect ...
 func (point Point) Rect() Rect {
 	return Rect{point, point}

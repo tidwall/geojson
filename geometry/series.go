@@ -136,6 +136,17 @@ func (series *baseSeries) Empty() bool {
 	return (series.closed && len(series.points) < 3) || len(series.points) < 2
 }
 
+// Valid ...
+func (series *baseSeries) Valid() bool {
+	valid := true
+	for _, point := range series.points {
+		if !point.Valid() {
+			valid = false
+		}
+	}
+	return valid
+}
+
 // Rect returns the series rectangle
 func (series *baseSeries) Rect() Rect {
 	return series.rect

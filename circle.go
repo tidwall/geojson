@@ -178,6 +178,11 @@ func (g *Circle) Empty() bool {
 	return false
 }
 
+// Valid ...
+func (g *Circle) Valid() bool {
+	return g.getObject().Valid()
+}
+
 // ForEach ...
 func (g *Circle) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)

@@ -13,6 +13,11 @@ func TestPointParse(t *testing.T) {
 	expectJSON(t, `{"type":"Point","coordinates":[1]}`, errCoordinatesInvalid)
 	expectJSON(t, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,4]}`, `{"type":"Point","coordinates":[1,2,3],"bbox":[1,2,3,4]}`)
 }
+func TestPointParseValid(t *testing.T) {
+	json := `{"type":"Point","coordinates":[190,90]}`
+	expectJSON(t, json, nil)
+	expectJSONOpts(t, json, errCoordinatesInvalid, &ParseOptions{RequireValid: true})
+}
 
 func TestPointVarious(t *testing.T) {
 	var g Object = PO(10, 20)
@@ -20,6 +25,34 @@ func TestPointVarious(t *testing.T) {
 	expect(t, g.Rect() == R(10, 20, 10, 20))
 	expect(t, g.Center() == P(10, 20))
 	expect(t, !g.Empty())
+}
+
+func TestPointValid(t *testing.T) {
+	var g Object = PO(0, 20)
+	expect(t, g.Valid())
+
+	var g1 Object = PO(10, 20)
+	expect(t, g1.Valid())
+}
+
+func TestPointInvalidLargeX(t *testing.T) {
+	var g Object = PO(10, 91)
+	expect(t, !g.Valid())
+}
+
+func TestPointInvalidLargeY(t *testing.T) {
+	var g Object = PO(181, 20)
+	expect(t, !g.Valid())
+}
+
+func TestPointValidLargeX(t *testing.T) {
+	var g Object = PO(180, 20)
+	expect(t, g.Valid())
+}
+
+func TestPointValidLargeY(t *testing.T) {
+	var g Object = PO(180, 90)
+	expect(t, g.Valid())
 }
 
 // func TestPointPoly(t *testing.T) {

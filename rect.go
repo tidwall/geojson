@@ -24,6 +24,11 @@ func (g *Rect) Empty() bool {
 	return g.base.Empty()
 }
 
+// Valid ...
+func (g *Rect) Valid() bool {
+	return g.base.Valid()
+}
+
 // Rect ...
 func (g *Rect) Rect() geometry.Rect {
 	return g.base

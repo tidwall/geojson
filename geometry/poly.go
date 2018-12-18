@@ -39,6 +39,14 @@ func (poly *Poly) Empty() bool {
 	return poly.Exterior.Empty()
 }
 
+// Valid ...
+func (poly *Poly) Valid() bool {
+	if !WorldPolygon.ContainsPoly(poly) {
+		return false
+	}
+	return true
+}
+
 // Rect ...
 func (poly *Poly) Rect() Rect {
 	if poly == nil || poly.Exterior == nil {

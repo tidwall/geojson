@@ -234,10 +234,21 @@ func Test369(t *testing.T) {
 		{-122.44, 37.7341129},
 		{-122.4408378, 37.7341129},
 	}, nil, DefaultIndexOptions)
+	d := NewPoly([]Point{
+		{-182.4408378, 37.7341129},
+		{-122.4408378, 37.733},
+		{-122.44, 37.733},
+		{-122.44, 37.7341129},
+		{-122.4408378, 137.7341129},
+	}, nil, DefaultIndexOptions)
 	expect(t, polyHoles.IntersectsPoly(a))
 	expect(t, !polyHoles.IntersectsPoly(b))
 	expect(t, !polyHoles.IntersectsPoly(c))
 	expect(t, a.IntersectsPoly(polyHoles))
 	expect(t, !b.IntersectsPoly(polyHoles))
 	expect(t, !c.IntersectsPoly(polyHoles))
+	expect(t, a.Valid())
+	expect(t, b.Valid())
+	expect(t, c.Valid())
+	expect(t, !d.Valid())
 }

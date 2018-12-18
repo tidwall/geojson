@@ -18,6 +18,12 @@ func TestLineStringParse(t *testing.T) {
 	expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]],"bbox":[1,2,3,4]}`, nil)
 }
 
+func TestLineStringParseValid(t *testing.T) {
+	json := `{"type":"LineString","coordinates":[[1,2],[-12,-190]]}`
+	expectJSON(t, json, nil)
+	expectJSONOpts(t, json, errDataInvalid, &ParseOptions{RequireValid: true})
+}
+
 func TestLineStringVarious(t *testing.T) {
 	var g = expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]]}`, nil)
 	expect(t, string(g.AppendJSON(nil)) == `{"type":"LineString","coordinates":[[3,4],[1,2]]}`)
@@ -28,6 +34,16 @@ func TestLineStringVarious(t *testing.T) {
 	expect(t, !g.Empty())
 	expect(t, g.Rect() == R(1, 2, 3, 4))
 	expect(t, g.Center() == R(1, 2, 3, 4).Center())
+}
+
+func TestLineStringValid(t *testing.T) {
+	var g = expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]]}`, nil)
+	expect(t, g.Valid())
+}
+
+func TestLineStringInvalid(t *testing.T) {
+	var g = expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2],[0, 190]]}`, nil)
+	expect(t, !g.Valid())
 }
 
 // func TestLineStringPoly(t *testing.T) {

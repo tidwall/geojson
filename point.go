@@ -34,6 +34,11 @@ func (g *Point) Empty() bool {
 	return g.base.Empty()
 }
 
+// Valid ...
+func (g *Point) Valid() bool {
+	return g.base.Valid()
+}
+
 // Rect ...
 func (g *Point) Rect() geometry.Rect {
 	return g.base.Rect()
@@ -150,6 +155,11 @@ func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	}
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
+	}
+	if opts.RequireValid {
+		if !g.Valid() {
+			return nil, errCoordinatesInvalid
+		}
 	}
 	return &g, nil
 }

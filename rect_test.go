@@ -41,3 +41,9 @@ func TestRect(t *testing.T) {
 	expect(t, (&Polygon{}).Distance(rect) != 0)
 
 }
+
+func TestRectValid(t *testing.T) {
+	json := `{"type":"Polygon","coordinates":[[[10,200],[30,200],[30,40],[10,40],[10,200]]]}`
+	expectJSON(t, json, nil)
+	expectJSONOpts(t, json, errCoordinatesInvalid, &ParseOptions{RequireValid: true})
+}

@@ -25,6 +25,19 @@ func TestMultiPolygon(t *testing.T) {
 	expectJSON(t, `{"type":"MultiPolygon","coordinates":[1,null]}`, errCoordinatesInvalid)
 }
 
+func TestMultiPolygonParseValid(t *testing.T) {
+	json := `{"type":"MultiPolygon","coordinates":[
+		[
+			[[0,0],[10,0],[10,10],[0,10],[0,0]],
+			[[2,2],[8,2],[8,8],[2,8],[2,2]]
+		],[
+			[[0,0],[10,0],[10,10],[0,10],[0,0]],
+			[[2,2],[8,2],[8,8],[2,8],[2,2]]
+		]
+	]}`
+	expectJSONOpts(t, json, nil, &ParseOptions{RequireValid: true})
+}
+
 func TestMultiPolygonPoly(t *testing.T) {
 	p := expectJSON(t, `{"type":"MultiPolygon","coordinates":[
 		[
