@@ -21,6 +21,11 @@ func (g *Polygon) Empty() bool {
 	return g.base.Empty()
 }
 
+// Valid ...
+func (g *Polygon) Valid() bool {
+	return g.base.Valid()
+}
+
 // Rect ...
 func (g *Polygon) Rect() geometry.Rect {
 	return g.base.Rect()
@@ -162,6 +167,11 @@ func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	g.extra = ex
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
+	}
+	if opts.RequireValid {
+		if !g.Valid() {
+			return nil, errCoordinatesInvalid
+		}
 	}
 	return &g, nil
 }

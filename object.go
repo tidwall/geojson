@@ -30,6 +30,7 @@ var (
 // Object is a GeoJSON type
 type Object interface {
 	Empty() bool
+	Valid() bool
 	Rect() geometry.Rect
 	Center() geometry.Point
 	Contains(other Object) bool
@@ -87,6 +88,7 @@ type ParseOptions struct {
 	// IndexGeometryKind is the kind of index implementation.
 	// Default is QuadTreeCompressed
 	IndexGeometryKind geometry.IndexKind
+	RequireValid       bool
 }
 
 // DefaultParseOptions ...
@@ -94,6 +96,7 @@ var DefaultParseOptions = &ParseOptions{
 	IndexChildren:     64,
 	IndexGeometry:     64,
 	IndexGeometryKind: geometry.QuadTree,
+	RequireValid:       false,
 }
 
 // Parse a GeoJSON object

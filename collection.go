@@ -64,6 +64,11 @@ func (g *collection) Empty() bool {
 	return g.pempty
 }
 
+// Valid ...
+func (g *collection) Valid() bool {
+	return g.Rect().Valid()
+}
+
 // Rect ...
 func (g *collection) Rect() geometry.Rect {
 	return g.prect

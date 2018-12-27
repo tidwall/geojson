@@ -113,6 +113,14 @@ func (rect Rect) Empty() bool {
 	return false
 }
 
+// Valid ...
+func (rect Rect) Valid() bool {
+	if !WorldPolygon.ContainsRect(rect) {
+		return false
+	}
+	return true
+}
+
 // Rect ...
 func (rect Rect) Rect() Rect {
 	return rect

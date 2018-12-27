@@ -21,6 +21,11 @@ func (g *LineString) Empty() bool {
 	return g.base.Empty()
 }
 
+// Valid ...
+func (g *LineString) Valid() bool {
+	return g.base.Valid()
+}
+
 // Rect ...
 func (g *LineString) Rect() geometry.Rect {
 	return g.base.Rect()
@@ -144,6 +149,11 @@ func parseJSONLineString(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	g.extra = ex
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
+	}
+	if opts.RequireValid {
+		if !g.Valid() {
+			return nil, errDataInvalid
+		}
 	}
 	return &g, nil
 }

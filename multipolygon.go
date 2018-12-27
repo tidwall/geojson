@@ -41,6 +41,17 @@ func (g *MultiPolygon) String() string {
 	return string(g.AppendJSON(nil))
 }
 
+// Valid ...
+func (g *MultiPolygon) Valid() bool {
+	valid := true
+	for _, p := range g.children {
+		if !p.Valid() {
+			valid = false
+		}
+	}
+	return valid
+}
+
 // JSON ...
 func (g *MultiPolygon) JSON() string {
 	return string(g.AppendJSON(nil))
@@ -89,6 +100,11 @@ func parseJSONMultiPolygon(
 	}
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
+	}
+	if opts.RequireValid {
+		if !g.Valid() {
+			return nil, errCoordinatesInvalid
+		}
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil

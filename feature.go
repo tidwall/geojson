@@ -45,6 +45,11 @@ func (g *Feature) Empty() bool {
 	return g.base.Empty()
 }
 
+// Valid ...
+func (g *Feature) Valid() bool {
+	return g.base.Valid()
+}
+
 // Rect ...
 func (g *Feature) Rect() geometry.Rect {
 	return g.base.Rect()

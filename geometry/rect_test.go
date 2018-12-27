@@ -81,6 +81,10 @@ func TestRectEmpty(t *testing.T) {
 	expect(t, !R(0, 0, 10, 10).Empty())
 }
 
+func TestRectValid(t *testing.T) {
+	expect(t, R(0, 0, 10, 10).Valid())
+}
+
 func TestRectRect(t *testing.T) {
 	expect(t, R(0, 0, 10, 10).Rect() == R(0, 0, 10, 10))
 }

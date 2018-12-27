@@ -28,6 +28,14 @@ func TestPolygonParse(t *testing.T) {
 		`{"type":"Polygon","coordinates":[[[0,0,0],[10,0,4,5],[5,10],[0,0]]]}`,
 		`{"type":"Polygon","coordinates":[[[0,0,0],[10,0,4],[5,10,0],[0,0,0]]]}`)
 }
+func TestPolygonParseValid(t *testing.T) {
+	json := `{"type":"Polygon","coordinates":[
+		[[0,0],[190,0],[10,10],[0,10],[0,0]],
+		[[2,2],[8,2],[8,8],[2,8],[2,2]]
+	]}`
+	expectJSON(t, json, nil)
+	expectJSONOpts(t, json, errCoordinatesInvalid, &ParseOptions{RequireValid: true})
+}
 
 func TestPolygonVarious(t *testing.T) {
 	var g = expectJSON(t, `{"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]]}`, nil)
