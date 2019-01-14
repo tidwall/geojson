@@ -191,8 +191,8 @@ func (series *baseSeries) Search(
 		// convert the byte pointer back to a valid slice
 		data := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 			Data: uintptr(unsafe.Pointer(v)),
-			Len:  0xFFFFFFFF,
-			Cap:  0xFFFFFFFF,
+			Len:  int((^uint(0)) >> 1),
+			Cap:  int((^uint(0)) >> 1),
 		}))
 		n := binary.LittleEndian.Uint32(data[1:])
 		data = data[:n:n]
