@@ -75,9 +75,9 @@ func (g *Feature) Members() string {
 
 // AppendJSON ...
 func (g *Feature) AppendJSON(dst []byte) []byte {
-	dst = append(dst, `{"type":"Feature","properties":{},"geometry":`...)
+	dst = append(dst, `{"type":"Feature","geometry":`...)
 	dst = g.base.AppendJSON(dst)
-	dst = g.extra.appendJSONExtra(dst)
+	dst = g.extra.appendJSONExtra(dst, true)
 	dst = append(dst, '}')
 	return dst
 
