@@ -58,6 +58,11 @@ func (g *MultiLineString) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *MultiLineString) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 func parseJSONMultiLineString(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {

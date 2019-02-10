@@ -62,6 +62,11 @@ func (g *LineString) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *LineString) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 // Spatial ...
 func (g *LineString) Spatial() Spatial {
 	return g

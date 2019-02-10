@@ -90,6 +90,11 @@ func (g *collection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *collection) MarshalJSON()([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 // String ...
 func (g *collection) String() string {
 	return string(g.AppendJSON(nil))

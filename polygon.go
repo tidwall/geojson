@@ -63,6 +63,11 @@ func (g *Polygon) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *Polygon) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 // String ...
 func (g *Polygon) String() string {
 	return string(g.AppendJSON(nil))
