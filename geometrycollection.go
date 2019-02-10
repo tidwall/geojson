@@ -45,6 +45,11 @@ func (g *GeometryCollection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *GeometryCollection) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 func parseJSONGeometryCollection(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {

@@ -53,6 +53,11 @@ func (g *Circle) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *Circle) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 // String ...
 func (g *Circle) String() string {
 	return string(g.AppendJSON(nil))

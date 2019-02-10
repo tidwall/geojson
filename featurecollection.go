@@ -45,6 +45,11 @@ func (g *FeatureCollection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *FeatureCollection) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 func parseJSONFeatureCollection(
 	keys *parseKeys, opts *ParseOptions,
 ) (Object, error) {

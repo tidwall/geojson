@@ -93,6 +93,11 @@ func (g *Feature) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// JSON ...
+func (g *Feature) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 // Spatial ...
 func (g *Feature) Spatial() Spatial {
 	return g

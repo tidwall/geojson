@@ -56,6 +56,11 @@ func (g *Rect) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
+// MarshalJSON ...
+func (g *Rect) MarshalJSON() ([]byte, error) {
+	return g.AppendJSON(nil), nil
+}
+
 // String ...
 func (g *Rect) String() string {
 	return string(g.AppendJSON(nil))
