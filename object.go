@@ -245,10 +245,12 @@ func appendJSONPoint(dst []byte, point geometry.Point, ex *extra, idx int) []byt
 	return dst
 }
 
-func (ex *extra) appendJSONExtra(dst []byte) []byte {
+func (ex *extra) appendJSONExtra(dst []byte, propertiesRequired bool) []byte {
 	if ex != nil && ex.members != "" {
 		dst = append(dst, ',')
 		dst = append(dst, ex.members[1:len(ex.members)-1]...)
+	} else if propertiesRequired {
+		dst = append(dst, `,"properties":{}`...)
 	}
 
 	return dst

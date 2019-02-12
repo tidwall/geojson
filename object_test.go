@@ -101,9 +101,9 @@ func expect(t testing.TB, what bool) {
 	}
 	if !what {
 		if t == nil {
-			panic("exception failure")
+			panic("expectation failure")
 		} else {
-			t.Fatal("expection failure")
+			t.Fatal("expectation failure")
 		}
 	}
 }

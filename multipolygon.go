@@ -30,7 +30,7 @@ func (g *MultiPolygon) AppendJSON(dst []byte) []byte {
 	}
 	dst = append(dst, ']')
 	if g.extra != nil {
-		dst = g.extra.appendJSONExtra(dst)
+		dst = g.extra.appendJSONExtra(dst, false)
 	}
 	dst = append(dst, '}')
 	return dst
