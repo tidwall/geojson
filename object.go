@@ -43,6 +43,7 @@ type Object interface {
 	NumPoints() int
 	ForEach(iter func(geom Object) bool) bool
 	Spatial() Spatial
+	MarshalJSON() ([]byte, error)
 }
 
 var _ = []Object{
