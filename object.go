@@ -249,6 +249,11 @@ func (ex *extra) appendJSONExtra(dst []byte, propertiesRequired bool) []byte {
 	if ex != nil && ex.members != "" {
 		dst = append(dst, ',')
 		dst = append(dst, ex.members[1:len(ex.members)-1]...)
+		if propertiesRequired {
+			if !gjson.Get(ex.members, "properties").Exists() {
+				dst = append(dst, `,"properties":{}`...)
+			}
+		}
 	} else if propertiesRequired {
 		dst = append(dst, `,"properties":{}`...)
 	}

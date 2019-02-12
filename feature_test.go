@@ -1,6 +1,10 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/tidwall/gjson"
+)
 
 func TestFeatureParse(t *testing.T) {
 	p := expectJSON(t, `{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2,3]},"properties":{}}`, nil)
@@ -30,10 +34,44 @@ func TestFeatureVarious(t *testing.T) {
 
 }
 
-// func TestFeaturePoly(t *testing.T) {
-// 	p := expectJSON(t, `{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2]}}`, nil)
-// 	expect(t, p.Intersects(PO(1, 2)))
-// 	expect(t, p.Contains(PO(1, 2)))
-// 	expect(t, p.Within(PO(1, 2)))
+func TestFeatureProperties(t *testing.T) {
+	obj, err := Parse(`{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2]}}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	json := obj.JSON()
+	if !gjson.Valid(json) {
+		t.Fatal("invalid json")
+	}
+	if !gjson.Get(json, "properties").Exists() {
+		t.Fatal("expected 'properties' member")
+	}
 
-// }
+	obj, err = Parse(`{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2]},"properties":true}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	json = obj.JSON()
+	if !gjson.Valid(json) {
+		t.Fatal("invalid json")
+	}
+	if gjson.Get(json, "properties").Type != gjson.True {
+		t.Fatal("expected 'properties' member to be 'true'")
+	}
+
+	obj, err = Parse(`{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2]},"id":{}}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	json = obj.JSON()
+	if !gjson.Valid(json) {
+		t.Fatal("invalid json")
+	}
+	if !gjson.Get(json, "properties").Exists() {
+		t.Fatal("expected 'properties' member")
+	}
+	if gjson.Get(json, "id").String() != "{}" {
+		t.Fatal("expected 'id' member")
+	}
+
+}
