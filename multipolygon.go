@@ -57,7 +57,7 @@ func (g *MultiPolygon) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON
+// MarshalJSON ...
 func (g *MultiPolygon) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }

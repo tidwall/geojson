@@ -93,7 +93,7 @@ func (g *Feature) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
+// MarshalJSON ...
 func (g *Feature) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
