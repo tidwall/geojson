@@ -89,7 +89,7 @@ type ParseOptions struct {
 	// IndexGeometryKind is the kind of index implementation.
 	// Default is QuadTreeCompressed
 	IndexGeometryKind geometry.IndexKind
-	RequireValid       bool
+	RequireValid      bool
 }
 
 // DefaultParseOptions ...
@@ -97,7 +97,7 @@ var DefaultParseOptions = &ParseOptions{
 	IndexChildren:     64,
 	IndexGeometry:     64,
 	IndexGeometryKind: geometry.QuadTree,
-	RequireValid:       false,
+	RequireValid:      false,
 }
 
 // Parse a GeoJSON object

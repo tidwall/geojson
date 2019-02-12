@@ -91,7 +91,7 @@ func (g *collection) JSON() string {
 }
 
 // MarshalJSON ...
-func (g *collection) MarshalJSON()([]byte, error) {
+func (g *collection) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
