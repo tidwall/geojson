@@ -50,7 +50,7 @@ var _ = []Object{
 	&Point{}, &LineString{}, &Polygon{}, &Feature{},
 	&MultiPoint{}, &MultiLineString{}, &MultiPolygon{},
 	&GeometryCollection{}, &FeatureCollection{},
-	&Rect{}, &Circle{},
+	&Rect{}, &Circle{}, &SimplePoint{},
 }
 
 // Collection is a searchable collection type.
@@ -89,7 +89,12 @@ type ParseOptions struct {
 	// IndexGeometryKind is the kind of index implementation.
 	// Default is QuadTreeCompressed
 	IndexGeometryKind geometry.IndexKind
-	RequireValid      bool
+	// RequireValid option cause parse to fail when a geojson object is invalid.
+	RequireValid bool
+	// AllowSimplePoints options will force to parse to return the SimplePoint
+	// type when a geojson point only consists of an 2D x/y coord and no extra
+	// json members.
+	AllowSimplePoints bool
 }
 
 // DefaultParseOptions ...
@@ -98,6 +103,7 @@ var DefaultParseOptions = &ParseOptions{
 	IndexGeometry:     64,
 	IndexGeometryKind: geometry.QuadTree,
 	RequireValid:      false,
+	AllowSimplePoints: false,
 }
 
 // Parse a GeoJSON object
@@ -296,10 +302,3 @@ func unionRects(a, b geometry.Rect) geometry.Rect {
 func geoDistancePoints(a, b geometry.Point) float64 {
 	return geo.DistanceTo(a.Y, a.X, b.Y, b.X)
 }
-
-// func geoDistanceCenterToPoint(obj Object, point geometry.Point) float64 {
-// 	if obj.Empty() {
-// 		return 0
-// 	}
-// 	return geoDistancePointsA(obj.Center(), point)
-// }

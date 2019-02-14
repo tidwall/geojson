@@ -152,21 +152,30 @@ func (g *Point) Z() float64 {
 }
 
 func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
-	var g Point
-	var err error
-	g.base, g.extra, err = parseJSONPointCoords(keys, gjson.Result{}, opts)
+	var o Object
+	base, extra, err := parseJSONPointCoords(keys, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
-	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
+	if err := parseBBoxAndExtras(&extra, keys, opts); err != nil {
 		return nil, err
 	}
+	if extra == nil && opts.AllowSimplePoints {
+		var g SimplePoint
+		g.base = base
+		o = &g
+	} else {
+		var g Point
+		g.base = base
+		g.extra = extra
+		o = &g
+	}
 	if opts.RequireValid {
-		if !g.Valid() {
+		if !o.Valid() {
 			return nil, errCoordinatesInvalid
 		}
 	}
-	return &g, nil
+	return o, nil
 }
 
 func parseJSONPointCoords(
