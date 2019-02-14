@@ -255,10 +255,12 @@ func (g *Point) DistancePoly(poly *geometry.Poly) float64 {
 }
 
 // IsPoint returns true if the object is a {"type":"Point"}
-func IsPoint(obj Object) bool {
-	switch obj.(type) {
-	case *Point, *SimplePoint:
-		return true
+func IsPoint(obj Object) (z float64, ok bool) {
+	switch pt := obj.(type) {
+	case *SimplePoint:
+		return 0, true
+	case *Point:
+		return pt.Z(), true
 	}
-	return false
+	return 0, false
 }
