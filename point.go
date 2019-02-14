@@ -253,3 +253,12 @@ func (g *Point) DistanceLine(line *geometry.Line) float64 {
 func (g *Point) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }
+
+// IsPoint returns true if the object is a {"type":"Point"}
+func IsPoint(obj Object) bool {
+	switch obj.(type) {
+	case *Point, *SimplePoint:
+		return true
+	}
+	return false
+}
