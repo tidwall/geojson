@@ -95,6 +95,9 @@ func (g *Point) Contains(obj Object) bool {
 
 // Intersects ...
 func (g *Point) Intersects(obj Object) bool {
+	if obj, ok := obj.(*Circle); ok {
+		return obj.Contains(g)
+	}
 	return obj.Spatial().IntersectsPoint(g.base)
 }
 

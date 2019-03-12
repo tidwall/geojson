@@ -171,3 +171,11 @@ func TestCircleIntersects(t *testing.T) {
 //	}
 //	expect(t, true)
 //}
+
+func TestPointCircle(t *testing.T) {
+	p := NewPoint(geometry.Point{X: -0.8856761, Y: 52.7563759})
+	c := NewCircle(geometry.Point{X: -0.8838196, Y: 52.7563395}, 200, 20)
+	if !p.Within(c) {
+		t.Fatal("expected true")
+	}
+}
