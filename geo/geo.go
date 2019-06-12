@@ -93,75 +93,60 @@ func BearingTo(latA, lonA, latB, lonB float64) float64 {
 func RectFromCenter(lat, lon, meters float64) (
 	minLat, minLon, maxLat, maxLon float64,
 ) {
-
-	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Latitude
+	// convert degrees to radians
 	lat *= radians
 	lon *= radians
 
-	r := meters / earthRadius // angular radius
+	// Calculate ANGULAR RADIUS
+	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#UsingIndex
+	r := meters / earthRadius
 
+	// Calculate LATITUDE min and max
+	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Latitude
 	minLat = lat - r
 	maxLat = lat + r
 
+	// Calculate LONGITUDE min and max
+	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Longitude
 	latT := math.Asin(math.Sin(lat) / math.Cos(r))
 	lonΔ := math.Acos((math.Cos(r) - math.Sin(latT)*math.Sin(lat)) / (math.Cos(latT) * math.Cos(lat)))
 
 	minLon = lon - lonΔ
 	maxLon = lon + lonΔ
 
-	// Adjust for north poll
+	// ADJUST mins and maxes for edge-of-map cases
+	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
+
+	// adjust for NORTH POLE
 	if maxLat > math.Pi/2 {
 		minLon = -math.Pi
 		maxLat = math.Pi / 2
 		maxLon = math.Pi
 	}
 
-	// Adjust for south poll
+	// adjust for SOUTH POLE
 	if minLat < -math.Pi/2 {
 		minLat = -math.Pi / 2
 		minLon = -math.Pi
 		maxLon = math.Pi
 	}
 
-	// Adjust for wraparound. Remove this if the commented-out condition below this block is added.
+	/* adjust for WRAPAROUND
+
+	Creates a bounding box that wraps around the Earth like a belt, which
+	results in returning false positive candidates (candidates that are
+	farther away from the center than the distance of the search radius).
+
+	An alternative method, possibly to be implemented in the future, would be
+	to split the bounding box into two boxes. This would return fewer (or no)
+	false positives, but will require significant changes to the API's of
+	geoJSON and any of its dependents. */
 	if minLon < -math.Pi || maxLon > math.Pi {
 		minLon = -math.Pi
 		maxLon = math.Pi
 	}
 
-	/*
-	   	// Consider splitting area into two bboxes, using the below checks, and erasing above block for performance. See http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
-	   	// Adjust for wraparound if minimum longitude is less than -180 degrees.
-	   	if lonMin < -math.Pi {
-	   // box 1:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin += 2*math.Pi
-	   		lonMax = math.Pi
-	   // box 2:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin = -math.Pi
-	   		lonMax = lonMax
-	   	}
-	   	// Adjust for wraparound if maximum longitude is greater than 180 degrees.
-	   	if lonMax > math.Pi {
-	   // box 1:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin = lonMin
-	   		lonMax = -math.Pi
-	   // box 2:
-	   		latMin = latMin
-	   		latMax = latMax
-	   		lonMin = -math.Pi
-	   		lonMax -= 2*math.Pi
-	   	}
-	*/
-
-	minLon = math.Mod(minLon+3*math.Pi, 2*math.Pi) - math.Pi // normalise to -180..+180°
-	maxLon = math.Mod(maxLon+3*math.Pi, 2*math.Pi) - math.Pi
-
+	// convert radians to degrees
 	minLat *= degrees
 	minLon *= degrees
 	maxLat *= degrees
