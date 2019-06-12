@@ -41,6 +41,68 @@ func TestGeoCalc(t *testing.T) {
 	if value2 != lonB {
 		t.Fatalf("expected '%v', got '%v'", lonB, value2)
 	}
+	// RectFromCenter
+	// expected mins and maxes for wraparound and pole tests
+	expMinLat := -90.0
+	expMinLon := -180.0
+	expMaxLat := 90.0
+	expMaxLon := 180.0
+
+	dist1 := 1600000.0
+
+	wraparoundTests := []struct {
+		name                   string
+		lat, lon, searchRadius float64
+	}{
+		{name: "Wraparound E", lat: 0.0, lon: 179.0, searchRadius: dist1},  // at equator near 180th meridian East
+		{name: "Wraparound W", lat: 0.0, lon: -179.0, searchRadius: dist1}, // at equator near 180th meridian West
+	}
+
+	for _, tt := range wraparoundTests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, minLon, _, maxLon := RectFromCenter(tt.lat, tt.lon, tt.searchRadius)
+			if !(minLon == expMinLon && maxLon == expMaxLon) {
+				t.Errorf("\nexpected minLon = '%v', maxLon = '%v'"+"\ngot minLon = '%v', maxLon = '%v'\n",
+					expMinLon, expMaxLon,
+					minLon, maxLon)
+			}
+		})
+	}
+
+	northPoleTests := []struct {
+		name                   string
+		lat, lon, searchRadius float64
+	}{
+		{name: "North Pole", lat: 89.0, lon: 90.0, searchRadius: dist1}, // near North Pole
+		{name: "North Pole: Tile38 iss422", lat: 13.0257553, lon: 77.6672509, searchRadius: 9000000.0},
+	}
+	for _, tt := range northPoleTests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, minLon, maxLat, maxLon := RectFromCenter(tt.lat, tt.lon, tt.searchRadius)
+			if !(minLon == expMinLon && maxLat == expMaxLat && maxLon == expMaxLon) {
+				t.Errorf("\nexpected minLon = '%v', maxLat = '%v', maxLon = '%v'"+"\ngot minLon = '%v', maxLat = '%v', maxLon = '%v'",
+					expMinLon, expMaxLat, expMaxLon,
+					minLon, maxLat, maxLon)
+			}
+		})
+	}
+
+	southPoleTests := []struct {
+		name                   string
+		lat, lon, searchRadius float64
+	}{
+		{name: "South Pole", lat: -89.0, lon: 90.0, searchRadius: dist1}, // near South Pole
+	}
+	for _, tt := range southPoleTests {
+		t.Run(tt.name, func(t *testing.T) {
+			minLat, minLon, _, maxLon := RectFromCenter(tt.lat, tt.lon, tt.searchRadius)
+			if !(minLat == expMinLat && minLon == expMinLon && maxLon == expMaxLon) {
+				t.Errorf("\nexpected minLat = '%v', minLon = '%v', maxLon = '%v'"+"\ngot minLat = '%v', minLon = '%v', maxLon = '%v'",
+					expMinLat, expMinLon, expMaxLon,
+					minLat, minLon, maxLon)
+			}
+		})
+	}
 }
 
 func TestHaversine(t *testing.T) {
