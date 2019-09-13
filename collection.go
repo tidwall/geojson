@@ -1,14 +1,14 @@
 package geojson
 
 import (
-	"github.com/tidwall/boxtree/d2"
 	"github.com/tidwall/geojson/geometry"
+	"github.com/tidwall/rbang"
 )
 
 type collection struct {
 	children []Object
 	extra    *extra
-	tree     *d2.BoxTree
+	tree     *rbang.RTree
 	prect    geometry.Rect
 	pempty   bool
 }
@@ -39,9 +39,9 @@ func (g *collection) Base() []Object {
 func (g *collection) Search(rect geometry.Rect, iter func(child Object) bool) {
 	if g.tree != nil {
 		g.tree.Search(
-			[]float64{rect.Min.X, rect.Min.Y},
-			[]float64{rect.Max.X, rect.Max.Y},
-			func(_, _ []float64, value interface{}) bool {
+			[2]float64{rect.Min.X, rect.Min.Y},
+			[2]float64{rect.Max.X, rect.Max.Y},
+			func(_, _ [2]float64, value interface{}) bool {
 				return iter(value.(Object))
 			},
 		)
@@ -303,15 +303,15 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 		count++
 	}
 	if count > 0 && opts.IndexChildren != 0 && count >= opts.IndexChildren {
-		g.tree = new(d2.BoxTree)
+		g.tree = new(rbang.RTree)
 		for _, child := range g.children {
 			if child.Empty() {
 				continue
 			}
 			rect := child.Rect()
 			g.tree.Insert(
-				[]float64{rect.Min.X, rect.Min.Y},
-				[]float64{rect.Max.X, rect.Max.Y},
+				[2]float64{rect.Min.X, rect.Min.Y},
+				[2]float64{rect.Max.X, rect.Max.Y},
 				child,
 			)
 		}
