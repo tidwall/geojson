@@ -31,11 +31,7 @@ func Haversine(latA, lonA, latB, lonB float64) float64 {
 
 // NormalizeDistance ...
 func NormalizeDistance(meters float64) float64 {
-	m1 := math.Mod(meters, twoPiR)
-	if m1 <= piR {
-		return m1
-	}
-	return twoPiR - m1
+	return math.Mod(meters, twoPiR)
 }
 
 // DistanceToHaversine ...

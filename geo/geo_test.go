@@ -143,6 +143,9 @@ func TestNormalizeDistance(t *testing.T) {
 		for i := 0; i < 1000; i++ {
 			meters1 := rand.Float64() * earthRadius * 3 // wrap three times
 			meters2 := NormalizeDistance(meters1)
+			if meters2 > piR {
+				t.Fatal("did not normalize")
+			}
 			dist1 := math.Floor(DistanceToHaversine(meters2) * 1e8)
 			dist2 := math.Floor(DistanceToHaversine(meters1) * 1e8)
 			if dist1 != dist2 {
