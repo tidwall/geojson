@@ -216,6 +216,11 @@ func (g *Circle) Spatial() Spatial {
 	return g.getObject().Spatial()
 }
 
+// Primative returns a primative GeoJSON object. Either a Polygon or Point.
+func (g *Circle) Primative() Object {
+	return g.getObject()
+}
+
 func (g *Circle) getObject() Object {
 	if g.object != nil {
 		return g.object
