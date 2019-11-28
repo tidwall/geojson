@@ -301,23 +301,11 @@ func ringIntersectsRing(ring, other Ring, allowOnEdge bool) bool {
 		// swap the rings so that the inner ring is smaller than the outer ring
 		ring, other = other, ring
 	}
-	if ring.Convex() && allowOnEdge {
-		// outer ring is convex so test that any inner points are inside of
-		// the outer ring
-		otherNumPoints := other.NumPoints()
-		for i := 0; i < otherNumPoints; i++ {
-			if ringContainsPoint(ring, other.PointAt(i), allowOnEdge).hit {
-				return true
-			}
-		}
-	} else {
-		// outer ring is concave so let's make sure that all inner segments are
-		// fully contained inside of the outer ring.
-		otherNumSegments := other.NumSegments()
-		for i := 0; i < otherNumSegments; i++ {
-			if ringIntersectsSegment(ring, other.SegmentAt(i), allowOnEdge) {
-				return true
-			}
+
+	otherNumSegments := other.NumSegments()
+	for i := 0; i < otherNumSegments; i++ {
+		if ringIntersectsSegment(ring, other.SegmentAt(i), allowOnEdge) {
+			return true
 		}
 	}
 	return false

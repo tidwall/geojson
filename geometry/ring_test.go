@@ -1385,3 +1385,49 @@ func TestRingXIntersectsLine(t *testing.T) {
 		})
 	})
 }
+
+func TestIssue14(t *testing.T) {
+	// https: //github.com/tidwall/geojson/issues/14
+	t.Run("original", func(t *testing.T) {
+		exterior := make([]Point, 5)
+		exterior[0] = Point{X: 0, Y: 0}
+		exterior[1] = Point{X: 6000, Y: 0}
+		exterior[2] = Point{X: 10, Y: 10.1}
+		exterior[3] = Point{X: 0, Y: 10}
+		exterior[4] = Point{X: 0, Y: 0}
+
+		polygon := NewPoly(exterior, nil, nil)
+
+		rectangle := Rect{
+			Min: Point{X: 2560, Y: 0},
+			Max: Point{X: 5120, Y: 2560},
+		}
+
+		flagContains := polygon.ContainsRect(rectangle)
+		flagIntersects := rectangle.IntersectsPoly(polygon)
+		flagIntersects2 := polygon.IntersectsRect(rectangle)
+		if !flagIntersects || flagContains || !flagIntersects2 {
+			t.Fatalf("expected\nintersects %v, contains %v, intersects2 %v\n"+
+				"got\nintersects %v, contains %v, intersects2 %v",
+				true, false, true,
+				flagIntersects, flagContains, flagIntersects2)
+		}
+	})
+	t.Run("modified", func(t *testing.T) {
+		exterior := []Point{P(0, 0), P(5, 0), P(0, 1), P(0, 0)}
+		polygon := NewPoly(exterior, nil, nil)
+		rectangle := Rect{
+			Min: Point{X: 2, Y: -1},
+			Max: Point{X: 4.5, Y: 1},
+		}
+		flagIntersects := polygon.IntersectsRect(rectangle)
+		flagContains := polygon.ContainsRect(rectangle)
+		flagIntersects2 := polygon.IntersectsRect(rectangle)
+		if !flagIntersects || flagContains || !flagIntersects2 {
+			t.Fatalf("expected\nintersects %v, contains %v, intersects2 %v\n"+
+				"got\nintersects %v, contains %v, intersects2 %v",
+				true, false, true,
+				flagIntersects, flagContains, flagIntersects2)
+		}
+	})
+}
