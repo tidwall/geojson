@@ -165,7 +165,7 @@ func parseJSONPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	}
 	if extra == nil && opts.AllowSimplePoints {
 		var g SimplePoint
-		g.base = base
+		g.Point = base
 		o = &g
 	} else {
 		var g Point
