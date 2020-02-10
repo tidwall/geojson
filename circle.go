@@ -103,13 +103,6 @@ func (g *Circle) Contains(obj Object) bool {
 		return g.containsPoint(other.Center())
 	case *Circle:
 		return other.Distance(g) < (other.meters + g.meters)
-	case *LineString:
-		for i := 0; i < other.base.NumPoints(); i++ {
-			if !g.containsPoint(other.base.PointAt(i)) {
-				return false
-			}
-		}
-		return true
 	case Collection:
 		for _, p := range other.Children() {
 			if !g.Contains(p) {
@@ -123,36 +116,6 @@ func (g *Circle) Contains(obj Object) bool {
 	}
 }
 
-// intersectsSegment returns true if the circle intersects a given segment
-func (g *Circle) intersectsSegment(seg geometry.Segment) bool {
-	start, end := seg.A, seg.B
-
-	// These are faster checks.
-	// If they succeed there's no need do complicate things.
-	if g.containsPoint(start) || g.containsPoint(end) {
-		return true
-	}
-
-	// Distance between start and end
-	l := geo.DistanceTo(start.Y, start.X, end.Y, end.X)
-
-	// Unit direction vector
-	dx := (end.X - start.X) / l
-	dy := (end.Y - start.Y) / l
-
-	// Point of the line closest to the center
-	t := dx*(g.center.X-start.X) + dy*(g.center.Y-start.Y)
-	px := t*dx + start.X
-	py := t*dy + start.Y
-	if px < start.X || px > end.X || py < start.Y || py > end.Y {
-		// closest point is outside the segment
-		return false
-	}
-
-	// Distance from the closest point to the center
-	return g.containsPoint(geometry.Point{X: px, Y: py})
-}
-
 // Intersects returns true the circle intersects other object
 func (g *Circle) Intersects(obj Object) bool {
 	switch other := obj.(type) {
@@ -160,13 +123,6 @@ func (g *Circle) Intersects(obj Object) bool {
 		return g.containsPoint(other.Center())
 	case *Circle:
 		return other.Distance(g) <= (other.meters + g.meters)
-	case *LineString:
-		for i := 0; i < other.base.NumSegments(); i++ {
-			if g.intersectsSegment(other.base.SegmentAt(i)) {
-				return true
-			}
-		}
-		return false
 	case Collection:
 		for _, p := range other.Children() {
 			if g.Intersects(p) {
@@ -174,6 +130,8 @@ func (g *Circle) Intersects(obj Object) bool {
 			}
 		}
 		return false
+	case *Feature:
+		return g.Intersects(other.base)
 	default:
 		// No simple cases, so using polygon approximation.
 		return g.getObject().Intersects(obj)

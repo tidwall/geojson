@@ -3,6 +3,7 @@ package geojson
 import (
 	"testing"
 
+	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
 
@@ -74,4 +75,23 @@ func TestFeatureProperties(t *testing.T) {
 		t.Fatal("expected 'id' member")
 	}
 
+}
+
+// https://github.com/tidwall/tile38/issues/529
+func TestIssue529(t *testing.T) {
+	o, err := Parse(`{"type":"LineString","coordinates":[[0,0],[0,1]]}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ls1 := o.(*LineString)
+	o, err = Parse(` {"type":"Feature","geometry":{"type":"LineString","coordinates":[[0,0],[0,1]]},"properties":{}}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ls2 := o.(*Feature)
+	circ := NewCircle(geometry.Point{X: 0, Y: 0.5}, 5000, 64)
+	expect(t, ls1.Intersects(circ))
+	expect(t, circ.Intersects(ls1))
+	expect(t, ls2.Intersects(circ))
+	expect(t, circ.Intersects(ls2))
 }
