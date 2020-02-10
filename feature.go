@@ -110,7 +110,7 @@ func (g *Feature) Within(obj Object) bool {
 
 // Contains ...
 func (g *Feature) Contains(obj Object) bool {
-	return obj.Within(g.base)
+	return g.base.Within(obj)
 }
 
 // WithinRect ...
@@ -135,7 +135,7 @@ func (g *Feature) WithinPoly(poly *geometry.Poly) bool {
 
 // Intersects ...
 func (g *Feature) Intersects(obj Object) bool {
-	return obj.Intersects(g.base)
+	return g.base.Intersects(obj)
 }
 
 // IntersectsPoint ...
