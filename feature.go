@@ -180,7 +180,8 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	if point, ok := g.base.(*Point); ok {
 		if g.extra != nil {
 			members := g.extra.members
-			if gjson.Get(members, "properties.type").String() == "Circle" {
+			if !opts.DisableCircleType &&
+				gjson.Get(members, "properties.type").String() == "Circle" {
 				// Circle
 				radius := gjson.Get(members, "properties.radius").Float()
 				units := gjson.Get(members, "properties.radius_units").String()

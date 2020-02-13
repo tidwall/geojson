@@ -95,6 +95,9 @@ type ParseOptions struct {
 	// type when a geojson point only consists of an 2D x/y coord and no extra
 	// json members.
 	AllowSimplePoints bool
+	// DisableCircleType disables the special Circle syntax that is unique to
+	// only Tile38.
+	DisableCircleType bool
 }
 
 // DefaultParseOptions ...
@@ -104,6 +107,7 @@ var DefaultParseOptions = &ParseOptions{
 	IndexGeometryKind: geometry.QuadTree,
 	RequireValid:      false,
 	AllowSimplePoints: false,
+	DisableCircleType: false,
 }
 
 // Parse a GeoJSON object
