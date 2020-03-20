@@ -110,7 +110,7 @@ func (g *Feature) Within(obj Object) bool {
 
 // Contains ...
 func (g *Feature) Contains(obj Object) bool {
-	return g.base.Within(obj)
+	return g.base.Contains(obj)
 }
 
 // WithinRect ...
