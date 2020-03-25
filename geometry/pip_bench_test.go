@@ -103,3 +103,12 @@ func TestBigArizona(t *testing.T) {
 func TestBigTexas(t *testing.T) {
 	testBig(t, "tx", tx, P(-98.52539, 29.363027), P(-101.953125, 29.324720161))
 }
+
+func BenchmarkBigTexas_RTree(b *testing.B) {
+	opts := IndexOptions{Kind: RTree, MinPoints: 64}
+	ring := newRing(tx, &opts)
+	pointIn := P(-98.52539, 29.363027)
+	for i := 0; i < b.N; i++ {
+		ringContainsPoint(ring, pointIn, true)
+	}
+}
