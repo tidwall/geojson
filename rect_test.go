@@ -1,6 +1,11 @@
 package geojson
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+
+	"github.com/tidwall/geojson/geometry"
+)
 
 func TestRect(t *testing.T) {
 	rect := RO(10, 20, 30, 40)
@@ -46,4 +51,29 @@ func TestRectValid(t *testing.T) {
 	json := `{"type":"Polygon","coordinates":[[[10,200],[30,200],[30,40],[10,40],[10,200]]]}`
 	expectJSON(t, json, nil)
 	expectJSONOpts(t, json, errCoordinatesInvalid, &ParseOptions{RequireValid: true})
+}
+
+func BenchmarkRectValid(b *testing.B) {
+	rects := make([]*Rect, b.N)
+	for i := 0; i < b.N; i++ {
+		min := geometry.Point{
+			X: rand.Float64()*400 - 200, // some are out of bounds
+			Y: rand.Float64()*200 - 100, // some are out of bounds
+		}
+		max := geometry.Point{
+			X: rand.Float64()*400 - 200, // some are out of bounds
+			Y: rand.Float64()*200 - 100, // some are out of bounds
+		}
+		if min.X > max.X {
+			min.X, max.X = max.X, min.X
+		}
+		if min.Y > max.Y {
+			min.Y, max.Y = max.Y, min.Y
+		}
+		rects[i] = NewRect(geometry.Rect{Min: min, Max: max})
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		rects[i].Valid()
+	}
 }

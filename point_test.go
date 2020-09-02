@@ -1,6 +1,11 @@
 package geojson
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+
+	"github.com/tidwall/geojson/geometry"
+)
 
 func TestPointParse(t *testing.T) {
 	p := expectJSON(t, `{"type":"Point","coordinates":[1,2,3]}`, nil)
@@ -55,77 +60,16 @@ func TestPointValidLargeY(t *testing.T) {
 	expect(t, g.Valid())
 }
 
-// func TestPointPoly(t *testing.T) {
-// 	p := expectJSON(t, `{"type":"Point","coordinates":[15,15,0]}`, nil)
-// 	expect(t, p.Within(PO(15, 15)))
-// 	expect(t, p.Contains(PO(15, 15)))
-// 	expect(t, p.Contains(RO(15, 15, 15, 15)))
-// 	expect(t, !p.Contains(RO(10, 10, 15, 15)))
-// 	expect(t, !p.Contains(PO(10, 10)))
-// 	expect(t, p.Intersects(PO(15, 15)))
-// 	expect(t, p.Intersects(RO(10, 10, 20, 20)))
-// 	expect(t, p.Intersects(
-// 		expectJSON(t, `{"type":"Point","coordinates":[15,15,10]}`, nil),
-// 	))
-// 	expect(t, !p.Intersects(
-// 		expectJSON(t, `{"type":"Point","coordinates":[9,15,10]}`, nil),
-// 	))
-// 	expect(t, p.Intersects(
-// 		expectJSON(t, `{"type":"Point","coordinates":[9,15,10],"bbox":[10,10,20,20]}`, nil),
-// 	))
-// 	expect(t, p.Intersects(
-// 		expectJSON(t, `{"type":"LineString","coordinates":[
-// 			[10,10],[20,20]
-// 		]}`, nil),
-// 	))
-// 	expect(t, !p.Intersects(
-// 		expectJSON(t, `{"type":"LineString","coordinates":[
-// 			[9,10],[20,20]
-// 		]}`, nil),
-// 	))
-// 	expect(t, p.Intersects(
-// 		expectJSON(t, `{"type":"Polygon","coordinates":[
-// 			[[9,9],[9,21],[21,21],[21,9],[9,9]]
-// 		]}`, nil),
-// 	))
-
-// 	expect(t, !p.Intersects(
-// 		expectJSON(t, `{"type":"Polygon","coordinates":[
-// 			[[9,9],[9,21],[21,21],[21,9],[9,9]],
-// 			[[9.5,9.5],[9.5,20.5],[20.5,20.5],[20.5,9.5],[9.5,9.5]]
-// 		]}`, nil),
-// 	))
-// 	expect(t, p.Intersects(
-// 		expectJSON(t, `{"type":"Feature","geometry":
-// 			{"type":"Point","coordinates":[15,15,10]}
-// 		}`, nil),
-// 	))
-// 	expect(t, p.Intersects(
-// 		expectJSON(t, `{"type":"Feature","geometry":
-// 			{"type":"Polygon","coordinates":[
-// 				[[9,9],[9,21],[21,21],[21,9],[9,9]]
-// 			]}
-// 		}`, nil),
-// 	))
-// 	expect(t, !p.Intersects(
-// 		expectJSON(t, `{"type":"Feature","geometry":
-// 			{"type":"Polygon","coordinates":[
-// 				[[9,9],[9,21],[21,21],[21,9],[9,9]],
-// 				[[9.5,9.5],[9.5,20.5],[20.5,20.5],[20.5,9.5],[9.5,9.5]]
-// 			]}
-// 		}`, nil),
-// 	))
-// 	expect(t, !expectJSON(t,
-// 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Contains(PO(7, 7)))
-// 	expect(t, expectJSON(t,
-// 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Contains(PO(12, 12)))
-
-// 	expect(t, !expectJSON(t,
-// 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Intersects(PO(7, 7)))
-// 	expect(t, expectJSON(t,
-// 		`{"type":"Point","coordinates":[15,15],"bbox":[10,10,15,15]}`, nil,
-// 	).Intersects(PO(12, 12)))
-// }
+func BenchmarkPointValid(b *testing.B) {
+	points := make([]*Point, b.N)
+	for i := 0; i < b.N; i++ {
+		points[i] = NewPoint(geometry.Point{
+			X: rand.Float64()*400 - 200, // some are out of bounds
+			Y: rand.Float64()*200 - 100, // some are out of bounds
+		})
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		points[i].Valid()
+	}
+}
