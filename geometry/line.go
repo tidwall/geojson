@@ -11,10 +11,7 @@ type Line struct {
 
 // Valid ...
 func (line *Line) Valid() bool {
-	if !WorldPolygon.ContainsLine(line) {
-		return false
-	}
-	return true
+	return line.baseSeries.Valid()
 }
 
 // NewLine creates a new Line

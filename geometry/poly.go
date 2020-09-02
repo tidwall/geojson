@@ -41,8 +41,13 @@ func (poly *Poly) Empty() bool {
 
 // Valid ...
 func (poly *Poly) Valid() bool {
-	if !WorldPolygon.ContainsPoly(poly) {
+	if !poly.Exterior.Valid() {
 		return false
+	}
+	for _, hole := range poly.Holes {
+		if !hole.Valid() {
+			return false
+		}
 	}
 	return true
 }
