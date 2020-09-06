@@ -98,6 +98,11 @@ type ParseOptions struct {
 	// DisableCircleType disables the special Circle syntax that is unique to
 	// only Tile38.
 	DisableCircleType bool
+	// AllowRects options will force to parse and return the Rect type when a
+	// geojson polygon only consists of a perfect rectangle, where there are
+	// exactly 5 points with the first point being the min x/y and the
+	// following point winding counter clockwise creating a closed rectangle.
+	AllowRects bool
 }
 
 // DefaultParseOptions ...
@@ -108,6 +113,7 @@ var DefaultParseOptions = &ParseOptions{
 	RequireValid:      false,
 	AllowSimplePoints: false,
 	DisableCircleType: false,
+	AllowRects:        false,
 }
 
 // Parse a GeoJSON object

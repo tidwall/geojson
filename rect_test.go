@@ -47,6 +47,27 @@ func TestRect(t *testing.T) {
 
 }
 
+func TestRectPoly(t *testing.T) {
+	rect := RO(10, 20, 30, 40)
+	json := rect.JSON()
+	expect(t, json ==
+		`{"type":"Polygon","coordinates":[[[10,20],[30,20],[30,40],[10,40],[10,20]]]}`)
+	opts := *DefaultParseOptions
+	opts.AllowRects = true
+	o, err := Parse(json, &opts)
+	expect(t, err == nil)
+	rect2, ok := o.(*Rect)
+	expect(t, ok)
+	expect(t, rect2.base == rect.base)
+	opts.AllowRects = false
+	o, err = Parse(json, &opts)
+	expect(t, err == nil)
+	poly, ok := o.(*Polygon)
+	expect(t, ok)
+	json2 := poly.JSON()
+	expect(t, json == json2)
+}
+
 func TestRectValid(t *testing.T) {
 	json := `{"type":"Polygon","coordinates":[[[10,200],[30,200],[30,40],[10,40],[10,200]]]}`
 	expectJSON(t, json, nil)

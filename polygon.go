@@ -148,8 +148,8 @@ func (g *Polygon) NumPoints() int {
 }
 
 func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
-	var g Polygon
-	coords, ex, err := parseJSONPolygonCoords(keys, gjson.Result{}, opts)
+	var o Object
+	coords, extra, err := parseJSONPolygonCoords(keys, gjson.Result{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -167,18 +167,37 @@ func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
 		holes = coords[1:]
 	}
 	gopts := toGeometryOpts(opts)
-	poly := geometry.NewPoly(exterior, holes, &gopts)
-	g.base = *poly
-	g.extra = ex
-	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
+	if err := parseBBoxAndExtras(&extra, keys, opts); err != nil {
 		return nil, err
 	}
+	if extra == nil && opts.AllowRects &&
+		len(holes) == 0 && len(exterior) == 5 &&
+		exterior[0].X < exterior[1].X &&
+		exterior[0].Y == exterior[1].Y &&
+		exterior[1].X == exterior[2].X &&
+		exterior[1].Y < exterior[2].Y &&
+		exterior[2].X > exterior[3].X &&
+		exterior[2].Y == exterior[3].Y &&
+		exterior[3].X == exterior[4].X &&
+		exterior[3].Y > exterior[4].Y {
+		// simple rectangle
+		o = NewRect(geometry.Rect{
+			Min: exterior[0],
+			Max: exterior[2],
+		})
+	} else {
+		g := Polygon{}
+		poly := geometry.NewPoly(exterior, holes, &gopts)
+		g.base = *poly
+		g.extra = extra
+		o = &g
+	}
 	if opts.RequireValid {
-		if !g.Valid() {
+		if !o.Valid() {
 			return nil, errCoordinatesInvalid
 		}
 	}
-	return &g, nil
+	return o, nil
 }
 
 func parseJSONPolygonCoords(
