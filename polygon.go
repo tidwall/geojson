@@ -298,3 +298,8 @@ func (g *Polygon) DistanceLine(line *geometry.Line) float64 {
 func (g *Polygon) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }
+
+// HasExtra ...
+func (g *Polygon) HasExtra() bool {
+	return g.extra != nil
+}
