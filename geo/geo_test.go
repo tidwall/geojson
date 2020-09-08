@@ -190,3 +190,17 @@ func BenchmarkDistanceTo(b *testing.B) {
 		DistanceTo(pointA.lat, pointA.lon, points[i].lat, points[i].lon)
 	}
 }
+
+func BenchmarkRectFromCenter(b *testing.B) {
+	points := make([]point, b.N)
+	meters := make([]float64, b.N)
+	for i := 0; i < b.N; i++ {
+		points[i].lat = rand.Float64()*180 - 90
+		points[i].lon = rand.Float64()*360 - 180
+		meters[i] = rand.Float64() * 100000
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		RectFromCenter(points[i].lat, points[i].lon, meters[i])
+	}
+}
