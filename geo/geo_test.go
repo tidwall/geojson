@@ -204,3 +204,13 @@ func BenchmarkRectFromCenter(b *testing.B) {
 		RectFromCenter(points[i].lat, points[i].lon, meters[i])
 	}
 }
+
+func TestRectFromCenter(t *testing.T) {
+	x := -66.609685
+	y := 65.431713
+	m := 0.000711
+	a, b, c, d := RectFromCenter(y, x, m)
+	if math.IsNaN(a) || math.IsNaN(b) || math.IsNaN(c) || math.IsNaN(d) {
+		t.Fatalf("invalid rect: [%f %f %f %f]\n", a, b, c, d)
+	}
+}

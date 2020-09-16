@@ -105,13 +105,25 @@ func RectFromCenter(lat, lon, meters float64) (
 	// Calculate LONGITUDE min and max
 	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Longitude
 	rCos := math.Cos(r)
-	latSin, latCos := math.Sincos(lat)
-	latT := math.Asin(latSin / rCos)
-	latTSin, latTCos := math.Sincos(latT)
-	lonΔ := math.Acos((rCos - latTSin*latSin) / (latTCos * latCos))
+	if rCos == 1.0 {
 
-	minLon = lon - lonΔ
-	maxLon = lon + lonΔ
+		// This can occur when the meters is too miniscule to derive the outer
+		// rectangle coordinates.
+		minLat = lat
+		minLon = lon
+		maxLat = lat
+		maxLon = lon
+
+	} else {
+
+		latSin, latCos := math.Sincos(lat)
+		latT := math.Asin(latSin / rCos)
+		latTSin, latTCos := math.Sincos(latT)
+		lonΔ := math.Acos((rCos - latTSin*latSin) / (latTCos * latCos))
+
+		minLon = lon - lonΔ
+		maxLon = lon + lonΔ
+	}
 
 	// ADJUST mins and maxes for edge-of-map cases
 	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
