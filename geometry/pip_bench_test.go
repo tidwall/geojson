@@ -35,9 +35,9 @@ func testBig(
 	N, T := 100000, 4
 
 	opts := []IndexOptions{
-		IndexOptions{Kind: None, MinPoints: 64},
-		IndexOptions{Kind: QuadTree, MinPoints: 64},
-		IndexOptions{Kind: RTree, MinPoints: 64},
+		{Kind: None, MinPoints: 64},
+		{Kind: QuadTree, MinPoints: 64},
+		{Kind: RTree, MinPoints: 64},
 	}
 	for _, opts := range opts {
 		var ms1, ms2 runtime.MemStats

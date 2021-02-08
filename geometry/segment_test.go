@@ -328,10 +328,10 @@ func TestSegmentIntersectsSegment(t *testing.T) {
 		}
 
 		tests := [][2]Segment{
-			[2]Segment{segs[0], segs[1]},
-			[2]Segment{flip(segs[0]), segs[1]},
-			[2]Segment{segs[0], flip(segs[1])},
-			[2]Segment{flip(segs[0]), flip(segs[1])},
+			{segs[0], segs[1]},
+			{flip(segs[0]), segs[1]},
+			{segs[0], flip(segs[1])},
+			{flip(segs[0]), flip(segs[1])},
 		}
 		for j := 0; j < len(tests); j++ {
 			if tests[j][0].IntersectsSegment(tests[j][1]) != expect {
