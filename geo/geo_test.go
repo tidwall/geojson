@@ -214,3 +214,49 @@ func TestRectFromCenter(t *testing.T) {
 		t.Fatalf("invalid rect: [%f %f %f %f]\n", a, b, c, d)
 	}
 }
+
+func TestSemi(t *testing.T) {
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	N := 10_000_000
+	var dists float64
+	var largest float64
+	for i := 0; i < N; i++ {
+		latA := rng.Float64()*180 - 90
+		lonA := rng.Float64()*360 - 180
+		if i < 8 {
+			switch i {
+			case 0:
+				latA, lonA = -90, -180
+			case 1:
+				latA, lonA = 0, -180
+			case 2:
+				latA, lonA = 90, -180
+			case 3:
+				latA, lonA = 90, 0
+			case 4:
+				latA, lonA = 90, 180
+			case 5:
+				latA, lonA = 0, 180
+			case 6:
+				latA, lonA = -90, 180
+			case 7:
+				latA, lonA = -90, 0
+			}
+		}
+		latB := SemiToDegs(DegsToSemi(latA))
+		lonB := SemiToDegs(DegsToSemi(lonA))
+		dist := DistanceTo(latA, lonA, latB, lonB)
+		if dist > largest {
+			largest = dist
+		}
+		dists += dist
+	}
+
+	avg := dists / float64(N)
+	// avg should not be greater than 0.7 cm, and largest should not be larger
+	// than 0.7
+	if avg > 0.007 || largest > 0.015 {
+		t.Fatalf("semicircles loss too great: avg: %f cm, largest: %f cm\n",
+			avg*100, largest*100)
+	}
+}

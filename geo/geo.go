@@ -165,3 +165,11 @@ func RectFromCenter(lat, lon, meters float64) (
 	return
 
 }
+
+func DegsToSemi(degs float64) int32 {
+	return int32(degs * (math.Pow(2, 31) / 180.0))
+}
+
+func SemiToDegs(semi int32) float64 {
+	return float64(semi) * (180.0 / math.Pow(2, 31))
+}
