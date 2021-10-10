@@ -1,6 +1,8 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestFeatureCollection(t *testing.T) {
 	p := expectJSON(t, `{"type":"FeatureCollection","features":[{"type":"Point","coordinates":[1,2,3]}]}`, nil)
@@ -23,4 +25,24 @@ func TestFeatureCollectionValid(t *testing.T) {
 	json := `{"type":"FeatureCollection","features":[{"type":"Point","coordinates":[1,200]}]}`
 	expectJSON(t, json, nil)
 	expectJSONOpts(t, json, errCoordinatesInvalid, &ParseOptions{RequireValid: true})
+}
+
+func TestForEach(t *testing.T) {
+	json := `{"type":"FeatureCollection","features":[
+		{"type":"Feature","id":"A","geometry":{"type":"Point","coordinates":[1,2]},"properties":{}},
+		{"type":"Feature","id":"B","geometry":{"type":"Point","coordinates":[3,4]},"properties":{}},
+		{"type":"Feature","id":"C","geometry":{"type":"Point","coordinates":[5,6]},"properties":{}},
+		{"type":"Feature","id":"D","geometry":{"type":"Point","coordinates":[7,8]},"properties":{}}
+	]}`
+
+	g, _ := Parse(json, nil)
+	objsA := g.(*FeatureCollection).Children()
+	var objsB []Object
+	g.ForEach(func(geom Object) bool {
+		objsB = append(objsB, geom)
+		return true
+	})
+	for i := 0; i < len(objsA) && i < len(objsB); i++ {
+		expect(t, objsA[i].String() == objsB[i].String())
+	}
 }

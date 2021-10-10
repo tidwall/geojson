@@ -37,7 +37,7 @@ func NewFeature(geometry Object, members string) *Feature {
 
 // ForEach ...
 func (g *Feature) ForEach(iter func(geom Object) bool) bool {
-	return g.base.ForEach(iter)
+	return iter(g)
 }
 
 // Empty ...
