@@ -4,11 +4,7 @@
 
 package geometry
 
-import (
-	"encoding/binary"
-	"reflect"
-	"unsafe"
-)
+import "encoding/binary"
 
 // IndexKind is the kind of index to use in the options.
 type IndexKind byte
@@ -187,13 +183,8 @@ func (series *baseSeries) Search(
 				}
 			}
 		}
-	case *byte:
-		// convert the byte pointer back to a valid slice
-		data := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-			Data: uintptr(unsafe.Pointer(v)),
-			Len:  int((^uint(0)) >> 1),
-			Cap:  int((^uint(0)) >> 1),
-		}))
+	case []byte:
+		data := v
 		n := binary.LittleEndian.Uint32(data[1:])
 		data = data[:n:n]
 		switch data[0] {
@@ -314,8 +305,7 @@ func (series *baseSeries) setCompressed(data []byte) {
 	binary.LittleEndian.PutUint32(data[1:], uint32(len(data)))
 	smaller := make([]byte, len(data))
 	copy(smaller, data)
-	// use the byte point instead of a double reference to the byte slice
-	series.index = &smaller[0]
+	series.index = smaller
 }
 
 func (series *baseSeries) buildIndex() {
