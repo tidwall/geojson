@@ -363,9 +363,6 @@ func ringIntersectsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 	if ring.Empty() || line.Empty() {
 		return false
 	}
-	if !ring.Rect().IntersectsRect(line.Rect()) {
-		return false
-	}
 	// check outer and innter rects intersection first
 	if !ring.Rect().IntersectsRect(line.Rect()) {
 		return false
