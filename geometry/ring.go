@@ -9,6 +9,7 @@ import (
 )
 
 const complexRingMinPoints = 16
+const notFoundIdx = -1
 
 // Ring ...
 type Ring = Series
@@ -24,6 +25,13 @@ type ringResult struct {
 }
 
 func ringContainsPoint(ring Ring, point Point, allowOnEdge bool) ringResult {
+	if !ring.Rect().ContainsPoint(point) { // Optimization
+		return ringResult{
+			hit: false,
+			idx: notFoundIdx,
+		}
+	}
+
 	var in bool
 	var idx int
 	rect := Rect{Point{math.Inf(-1), point.Y}, Point{math.Inf(+1), point.Y}}
@@ -91,7 +99,10 @@ func ringIntersectsPoint(ring Ring, point Point, allowOnEdge bool) ringResult {
 // }
 
 func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
-	// fmt.Printf("%v %v\n", seg.A, seg.B)
+	if !ring.Rect().ContainsPoint(seg.A) || !ring.Rect().ContainsPoint(seg.B) { // Optimization
+		return false
+	}
+
 	// Test that segment points are contained in the ring.
 	resA := ringContainsPoint(ring, seg.A, allowOnEdge)
 	if !resA.hit {
@@ -235,6 +246,9 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 
 // ringIntersectsSegment detect if the segment intersects the ring
 func ringIntersectsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
+	if !seg.Rect().IntersectsRect(ring.Rect()) { // Optimization
+		return false
+	}
 	// Quick check that either point is inside of the ring
 	if ringContainsPoint(ring, seg.A, allowOnEdge).hit {
 		return true
@@ -347,6 +361,9 @@ func ringContainsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 
 func ringIntersectsLine(ring Ring, line *Line, allowOnEdge bool) bool {
 	if ring.Empty() || line.Empty() {
+		return false
+	}
+	if !ring.Rect().IntersectsRect(line.Rect()) {
 		return false
 	}
 	// check outer and innter rects intersection first
