@@ -63,7 +63,7 @@ func containsPointSearcher(point Point, allowOnEdge bool, idx *int, in *bool, se
 // ring.Search does not escape, and hence save us 3 heap allocations and ~6% runtime.
 
 func ringContainsPointBaseSeries(rect Rect, ring *baseSeries, point Point, allowOnEdge bool) (bool, int) {
-	var idx = -1
+	var idx = notFoundIdx
 	var in bool
 
 	ring.Search(
@@ -76,7 +76,7 @@ func ringContainsPointBaseSeries(rect Rect, ring *baseSeries, point Point, allow
 }
 
 func ringContainsPointGeneric(rect Rect, ring Ring, point Point, allowOnEdge bool) (bool, int) {
-	var idx = -1
+	var idx = notFoundIdx
 	var in bool
 	ring.Search(
 		rect,
@@ -126,9 +126,9 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	// edge of the ring.
 	if allowOnEdge {
 		// do some logic around seg points that are on the edge of the ring.
-		if resA.idx != -1 {
+		if resA.idx != notFoundIdx {
 			// seg A is on a ring segment
-			if resB.idx != -1 {
+			if resB.idx != notFoundIdx {
 				// seg B is on a ring segment
 				if resB.idx == resA.idx {
 					// case (3)
@@ -199,7 +199,7 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 				return true
 			})
 			return !intersects
-		} else if resB.idx != -1 {
+		} else if resB.idx != notFoundIdx {
 			// case (2)
 			// seg B is on a ring segment, but seg A is not.
 			// check if seg intersects any ring segments where B is not on.
