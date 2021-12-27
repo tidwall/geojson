@@ -9,7 +9,6 @@ import (
 )
 
 const complexRingMinPoints = 16
-const notFoundIdx = -1
 
 // Ring ...
 type Ring = Series
@@ -28,7 +27,7 @@ func ringContainsPoint(ring Ring, point Point, allowOnEdge bool) ringResult {
 	if !ring.Rect().ContainsPoint(point) { // Optimization
 		return ringResult{
 			hit: false,
-			idx: notFoundIdx,
+			idx: -1,
 		}
 	}
 
@@ -63,7 +62,7 @@ func containsPointSearcher(point Point, allowOnEdge bool, idx *int, in *bool, se
 // ring.Search does not escape, and hence save us 3 heap allocations and ~6% runtime.
 
 func ringContainsPointBaseSeries(rect Rect, ring *baseSeries, point Point, allowOnEdge bool) (bool, int) {
-	var idx = notFoundIdx
+	var idx = -1
 	var in bool
 
 	ring.Search(
@@ -76,7 +75,7 @@ func ringContainsPointBaseSeries(rect Rect, ring *baseSeries, point Point, allow
 }
 
 func ringContainsPointGeneric(rect Rect, ring Ring, point Point, allowOnEdge bool) (bool, int) {
-	var idx = notFoundIdx
+	var idx = -1
 	var in bool
 	ring.Search(
 		rect,
@@ -126,9 +125,9 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 	// edge of the ring.
 	if allowOnEdge {
 		// do some logic around seg points that are on the edge of the ring.
-		if resA.idx != notFoundIdx {
+		if resA.idx != -1 {
 			// seg A is on a ring segment
-			if resB.idx != notFoundIdx {
+			if resB.idx != -1 {
 				// seg B is on a ring segment
 				if resB.idx == resA.idx {
 					// case (3)
@@ -199,7 +198,7 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 				return true
 			})
 			return !intersects
-		} else if resB.idx != notFoundIdx {
+		} else if resB.idx != -1 {
 			// case (2)
 			// seg B is on a ring segment, but seg A is not.
 			// check if seg intersects any ring segments where B is not on.
