@@ -213,6 +213,15 @@ func TestRectFromCenter(t *testing.T) {
 	if math.IsNaN(a) || math.IsNaN(b) || math.IsNaN(c) || math.IsNaN(d) {
 		t.Fatalf("invalid rect: [%f %f %f %f]\n", a, b, c, d)
 	}
+
+	x = -53.82321297037157
+	y = -51.02891855590538
+	m = 0.10
+	a, b, c, d = RectFromCenter(y, x, m)
+	if math.IsNaN(a) || math.IsNaN(b) || math.IsNaN(c) || math.IsNaN(d) {
+		t.Fatalf("invalid rect: [%f %f %f %f]\n", a, b, c, d)
+	}
+
 }
 
 func TestSemi(t *testing.T) {

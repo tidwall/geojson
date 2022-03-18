@@ -105,7 +105,7 @@ func RectFromCenter(lat, lon, meters float64) (
 	// Calculate LONGITUDE min and max
 	// see http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#Longitude
 	rCos := math.Cos(r)
-	if rCos == 1.0 {
+	if rCos > 0.999999999999999 {
 
 		// This can occur when the meters is too miniscule to derive the outer
 		// rectangle coordinates.
