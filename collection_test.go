@@ -134,3 +134,15 @@ func TestCollectionUSASubset(t *testing.T) {
 	})
 
 }
+
+func TestCollectionBinarySimple(t *testing.T) {
+	o, err := Parse(`{"type":"MultiPoint","coordinates":[[1,2,9],[3,4,10]]}`, nil)
+	expect(t, err == nil)
+	expect(t, o != nil)
+	c1 := o.(*MultiPoint).collection
+	data := appendBinaryCollection(nil, c1)
+	c2, n := parseBinaryCollection(data, nil)
+	expect(t, n == len(data))
+	expect(t, c1.prect == c2.prect)
+	expect(t, c1.pempty == c2.pempty)
+}

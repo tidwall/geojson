@@ -61,6 +61,14 @@ func (g *MultiPolygon) JSON() string {
 func (g *MultiPolygon) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
+func (g *MultiPolygon) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binMultiPolygon)
+	return appendBinaryCollection(dst, g.collection)
+}
+
+func (g *MultiPolygon) Binary() []byte {
+	return g.AppendBinary(nil)
+}
 
 func parseJSONMultiPolygon(
 	keys *parseKeys, opts *ParseOptions,
@@ -113,4 +121,15 @@ func parseJSONMultiPolygon(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+
+func parseBinaryMultiPolygonObject(src []byte, opts *ParseOptions) (*MultiPolygon, int) {
+	mark := len(src)
+	c, n := parseBinaryCollection(src, opts)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	g := &MultiPolygon{collection: c}
+	return g, mark - len(src)
 }

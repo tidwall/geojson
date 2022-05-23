@@ -9,7 +9,6 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-// Feature ...
 type Feature struct {
 	base  Object
 	extra *extra
@@ -35,37 +34,30 @@ func NewFeature(geometry Object, members string) *Feature {
 	return g
 }
 
-// ForEach ...
 func (g *Feature) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)
 }
 
-// Empty ...
 func (g *Feature) Empty() bool {
 	return g.base.Empty()
 }
 
-// Valid ...
 func (g *Feature) Valid() bool {
 	return g.base.Valid()
 }
 
-// Rect ...
 func (g *Feature) Rect() geometry.Rect {
 	return g.base.Rect()
 }
 
-// Center ...
 func (g *Feature) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
-// Base ...
 func (g *Feature) Base() Object {
 	return g.base
 }
 
-// Members ...
 func (g *Feature) Members() string {
 	if g.extra != nil {
 		return g.extra.members
@@ -73,7 +65,6 @@ func (g *Feature) Members() string {
 	return ""
 }
 
-// AppendJSON ...
 func (g *Feature) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Feature","geometry":`...)
 	dst = g.base.AppendJSON(dst)
@@ -83,82 +74,77 @@ func (g *Feature) AppendJSON(dst []byte) []byte {
 
 }
 
-// String ...
 func (g *Feature) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
 func (g *Feature) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *Feature) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// Spatial ...
+func (g *Feature) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binFeature)
+	dst = g.base.AppendBinary(dst)
+	dst = g.extra.appendBinary(dst)
+	return dst
+}
+
+func (g *Feature) Binary() []byte {
+	return g.AppendBinary(nil)
+}
+
 func (g *Feature) Spatial() Spatial {
 	return g
 }
 
-// Within ...
 func (g *Feature) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
-// Contains ...
 func (g *Feature) Contains(obj Object) bool {
 	return g.base.Contains(obj)
 }
 
-// WithinRect ...
 func (g *Feature) WithinRect(rect geometry.Rect) bool {
 	return g.base.Spatial().WithinRect(rect)
 }
 
-// WithinPoint ...
 func (g *Feature) WithinPoint(point geometry.Point) bool {
 	return g.base.Spatial().WithinPoint(point)
 }
 
-// WithinLine ...
 func (g *Feature) WithinLine(line *geometry.Line) bool {
 	return g.base.Spatial().WithinLine(line)
 }
 
-// WithinPoly ...
 func (g *Feature) WithinPoly(poly *geometry.Poly) bool {
 	return g.base.Spatial().WithinPoly(poly)
 }
 
-// Intersects ...
 func (g *Feature) Intersects(obj Object) bool {
 	return g.base.Intersects(obj)
 }
 
-// IntersectsPoint ...
 func (g *Feature) IntersectsPoint(point geometry.Point) bool {
 	return g.base.Spatial().IntersectsPoint(point)
 }
 
-// IntersectsRect ...
 func (g *Feature) IntersectsRect(rect geometry.Rect) bool {
 	return g.base.Spatial().IntersectsRect(rect)
 }
 
-// IntersectsLine ...
 func (g *Feature) IntersectsLine(line *geometry.Line) bool {
 	return g.base.Spatial().IntersectsLine(line)
 }
 
-// IntersectsPoly ...
 func (g *Feature) IntersectsPoly(poly *geometry.Poly) bool {
 	return g.base.Spatial().IntersectsPoly(poly)
 }
 
-// NumPoints ...
 func (g *Feature) NumPoints() int {
 	return g.base.NumPoints()
 }
@@ -177,49 +163,72 @@ func parseJSONFeature(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	if err := parseBBoxAndExtras(&g.extra, keys, opts); err != nil {
 		return nil, err
 	}
-	if point, ok := g.base.(*Point); ok {
-		if g.extra != nil {
-			members := g.extra.members
-			if !opts.DisableCircleType &&
-				gjson.Get(members, "properties.type").String() == "Circle" {
-				// Circle
-				radius := gjson.Get(members, "properties.radius").Float()
-				units := gjson.Get(members, "properties.radius_units").String()
-				switch units {
-				case "", "m":
-				case "km":
-					radius *= 1000
-				default:
-					return nil, errCircleRadiusUnitsInvalid
-				}
-				return NewCircle(point.base, radius, 64), nil
+	if !opts.DisableCircleType && g.extra != nil &&
+		gjson.Get(g.extra.members, "properties.type").String() == "Circle" {
+		ok := true
+		var p geometry.Point
+		switch g := g.base.(type) {
+		case *Point:
+			if g.extra == nil {
+				p = g.base
+			} else {
+				ok = false
 			}
+		case *SimplePoint:
+			p = g.Point
+		default:
+			ok = false
+		}
+		if ok {
+			// Circle
+			members := g.extra.members
+			radius := gjson.Get(members, "properties.radius").Float()
+			units := gjson.Get(members, "properties.radius_units").String()
+			switch units {
+			case "", "m":
+			case "km":
+				radius *= 1000
+			default:
+				return nil, errCircleRadiusUnitsInvalid
+			}
+			return NewCircle(p, radius, 64), nil
 		}
 	}
 	return &g, nil
 }
 
-// Distance ...
 func (g *Feature) Distance(obj Object) float64 {
 	return g.base.Distance(obj)
 }
 
-// DistancePoint ...
 func (g *Feature) DistancePoint(point geometry.Point) float64 {
 	return g.base.Spatial().DistancePoint(point)
 }
 
-// DistanceRect ...
 func (g *Feature) DistanceRect(rect geometry.Rect) float64 {
 	return g.base.Spatial().DistanceRect(rect)
 }
 
-// DistanceLine ...
 func (g *Feature) DistanceLine(line *geometry.Line) float64 {
 	return g.base.Spatial().DistanceLine(line)
 }
 
-// DistancePoly ...
 func (g *Feature) DistancePoly(poly *geometry.Poly) float64 {
 	return g.base.Spatial().DistancePoly(poly)
+}
+
+func parseBinaryFeatureObject(src []byte, opts *ParseOptions) (*Feature, int) {
+	mark := len(src)
+	obj, n := ParseBinary(src, opts)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	extra, n := parseBinaryExtra(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	g := &Feature{base: obj, extra: extra}
+	return g, mark - len(src)
 }

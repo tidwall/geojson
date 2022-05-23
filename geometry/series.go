@@ -30,16 +30,24 @@ func (kind IndexKind) String() string {
 
 }
 
-// IndexOptions are segment indexing options
+// IndexOptions are segment indexing options.
 type IndexOptions struct {
 	Kind      IndexKind
 	MinPoints int
 }
 
-// DefaultIndexOptions ...
+// DefaultIndexOptions is used with functions like NewPoly and NewLine to
+// indicate that the new geometry will use the default indexing options.
 var DefaultIndexOptions = &IndexOptions{
 	Kind:      QuadTree,
 	MinPoints: 64,
+}
+
+// NoIndexOptions is used with functions like NewPoly and NewLine to
+// indicate that the new geometry should not be indexed.
+var NoIndexOptions = &IndexOptions{
+	Kind:      None,
+	MinPoints: 0,
 }
 
 // Series is just a series of points with utilities for efficiently accessing

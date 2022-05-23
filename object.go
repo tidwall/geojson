@@ -1,8 +1,10 @@
 package geojson
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/tidwall/geojson/geo"
@@ -44,6 +46,8 @@ type Object interface {
 	ForEach(iter func(geom Object) bool) bool
 	Spatial() Spatial
 	MarshalJSON() ([]byte, error)
+	AppendBinary(dst []byte) []byte
+	Binary() []byte
 }
 
 var _ = []Object{
@@ -192,14 +196,15 @@ func parseJSON(data string, opts *ParseOptions) (Object, error) {
 			} else {
 				fmembers = append(fmembers, ',')
 			}
-			fmembers = append(fmembers, pretty.UglyInPlace([]byte(key.Raw))...)
+			fmembers = append(fmembers, key.Raw...)
 			fmembers = append(fmembers, ':')
-			fmembers = append(fmembers, pretty.UglyInPlace([]byte(val.Raw))...)
+			fmembers = append(fmembers, val.Raw...)
 		}
 		return true
 	})
 	if len(fmembers) > 0 {
 		fmembers = append(fmembers, '}')
+		fmembers = pretty.UglyInPlace(fmembers)
 		keys.members = string(fmembers)
 	}
 	if !rType.Exists() {
@@ -277,6 +282,128 @@ func (ex *extra) appendJSONExtra(dst []byte, propertiesRequired bool) []byte {
 	return dst
 }
 
+func (ex *extra) appendBinary(dst []byte) []byte {
+	if ex == nil {
+		return append(dst, 0)
+	}
+	dst = append(dst, 1)
+	dst = append(dst, ex.dims)
+	dst = appendUvarint(dst, uint64(len(ex.values)))
+	for _, x := range ex.values {
+		dst = appendFloat64(dst, x)
+	}
+	dst = appendUvarint(dst, uint64(len(ex.members)))
+	dst = append(dst, ex.members...)
+	return dst
+}
+
+func parseBinaryPoints(src []byte) ([]geometry.Point, int) {
+	mark := len(src)
+	nvals, n := binary.Uvarint(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	if uint64(len(src)) < nvals*16 {
+		return nil, 0
+	}
+	points := make([]geometry.Point, nvals)
+	for i := 0; i < len(points); i++ {
+		points[i] = geometry.Point{
+			X: math.Float64frombits(binary.LittleEndian.Uint64(src[i*16:])),
+			Y: math.Float64frombits(binary.LittleEndian.Uint64(src[i*16+8:])),
+		}
+	}
+	src = src[nvals*16:]
+	return points, mark - len(src)
+}
+
+func parseBinaryFloat64s(src []byte) ([]float64, int) {
+	mark := len(src)
+	nvals, n := binary.Uvarint(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	if uint64(len(src)) < nvals*8 {
+		return nil, 0
+	}
+	values := make([]float64, nvals)
+	for i := 0; i < len(values); i++ {
+		x := math.Float64frombits(binary.LittleEndian.Uint64(src[i*8:]))
+		values[i] = x
+	}
+	src = src[nvals*8:]
+	return values, mark - len(src)
+}
+
+func parseBinaryExtra(src []byte) (*extra, int) {
+	mark := len(src)
+	if len(src) == 0 {
+		return nil, 0
+	}
+	if src[0] == 0 {
+		return nil, 1
+	}
+	if src[0] != 1 {
+		return nil, 0
+	}
+	src = src[1:]
+
+	ex := &extra{}
+	if len(src) == 0 {
+		return nil, 0
+	}
+	ex.dims = src[0]
+	src = src[1:]
+
+	var n int
+	ex.values, n = parseBinaryFloat64s(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+
+	mlen, n := binary.Uvarint(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+
+	if uint64(len(src)) < mlen {
+		return nil, 0
+	}
+	ex.members = string(src[:mlen])
+	src = src[mlen:]
+
+	return ex, mark - len(src)
+}
+
+func appendUvarint(dst []byte, x uint64) []byte {
+	var buf [10]byte
+	n := binary.PutUvarint(buf[:], x)
+	return append(dst, buf[:n]...)
+}
+
+func appendFloat64(dst []byte, x float64) []byte {
+	var buf [8]byte
+	binary.LittleEndian.PutUint64(buf[:], math.Float64bits(x))
+	return append(dst, buf[:]...)
+}
+
+func appendBinaryPoint(dst []byte, point geometry.Point) []byte {
+	dst = appendFloat64(dst, point.X)
+	return appendFloat64(dst, point.Y)
+}
+
+func parseBinaryPoint(src []byte) geometry.Point {
+	// The size has already been checked by caller
+	return geometry.Point{
+		X: math.Float64frombits(binary.LittleEndian.Uint64(src[0:8])),
+		Y: math.Float64frombits(binary.LittleEndian.Uint64(src[8:16])),
+	}
+}
+
 func appendJSONSeries(
 	dst []byte, series geometry.Series, ex *extra, pidx int,
 ) (ndst []byte, npidx int) {
@@ -291,6 +418,23 @@ func appendJSONSeries(
 	}
 	dst = append(dst, ']')
 	return dst, pidx
+}
+
+func appendBinarySeries(dst []byte, series geometry.Series) (ndst []byte) {
+	nPoints := series.NumPoints()
+	dst = appendUvarint(dst, uint64(nPoints))
+	for i := 0; i < nPoints; i++ {
+		dst = appendBinaryPoint(dst, series.PointAt(i))
+	}
+	return dst
+}
+
+func appendBinaryPoints(dst []byte, points []geometry.Point) (ndst []byte) {
+	dst = appendUvarint(dst, uint64(len(points)))
+	for i := 0; i < len(points); i++ {
+		dst = appendBinaryPoint(dst, points[i])
+	}
+	return dst
 }
 
 func unionRects(a, b geometry.Rect) geometry.Rect {
@@ -311,4 +455,78 @@ func unionRects(a, b geometry.Rect) geometry.Rect {
 
 func geoDistancePoints(a, b geometry.Point) float64 {
 	return geo.DistanceTo(a.Y, a.X, b.Y, b.X)
+}
+
+// These types do not necessarily align with WKT/WKB type integer codes.
+// New values may be added in the future, but do not change the older ones
+// as that might break compatibilty with dependent applications.
+const (
+	binPoint              byte = 1
+	binLineString         byte = 2
+	binPolygon            byte = 3
+	binMultiPoint         byte = 4
+	binMultiLineString    byte = 5
+	binMultiPolygon       byte = 6
+	binGeometryCollection byte = 7
+	binFeature            byte = 128
+	binFeatureCollection  byte = 129
+	binRect               byte = 130
+	binSimplePoint        byte = 131
+	binCircle             byte = 132
+)
+
+// ParseBinary from bytes that where generated from the Object.Binary()
+// method. Reutrns nil if there was a problem parsing.
+//
+// Only the fields relating to geometry indexing are used. The others are
+// ignored.
+func ParseBinary(src []byte, opts *ParseOptions) (Object, int) {
+	if opts == nil {
+		opts = DefaultParseOptions
+	}
+	mark := len(src)
+	if len(src) == 0 || src[0] != ':' {
+		return nil, 0
+	}
+	src = src[1:]
+	if len(src) == 0 {
+		return nil, 0
+	}
+	kind := src[0]
+	src = src[1:]
+	var obj Object
+	var n int
+	switch kind {
+	case binPoint:
+		obj, n = parseBinaryPointObject(src, opts)
+	case binLineString:
+		obj, n = parseBinaryLineStringObject(src, opts)
+	case binPolygon:
+		obj, n = parseBinaryPolygonObject(src, opts)
+	case binMultiPoint:
+		obj, n = parseBinaryMultiPointObject(src, opts)
+	case binMultiLineString:
+		obj, n = parseBinaryMultiLineStringObject(src, opts)
+	case binMultiPolygon:
+		obj, n = parseBinaryMultiPolygonObject(src, opts)
+	case binGeometryCollection:
+		obj, n = parseBinaryGeometryCollectionObject(src, opts)
+	case binFeature:
+		obj, n = parseBinaryFeatureObject(src, opts)
+	case binFeatureCollection:
+		obj, n = parseBinaryFeatureCollectionObject(src, opts)
+	case binRect:
+		obj, n = parseBinaryRectObject(src, opts)
+	case binSimplePoint:
+		obj, n = parseBinarySimplePointObject(src, opts)
+	case binCircle:
+		obj, n = parseBinaryCircleObject(src, opts)
+	default:
+		return nil, 0
+	}
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	return obj, mark - len(src)
 }

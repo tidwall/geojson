@@ -5,43 +5,35 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// LineString ...
 type LineString struct {
 	base  geometry.Line
 	extra *extra
 }
 
-// NewLineString ...
 func NewLineString(line *geometry.Line) *LineString {
 	return &LineString{base: *line}
 }
 
-// Empty ...
 func (g *LineString) Empty() bool {
 	return g.base.Empty()
 }
 
-// Valid ...
 func (g *LineString) Valid() bool {
 	return g.base.Valid()
 }
 
-// Rect ...
 func (g *LineString) Rect() geometry.Rect {
 	return g.base.Rect()
 }
 
-// Center ...
 func (g *LineString) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
-// Base ...
 func (g *LineString) Base() *geometry.Line {
 	return &g.base
 }
 
-// AppendJSON ...
 func (g *LineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"LineString","coordinates":`...)
 	dst, _ = appendJSONSeries(dst, &g.base, g.extra, 0)
@@ -52,87 +44,99 @@ func (g *LineString) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// String ...
 func (g *LineString) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
 func (g *LineString) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *LineString) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// Spatial ...
+func (g *LineString) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binLineString)
+	dst = appendBinarySeries(dst, &g.base)
+	dst = g.extra.appendBinary(dst)
+	return dst
+}
+
+func (g *LineString) Binary() []byte {
+	return g.AppendBinary(nil)
+}
+
+func parseBinaryLineStringObject(src []byte, opts *ParseOptions) (*LineString, int) {
+	mark := len(src)
+	g := &LineString{}
+	points, n := parseBinaryPoints(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	gopts := toGeometryOpts(opts)
+	g.base = *geometry.NewLine(points, &gopts)
+	g.extra, n = parseBinaryExtra(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	return g, mark - len(src)
+}
+
 func (g *LineString) Spatial() Spatial {
 	return g
 }
 
-// ForEach ...
 func (g *LineString) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)
 }
 
-// Within ...
 func (g *LineString) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
-// Contains ...
 func (g *LineString) Contains(obj Object) bool {
 	return obj.Spatial().WithinLine(&g.base)
 }
 
-// Intersects ...
 func (g *LineString) Intersects(obj Object) bool {
 	return obj.Spatial().IntersectsLine(&g.base)
 }
 
-// WithinRect ...
 func (g *LineString) WithinRect(rect geometry.Rect) bool {
 	return rect.ContainsLine(&g.base)
 }
 
-// WithinPoint ...
 func (g *LineString) WithinPoint(point geometry.Point) bool {
 	return point.ContainsLine(&g.base)
 }
 
-// WithinLine ...
 func (g *LineString) WithinLine(line *geometry.Line) bool {
 	return line.ContainsLine(&g.base)
 }
 
-// WithinPoly ...
 func (g *LineString) WithinPoly(poly *geometry.Poly) bool {
 	return poly.ContainsLine(&g.base)
 }
 
-// IntersectsPoint ...
 func (g *LineString) IntersectsPoint(point geometry.Point) bool {
 	return g.base.IntersectsPoint(point)
 }
 
-// IntersectsRect ...
 func (g *LineString) IntersectsRect(rect geometry.Rect) bool {
 	return g.base.IntersectsRect(rect)
 }
 
-// IntersectsLine ...
 func (g *LineString) IntersectsLine(line *geometry.Line) bool {
 	return g.base.IntersectsLine(line)
 }
 
-// IntersectsPoly ...
 func (g *LineString) IntersectsPoly(poly *geometry.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-// NumPoints ...
 func (g *LineString) NumPoints() int {
 	return g.base.NumPoints()
 }
@@ -206,7 +210,7 @@ func parseJSONLineStringCoords(
 			return false
 		}
 		coords = append(coords, geometry.Point{X: nums[0], Y: nums[1]})
-		if ex == nil {
+		if ex == nil && len(coords) == 1 {
 			if count > 2 {
 				ex = new(extra)
 				if count > 3 {
@@ -230,12 +234,10 @@ func parseJSONLineStringCoords(
 	return coords, ex, err
 }
 
-// Distance ...
 func (g *LineString) Distance(obj Object) float64 {
 	return obj.Spatial().DistanceLine(&g.base)
 }
 
-// DistancePoint ...
 func (g *LineString) DistancePoint(point geometry.Point) float64 {
 	return geoDistancePoints(g.Center(), point)
 }
@@ -245,12 +247,10 @@ func (g *LineString) DistanceRect(rect geometry.Rect) float64 {
 	return geoDistancePoints(g.Center(), rect.Center())
 }
 
-// DistanceLine ...
 func (g *LineString) DistanceLine(line *geometry.Line) float64 {
 	return geoDistancePoints(g.Center(), line.Rect().Center())
 }
 
-// DistancePoly ...
 func (g *LineString) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }

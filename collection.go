@@ -1,6 +1,9 @@
 package geojson
 
 import (
+	"encoding/binary"
+	"math"
+
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/rtree"
 )
@@ -13,6 +16,64 @@ type collection struct {
 	pempty   bool
 }
 
+func appendBinaryCollection(dst []byte, c collection) []byte {
+	dst = appendFloat64(dst, c.prect.Min.X)
+	dst = appendFloat64(dst, c.prect.Min.Y)
+	dst = appendFloat64(dst, c.prect.Max.X)
+	dst = appendFloat64(dst, c.prect.Max.Y)
+	if c.pempty {
+		dst = append(dst, 1)
+	} else {
+		dst = append(dst, 0)
+	}
+	dst = appendUvarint(dst, uint64(len(c.children)))
+	for _, obj := range c.children {
+		dst = append(dst, obj.Binary()...)
+	}
+	dst = c.extra.appendBinary(dst)
+	return dst
+}
+
+func parseBinaryCollection(src []byte, opts *ParseOptions) (collection, int) {
+	var c collection
+	mark := len(src)
+	if len(src) < 33 {
+		return c, 0
+	}
+	c.prect.Min.X = math.Float64frombits(binary.LittleEndian.Uint64(src[0:]))
+	c.prect.Min.Y = math.Float64frombits(binary.LittleEndian.Uint64(src[8:]))
+	c.prect.Max.X = math.Float64frombits(binary.LittleEndian.Uint64(src[16:]))
+	c.prect.Max.Y = math.Float64frombits(binary.LittleEndian.Uint64(src[24:]))
+	if src[32] == 1 {
+		c.pempty = true
+	} else if src[32] == 0 {
+		c.pempty = false
+	} else {
+		return c, 0
+	}
+	src = src[33:]
+	nobjs, n := binary.Uvarint(src)
+	if n <= 0 {
+		return c, 0
+	}
+	src = src[n:]
+	c.children = make([]Object, nobjs)
+	for i := uint64(0); i < nobjs; i++ {
+		obj, n := ParseBinary(src, opts)
+		if n <= 0 {
+			return c, 0
+		}
+		src = src[n:]
+		c.children[i] = obj
+	}
+	c.extra, n = parseBinaryExtra(src)
+	if n <= 0 {
+		return c, 0
+	}
+	src = src[n:]
+	return c, mark - len(src)
+}
+
 func (g *collection) Indexed() bool {
 	return g.tree != nil
 }
@@ -21,7 +82,6 @@ func (g *collection) Children() []Object {
 	return g.children
 }
 
-// ForEach ...
 func (g *collection) ForEach(iter func(geom Object) bool) bool {
 	for _, child := range g.children {
 		if !child.ForEach(iter) {
@@ -31,7 +91,6 @@ func (g *collection) ForEach(iter func(geom Object) bool) bool {
 	return true
 }
 
-// Base ...
 func (g *collection) Base() []Object {
 	return g.children
 }
@@ -59,53 +118,52 @@ func (g *collection) Search(rect geometry.Rect, iter func(child Object) bool) {
 	}
 }
 
-// Empty ...
 func (g *collection) Empty() bool {
 	return g.pempty
 }
 
-// Valid ...
 func (g *collection) Valid() bool {
 	return g.Rect().Valid()
 }
 
-// Rect ...
 func (g *collection) Rect() geometry.Rect {
 	return g.prect
 }
 
-// Center ...
 func (g *collection) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
-// AppendJSON ...
 func (g *collection) AppendJSON(dst []byte) []byte {
 	// this should never be called
 	return append(dst, "null"...)
 }
 
-// JSON ...
 func (g *collection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *collection) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// String ...
 func (g *collection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// Within ...
+func (g *collection) AppendBinary(dst []byte) []byte {
+	// this should never be called
+	return nil
+}
+
+func (g *collection) Binary() []byte {
+	return g.AppendBinary(nil)
+}
+
 func (g *collection) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
-// Contains ...
 func (g *collection) Contains(obj Object) bool {
 	if g.Empty() {
 		return false
@@ -200,7 +258,6 @@ func (g *collection) WithinPoly(poly *geometry.Poly) bool {
 	return withinCount == len(g.children)
 }
 
-// Intersects ...
 func (g *collection) Intersects(obj Object) bool {
 	// check if any of obj intersects with any of collection
 	var intersects bool
@@ -272,7 +329,6 @@ func (g *collection) IntersectsPoly(poly *geometry.Poly) bool {
 	return intersects
 }
 
-// NumPoints ...
 func (g *collection) NumPoints() int {
 	var n int
 	for _, child := range g.children {
@@ -318,7 +374,6 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 	}
 }
 
-// Distance ...
 func (g *collection) Distance(obj Object) float64 {
 	return obj.Spatial().DistancePoint(g.Center())
 }

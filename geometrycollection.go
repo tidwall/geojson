@@ -6,10 +6,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// GeometryCollection ...
 type GeometryCollection struct{ collection }
 
-// NewGeometryCollection ...
 func NewGeometryCollection(geometries []Object) *GeometryCollection {
 	g := new(GeometryCollection)
 	g.children = geometries
@@ -35,19 +33,24 @@ func (g *GeometryCollection) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// String ...
 func (g *GeometryCollection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
 func (g *GeometryCollection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *GeometryCollection) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
+}
+func (g *GeometryCollection) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binGeometryCollection)
+	return appendBinaryCollection(dst, g.collection)
+}
+
+func (g *GeometryCollection) Binary() []byte {
+	return g.AppendBinary(nil)
 }
 
 func parseJSONGeometryCollection(
@@ -78,4 +81,14 @@ func parseJSONGeometryCollection(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+func parseBinaryGeometryCollectionObject(src []byte, opts *ParseOptions) (*GeometryCollection, int) {
+	mark := len(src)
+	c, n := parseBinaryCollection(src, opts)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	g := &GeometryCollection{collection: c}
+	return g, mark - len(src)
 }

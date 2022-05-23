@@ -122,3 +122,79 @@ func cleanJSON(data string) string {
 	opts.Width = 99999999
 	return string(pretty.PrettyOptions(dst, &opts))
 }
+
+func TestBinary(t *testing.T) {
+	jsons := []string{
+		`G:{"type":"Point","coordinates":[10,20]}`,
+		`G:{"type":"Point","coordinates":[10,20,30]}`,
+		`G:{"type":"Point","coordinates":[10,20],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"Point","coordinates":[10,20,30],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"LineString","coordinates":[[10,20],[30,40]]}`,
+		`G:{"type":"LineString","coordinates":[[10,20],[30,40]],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"LineString","coordinates":[[10,20,33],[30,40,44]],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"Polygon","coordinates":[[[0,0],[190,0],[10,10],[0,10],[0,0]],[[2,2],[8,2],[8,8],[2,8],[2,2]]]}`,
+		`G:{"type":"Polygon","coordinates":[[[0,0],[190,0],[10,10],[0,10],[0,0]],[[2,2],[8,2],[8,8],[2,8],[2,2]]],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"Polygon","coordinates":[[[0,0,0],[190,0,1],[10,10,2],[0,10,3],[0,0,4]],[[2,2,5],[8,2,6],[8,8,7],[2,8,8],[2,2,9]],[[3,3,5],[9,3,6],[9,9,7],[3,9,8],[3,3,9]]],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"MultiPoint","coordinates":[]}`,
+		`G:{"type":"MultiPoint","coordinates":[[1,2],[3,4]]}`,
+		`G:{"type":"MultiPoint","coordinates":[[1,2,3]]}`,
+		`G:{"type":"MultiPoint","coordinates":[[1,2,9],[3,4,10]]}`,
+		`G:{"type":"MultiPoint","coordinates":[[1,2,9],[3,4,10]],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"MultiLineString","coordinates":[[[10,10],[20,20]],[[50,50],[100,100]]]}`,
+		`G:{"type":"MultiLineString","coordinates":[[[10,10,5],[20,20,30]],[[50,50,6],[100,100,7]]]}`,
+		`G:{"type":"MultiLineString","coordinates":[[[10,10,5],[20,20,30]],[[50,50,6],[100,100,7]]],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"MultiLineString","coordinates":[[[10,10],[20,20]],[[50,50],[100,100]]]}`,
+		`G:{"type":"MultiPolygon","coordinates":[[[[0,0],[10,0],[10,10],[0,10],[0,0]],[[2,2],[8,2],[8,8],[2,8],[2,2]]],[[[0,0],[10,0],[10,10],[0,10],[0,0]],[[2,2],[8,2],[8,8],[2,8],[2,2]]]]}`,
+		`G:{"type":"MultiPolygon","coordinates":[[[[0,0,1],[10,0,2],[10,10,3],[0,10,4],[0,0,5]],[[2,2,6],[8,2,7],[8,8,8],[2,8,9],[2,2,10]]],[[[0,0],[10,0],[10,10],[0,10],[0,0]],[[2,2],[8,2],[8,8],[2,8],[2,2]]]]}`,
+		`G:{"type":"MultiPolygon","coordinates":[[[[0,0,1],[10,0,2],[10,10,3],[0,10,4],[0,0,5]],[[2,2,6],[8,2,7],[8,8,8],[2,8,9],[2,2,10]]],[[[0,0],[10,0],[10,10],[0,10],[0,0]],[[2,2],[8,2],[8,8],[2,8],[2,2]]]],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[1,2]},{"type":"LineString","coordinates":[[10,20],[30,40]]}]}`,
+		`G:{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[1,2]},{"type":"LineString","coordinates":[[10,20],[30,40]]}],"a":[1,2,3],"b":{"c":"d"}}`,
+		`G:{"type":"Feature","geometry":{"type":"Point","coordinates":[1,2,3]},"bbox":[1,2,3,4],"properties":{}}`,
+		`G:{"type":"FeatureCollection","features":[
+			{"type":"Feature","id":"A","geometry":{"type":"Point","coordinates":[1,2]},"properties":{}},
+			{"type":"Feature","id":"B","geometry":{"type":"Point","coordinates":[3,4]},"properties":{}},
+			{"type":"Feature","id":"C","geometry":{"type":"Point","coordinates":[5,6]},"properties":{}},
+			{"type":"Feature","id":"D","geometry":{"type":"Point","coordinates":[7,8]},"properties":{}}
+		],"hello":"jello"}`,
+
+		// Rect
+		`X:{"type":"Polygon","coordinates":[[[10,20],[30,20],[30,40],[10,40],[10,20]]]}`,
+
+		// SimplePoint
+		`X:{"type":"Point","coordinates":[10,20]}`,
+
+		// Circle
+		`X:{"type":"Feature","geometry":{"type":"Point","coordinates":[-112,33]},"properties":{"type":"Circle","radius":5000,"radius_units":"m"}}`,
+	}
+	for _, json := range jsons {
+		opts := *DefaultParseOptions
+		if json[:2] == "X:" {
+			opts.AllowRects = true
+			opts.AllowSimplePoints = true
+		}
+		json = json[2:]
+		obj, err := Parse(json, &opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+		bin := obj.Binary()
+		if bin == nil {
+			t.Fatal("expected not nil")
+		}
+		obj2, n := ParseBinary(bin, nil)
+		if n != len(bin) {
+			t.Fatalf("expected %d, got %d", len(bin), n)
+		}
+		if obj2 == nil {
+			t.Fatal("expected not nil")
+		}
+		json1 := string(pretty.Ugly([]byte(cleanJSON(json))))
+		json2 := string(pretty.Ugly([]byte(cleanJSON(obj2.JSON()))))
+		if json2 != json1 {
+			println("GOT", json2)
+			println("EXPECTED", json1)
+			t.Fatal("json mismatch")
+		}
+
+	}
+}

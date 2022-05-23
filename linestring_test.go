@@ -16,6 +16,7 @@ func TestLineStringParse(t *testing.T) {
 	expect(t, g.Rect() == R(1, 2, 3, 4))
 	expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]],"bbox":null}`, nil)
 	expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2]],"bbox":[1,2,3,4]}`, nil)
+	expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2,10]]}`, `{"type":"LineString","coordinates":[[3,4],[1,2]]}`)
 }
 
 func TestLineStringParseValid(t *testing.T) {
@@ -45,30 +46,3 @@ func TestLineStringInvalid(t *testing.T) {
 	var g = expectJSON(t, `{"type":"LineString","coordinates":[[3,4],[1,2],[0, 190]]}`, nil)
 	expect(t, !g.Valid())
 }
-
-// func TestLineStringPoly(t *testing.T) {
-// 	ls := expectJSON(t, `{"type":"LineString","coordinates":[
-// 		[10,10],[20,20],[20,10]
-// 	]}`, nil)
-// 	expect(t, ls.(*LineString).Contains(ls))
-// 	expect(t, ls.Contains(PO(10, 10)))
-// 	expect(t, ls.Contains(PO(15, 15)))
-// 	expect(t, ls.Contains(PO(20, 20)))
-// 	expect(t, ls.Contains(PO(20, 15)))
-// 	expect(t, !ls.Contains(PO(12, 13)))
-// 	expect(t, !ls.Contains(RO(10, 10, 20, 20)))
-// 	expect(t, ls.Intersects(PO(10, 10)))
-// 	expect(t, ls.Intersects(PO(15, 15)))
-// 	expect(t, ls.Intersects(PO(20, 20)))
-// 	expect(t, !ls.Intersects(PO(12, 13)))
-// 	expect(t, ls.Intersects(RO(10, 10, 20, 20)))
-// 	expect(t, ls.Intersects(
-// 		expectJSON(t, `{"type":"Point","coordinates":[15,15,0]}`, nil),
-// 	))
-// 	expect(t, ls.Intersects(ls))
-// 	lsb := expectJSON(t, `{"type":"LineString","coordinates":[
-// 		[10,10],[20,20],[20,10]
-// 	],"bbox":[10,10,20,20]}`, nil)
-// 	expect(t, lsb.Contains(PO(12, 13)))
-// 	expect(t, ls.Contains(PO(20, 20)))
-// }

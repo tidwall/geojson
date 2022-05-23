@@ -6,10 +6,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// FeatureCollection ...
 type FeatureCollection struct{ collection }
 
-// NewFeatureCollection ...
 func NewFeatureCollection(features []Object) *FeatureCollection {
 	g := new(FeatureCollection)
 	g.children = features
@@ -35,19 +33,24 @@ func (g *FeatureCollection) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// String ...
 func (g *FeatureCollection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
 func (g *FeatureCollection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *FeatureCollection) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
+}
+func (g *FeatureCollection) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binFeatureCollection)
+	return appendBinaryCollection(dst, g.collection)
+}
+
+func (g *FeatureCollection) Binary() []byte {
+	return g.AppendBinary(nil)
 }
 
 func parseJSONFeatureCollection(
@@ -78,4 +81,14 @@ func parseJSONFeatureCollection(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+func parseBinaryFeatureCollectionObject(src []byte, opts *ParseOptions) (*FeatureCollection, int) {
+	mark := len(src)
+	c, n := parseBinaryCollection(src, opts)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	g := &FeatureCollection{collection: c}
+	return g, mark - len(src)
 }

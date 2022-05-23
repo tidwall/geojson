@@ -1,47 +1,41 @@
 package geojson
 
 import (
+	"encoding/binary"
+
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
 
-// Polygon ...
 type Polygon struct {
 	base  geometry.Poly
 	extra *extra
 }
 
-// NewPolygon ...
 func NewPolygon(poly *geometry.Poly) *Polygon {
 	return &Polygon{base: *poly}
 }
 
-// Empty ...
 func (g *Polygon) Empty() bool {
 	return g.base.Empty()
 }
 
-// Valid ...
 func (g *Polygon) Valid() bool {
 	return g.base.Valid()
 }
 
-// Rect ...
 func (g *Polygon) Rect() geometry.Rect {
 	return g.base.Rect()
 }
 
-// Center ...
 func (g *Polygon) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
-// Base ...
 func (g *Polygon) Base() *geometry.Poly {
 	return &g.base
 }
 
-// AppendJSON ...
 func (g *Polygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Polygon","coordinates":[`...)
 	var pidx int
@@ -58,87 +52,116 @@ func (g *Polygon) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// JSON ...
 func (g *Polygon) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *Polygon) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// String ...
 func (g *Polygon) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// Spatial ...
+func (g *Polygon) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binPolygon)
+	dst = appendBinarySeries(dst, g.base.Exterior)
+	dst = appendUvarint(dst, uint64(len(g.base.Holes)))
+	for _, hole := range g.base.Holes {
+		dst = appendBinarySeries(dst, hole)
+	}
+	dst = g.extra.appendBinary(dst)
+	return dst
+}
+
+func parseBinaryPolygonObject(src []byte, opts *ParseOptions) (*Polygon, int) {
+	mark := len(src)
+	g := &Polygon{}
+	exterior, n := parseBinaryPoints(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	nholes, n := binary.Uvarint(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	holes := make([][]geometry.Point, nholes)
+	for i := uint64(0); i < nholes; i++ {
+		holes[i], n = parseBinaryPoints(src)
+		if n <= 0 {
+			return nil, 0
+		}
+		src = src[n:]
+	}
+	gopts := toGeometryOpts(opts)
+	g.base = *geometry.NewPoly(exterior, holes, &gopts)
+	g.extra, n = parseBinaryExtra(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	return g, mark - len(src)
+}
+
+func (g *Polygon) Binary() []byte {
+	return g.AppendBinary(nil)
+}
+
 func (g *Polygon) Spatial() Spatial {
 	return g
 }
 
-// ForEach ...
 func (g *Polygon) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)
 }
 
-// Within ...
 func (g *Polygon) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
-// Contains ...
 func (g *Polygon) Contains(obj Object) bool {
 	return obj.Spatial().WithinPoly(&g.base)
 }
 
-// WithinRect ...
 func (g *Polygon) WithinRect(rect geometry.Rect) bool {
 	return rect.ContainsPoly(&g.base)
 }
 
-// WithinPoint ...
 func (g *Polygon) WithinPoint(point geometry.Point) bool {
 	return point.ContainsPoly(&g.base)
 }
 
-// WithinLine ...
 func (g *Polygon) WithinLine(line *geometry.Line) bool {
 	return line.ContainsPoly(&g.base)
 }
 
-// WithinPoly ...
 func (g *Polygon) WithinPoly(poly *geometry.Poly) bool {
 	return poly.ContainsPoly(&g.base)
 }
 
-// Intersects ...
 func (g *Polygon) Intersects(obj Object) bool {
 	return obj.Spatial().IntersectsPoly(&g.base)
 }
 
-// IntersectsPoint ...
 func (g *Polygon) IntersectsPoint(point geometry.Point) bool {
 	return g.base.IntersectsPoint(point)
 }
 
-// IntersectsRect ...
 func (g *Polygon) IntersectsRect(rect geometry.Rect) bool {
 	return g.base.IntersectsRect(rect)
 }
 
-// IntersectsLine ...
 func (g *Polygon) IntersectsLine(line *geometry.Line) bool {
 	return g.base.IntersectsLine(line)
 }
 
-// IntersectsPoly ...
 func (g *Polygon) IntersectsPoly(poly *geometry.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-// NumPoints ...
 func (g *Polygon) NumPoints() int {
 	n := g.base.Exterior.NumPoints()
 	for _, hole := range g.base.Holes {
@@ -248,7 +271,7 @@ func parseJSONPolygonCoords(
 				return false
 			}
 			coords[ii] = append(coords[ii], geometry.Point{X: nums[0], Y: nums[1]})
-			if ex == nil {
+			if ex == nil && len(coords[ii]) == 1 {
 				if count > 2 {
 					ex = new(extra)
 					if count > 3 {
@@ -274,32 +297,26 @@ func parseJSONPolygonCoords(
 	return coords, ex, err
 }
 
-// Distance ...
 func (g *Polygon) Distance(obj Object) float64 {
 	return obj.Spatial().DistancePoly(&g.base)
 }
 
-// DistancePoint ...
 func (g *Polygon) DistancePoint(point geometry.Point) float64 {
 	return geoDistancePoints(g.Center(), point)
 }
 
-// DistanceRect ...
 func (g *Polygon) DistanceRect(rect geometry.Rect) float64 {
 	return geoDistancePoints(g.Center(), rect.Center())
 }
 
-// DistanceLine ...
 func (g *Polygon) DistanceLine(line *geometry.Line) float64 {
 	return geoDistancePoints(g.Center(), line.Rect().Center())
 }
 
-// DistancePoly ...
 func (g *Polygon) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }
 
-// HasExtra ...
 func (g *Polygon) HasExtra() bool {
 	return g.extra != nil
 }

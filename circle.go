@@ -1,6 +1,7 @@
 package geojson
 
 import (
+	"encoding/binary"
 	"math"
 	"strconv"
 
@@ -8,14 +9,11 @@ import (
 	"github.com/tidwall/geojson/geometry"
 )
 
-// Circle ...
 type Circle struct {
-	object    Object
 	center    geometry.Point
 	meters    float64
 	haversine float64
 	steps     int
-	km        bool
 	extra     *extra
 }
 
@@ -35,7 +33,6 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 	return g
 }
 
-// AppendJSON ...
 func (g *Circle) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Feature","geometry":`...)
 	dst = append(dst, `{"type":"Point","coordinates":[`...)
@@ -48,19 +45,30 @@ func (g *Circle) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// JSON ...
 func (g *Circle) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *Circle) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// String ...
 func (g *Circle) String() string {
 	return string(g.AppendJSON(nil))
+}
+
+func (g *Circle) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binCircle)
+	dst = appendBinaryPoint(dst, g.center)
+	dst = appendFloat64(dst, g.meters)
+	dst = appendFloat64(dst, g.haversine)
+	dst = appendUvarint(dst, uint64(g.steps))
+	dst = g.extra.appendBinary(dst)
+	return dst
+}
+
+func (g *Circle) Binary() []byte {
+	return g.AppendBinary(nil)
 }
 
 // Meters returns the circle's radius
@@ -138,38 +146,31 @@ func (g *Circle) Intersects(obj Object) bool {
 	}
 }
 
-// Empty ...
 func (g *Circle) Empty() bool {
 	return false
 }
 
-// Valid ...
 func (g *Circle) Valid() bool {
 	return g.getObject().Valid()
 }
 
-// ForEach ...
 func (g *Circle) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)
 }
 
-// NumPoints ...
 func (g *Circle) NumPoints() int {
 	// should this be g.steps?
 	return 1
 }
 
-// Distance ...
 func (g *Circle) Distance(other Object) float64 {
 	return g.getObject().Distance(other)
 }
 
-// Rect ...
 func (g *Circle) Rect() geometry.Rect {
 	return g.getObject().Rect()
 }
 
-// Spatial ...
 func (g *Circle) Spatial() Spatial {
 	return g.getObject().Spatial()
 }
@@ -180,9 +181,6 @@ func (g *Circle) Primative() Object {
 }
 
 func (g *Circle) getObject() Object {
-	if g.object != nil {
-		return g.object
-	}
 	return makeCircleObject(g.center, g.meters, g.steps)
 }
 
@@ -221,4 +219,28 @@ func makeCircleObject(center geometry.Point, meters float64, steps int) Object {
 			Kind: geometry.None,
 		}),
 	)
+}
+
+func parseBinaryCircleObject(src []byte, opts *ParseOptions) (*Circle, int) {
+	mark := len(src)
+	if len(src) < 32 {
+		return nil, 0
+	}
+	p := &Circle{}
+	p.center = parseBinaryPoint(src)
+	p.meters = math.Float64frombits(binary.LittleEndian.Uint64(src[16:]))
+	p.haversine = math.Float64frombits(binary.LittleEndian.Uint64(src[24:]))
+	src = src[32:]
+	steps, n := binary.Uvarint(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	p.steps = int(steps)
+	src = src[n:]
+	p.extra, n = parseBinaryExtra(src)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	return p, mark - len(src)
 }

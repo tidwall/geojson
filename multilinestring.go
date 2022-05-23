@@ -5,10 +5,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// MultiLineString ...
 type MultiLineString struct{ collection }
 
-// NewMultiLineString ...
 func NewMultiLineString(lines []*geometry.Line) *MultiLineString {
 	g := new(MultiLineString)
 	for _, line := range lines {
@@ -18,7 +16,6 @@ func NewMultiLineString(lines []*geometry.Line) *MultiLineString {
 	return g
 }
 
-// AppendJSON ...
 func (g *MultiLineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiLineString","coordinates":[`...)
 	for i, g := range g.children {
@@ -37,12 +34,10 @@ func (g *MultiLineString) AppendJSON(dst []byte) []byte {
 
 }
 
-// String ...
 func (g *MultiLineString) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// Valid ...
 func (g *MultiLineString) Valid() bool {
 	valid := true
 	for _, p := range g.children {
@@ -53,14 +48,20 @@ func (g *MultiLineString) Valid() bool {
 	return valid
 }
 
-// JSON ...
 func (g *MultiLineString) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *MultiLineString) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
+}
+func (g *MultiLineString) AppendBinary(dst []byte) []byte {
+	dst = append(dst, ':', binMultiLineString)
+	return appendBinaryCollection(dst, g.collection)
+}
+
+func (g *MultiLineString) Binary() []byte {
+	return g.AppendBinary(nil)
 }
 
 func parseJSONMultiLineString(
@@ -103,4 +104,15 @@ func parseJSONMultiLineString(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+
+func parseBinaryMultiLineStringObject(src []byte, opts *ParseOptions) (*MultiLineString, int) {
+	mark := len(src)
+	c, n := parseBinaryCollection(src, opts)
+	if n <= 0 {
+		return nil, 0
+	}
+	src = src[n:]
+	g := &MultiLineString{collection: c}
+	return g, mark - len(src)
 }

@@ -27,6 +27,9 @@ func TestPolygonParse(t *testing.T) {
 	expectJSON(t,
 		`{"type":"Polygon","coordinates":[[[0,0,0],[10,0,4,5],[5,10],[0,0]]]}`,
 		`{"type":"Polygon","coordinates":[[[0,0,0],[10,0,4],[5,10,0],[0,0,0]]]}`)
+	expectJSON(t,
+		`{"type":"Polygon","coordinates":[[[0,1],[10,0,10],[5,10,99,100],[0,1]]]}`,
+		`{"type":"Polygon","coordinates":[[[0,1],[10,0],[5,10],[0,1]]]}`)
 }
 func TestPolygonParseValid(t *testing.T) {
 	json := `{"type":"Polygon","coordinates":[
@@ -44,27 +47,3 @@ func TestPolygonVarious(t *testing.T) {
 	expect(t, g.Center() == P(5, 5))
 	expect(t, !g.Empty())
 }
-
-// func TestPolygonPoly(t *testing.T) {
-// 	json := `{"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]]}`
-// 	g := expectJSON(t, json, nil)
-// 	expect(t, g.Contains(PO(5, 5)))
-// 	expect(t, g.Contains(RO(5, 5, 6, 6)))
-// 	expect(t, g.Contains(expectJSON(t, `{"type":"LineString","coordinates":[
-// 		[5,5],[5,6],[6,5]
-// 	]}`, nil)))
-// 	expect(t, g.Intersects(PO(5, 5)))
-// 	expect(t, g.Intersects(RO(5, 5, 6, 6)))
-// 	expect(t, g.Intersects(expectJSON(t, `{"type":"LineString","coordinates":[
-// 		[5,5],[5,6],[6,5],[50,50]
-// 	]}`, nil)))
-// 	expect(t, g.Intersects(expectJSON(t, `{"type":"Polygon","coordinates":[[
-// 		[5,5],[5,6],[6,5],[50,50],[5,5]
-// 	]]}`, nil)))
-// 	expect(t, !g.Contains(expectJSON(t, `{"type":"Polygon","coordinates":[[
-// 		[5,5],[5,6],[6,5],[50,50],[5,5]
-// 	]]}`, nil)))
-// 	expect(t, g.Contains(expectJSON(t, `{"type":"Polygon","coordinates":[[
-// 		[5,5],[5,6],[6,5],[5,5]
-// 	]]}`, nil)))
-// }
