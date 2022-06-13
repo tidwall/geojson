@@ -39,10 +39,20 @@ func (g *Rect) Center() geometry.Point {
 	return g.base.Center()
 }
 
-func (g *Rect) AppendJSON(dst []byte) []byte {
-	var gPoly Polygon
+// Primative returns a primative GeoJSON object. Either a Polygon or Point.
+func (g *Rect) Primative() Object {
+	if g.base.Min == g.base.Max {
+		gPoint := new(Point)
+		gPoint.base = g.base.Min
+		return gPoint
+	}
+	gPoly := new(Polygon)
 	gPoly.base.Exterior = g.base
-	return gPoly.AppendJSON(dst)
+	return gPoly
+}
+
+func (g *Rect) AppendJSON(dst []byte) []byte {
+	return g.Primative().AppendJSON(dst)
 }
 
 func (g *Rect) JSON() string {
