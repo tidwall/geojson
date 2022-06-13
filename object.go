@@ -126,30 +126,22 @@ func Parse(data string, opts *ParseOptions) (Object, error) {
 		// opts should never be nil
 		opts = DefaultParseOptions
 	}
-	// look at the first byte
-	for i := 0; ; i++ {
-		if len(data) == 0 {
-			return nil, errDataInvalid
-		}
-		switch data[0] {
-		default:
-			// well-known text is not supported yet
-			return nil, errDataInvalid
-		case 0, 1:
-			if i > 0 {
-				// 0x00 or 0x01 must be the first bytes
-				return nil, errDataInvalid
-			}
-			// well-known binary is not supported yet
-			return nil, errDataInvalid
+	// look at the first byte for WKB
+	if len(data) > 0 && (data[0] == 0x00 || data[0] == 0x01) {
+		return parseWKB(data, opts)
+	}
+	for i := 0; i < len(data); i++ {
+		switch data[i] {
 		case ' ', '\t', '\n', '\r':
 			// strip whitespace
-			data = data[1:]
 			continue
 		case '{':
 			return parseJSON(data, opts)
+		default:
+			return parseWKT(data, opts)
 		}
 	}
+	return nil, errDataInvalid
 }
 
 func toGeometryOpts(opts *ParseOptions) geometry.IndexOptions {
