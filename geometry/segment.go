@@ -4,6 +4,10 @@
 
 package geometry
 
+func eqZero(x float64) bool {
+	return !(x < 0 || x > 0)
+}
+
 // Segment is a two point line
 type Segment struct {
 	A, B Point
@@ -36,7 +40,7 @@ func (seg Segment) CollinearPoint(point Point) bool {
 	cmpx, cmpy := point.X-seg.A.X, point.Y-seg.A.Y
 	rx, ry := seg.B.X-seg.A.X, seg.B.Y-seg.A.Y
 	cmpxr := cmpx*ry - cmpy*rx
-	return cmpxr == 0
+	return eqZero(cmpxr)
 }
 
 // ContainsPoint ...
@@ -104,7 +108,7 @@ func (seg Segment) IntersectsSegment(other Segment) bool {
 	cmpx, cmpy := c.X-a.X, c.Y-a.Y
 	rx, ry := b.X-a.X, b.Y-a.Y
 	cmpxr := cmpx*ry - cmpy*rx
-	if cmpxr == 0 {
+	if eqZero(cmpxr) {
 		// Lines are collinear, and so intersect if they have any overlap
 		if !(((c.X-a.X <= 0) != (c.X-b.X <= 0)) ||
 			((c.Y-a.Y <= 0) != (c.Y-b.Y <= 0))) {
@@ -116,7 +120,7 @@ func (seg Segment) IntersectsSegment(other Segment) bool {
 	sx, sy := d.X-c.X, d.Y-c.Y
 	cmpxs := cmpx*sy - cmpy*sx
 	rxs := rx*sy - ry*sx
-	if rxs == 0 {
+	if eqZero(rxs) {
 		return false // segments are parallel.
 	}
 	rxsr := 1 / rxs
