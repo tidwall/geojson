@@ -4,6 +4,8 @@
 
 package geometry
 
+import "math"
+
 // Point ...
 type Point struct {
 	X, Y float64
@@ -79,4 +81,10 @@ func (point Point) IntersectsPoly(poly *Poly) bool {
 		return false
 	}
 	return poly.IntersectsPoint(point)
+}
+
+func (point Point) DistancePoint(other Point) float64 {
+	dx := point.X - other.X
+	dy := point.Y - other.Y
+	return math.Sqrt(dx*dx + dy*dy)
 }
