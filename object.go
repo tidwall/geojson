@@ -3,6 +3,7 @@ package geojson
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/tidwall/geojson/geo"
@@ -243,18 +244,23 @@ func parseBBoxAndExtras(ex **extra, keys *parseKeys, opts *ParseOptions) error {
 	return nil
 }
 
+func appendJSONFloat(dst []byte, f float64) []byte {
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		return append(dst, "null"...)
+	}
+	return strconv.AppendFloat(dst, f, 'f', -1, 64)
+}
+
 func appendJSONPoint(dst []byte, point geometry.Point, ex *extra, idx int) []byte {
 	dst = append(dst, '[')
-	dst = strconv.AppendFloat(dst, point.X, 'f', -1, 64)
+	dst = appendJSONFloat(dst, point.X)
 	dst = append(dst, ',')
-	dst = strconv.AppendFloat(dst, point.Y, 'f', -1, 64)
+	dst = appendJSONFloat(dst, point.Y)
 	if ex != nil {
 		dims := int(ex.dims)
 		for i := 0; i < dims; i++ {
 			dst = append(dst, ',')
-			dst = strconv.AppendFloat(
-				dst, ex.values[idx*dims+i], 'f', -1, 64,
-			)
+			dst = appendJSONFloat(dst, ex.values[idx*dims+i])
 		}
 	}
 	dst = append(dst, ']')

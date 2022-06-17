@@ -2,7 +2,6 @@ package geojson
 
 import (
 	"math"
-	"strconv"
 
 	"github.com/tidwall/geojson/geo"
 	"github.com/tidwall/geojson/geometry"
@@ -39,11 +38,11 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 func (g *Circle) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Feature","geometry":`...)
 	dst = append(dst, `{"type":"Point","coordinates":[`...)
-	dst = strconv.AppendFloat(dst, g.center.X, 'f', -1, 64)
+	dst = appendJSONFloat(dst, g.center.X)
 	dst = append(dst, ',')
-	dst = strconv.AppendFloat(dst, g.center.Y, 'f', -1, 64)
+	dst = appendJSONFloat(dst, g.center.Y)
 	dst = append(dst, `]},"properties":{"type":"Circle","radius":`...)
-	dst = strconv.AppendFloat(dst, g.meters, 'f', -1, 64)
+	dst = appendJSONFloat(dst, g.meters)
 	dst = append(dst, `,"radius_units":"m"}}`...)
 	return dst
 }

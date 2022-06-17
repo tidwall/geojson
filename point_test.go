@@ -10,7 +10,8 @@ import (
 func TestPointParse(t *testing.T) {
 	p := expectJSON(t, `{"type":"Point","coordinates":[1,2,3]}`, nil)
 	expect(t, p.Center() == P(1, 2))
-	expectJSON(t, `{"type":"Point","coordinates":[1,null]}`, errCoordinatesInvalid)
+	expectJSON(t, `{"type":"Point","coordinates":[1,null]}`, `{"type":"Point","coordinates":[1,null]}`)
+	expectJSON(t, `{"type":"Point","coordinates":[1,"hello"]}`, errCoordinatesInvalid)
 	expectJSON(t, `{"type":"Point","coordinates":[1,2],"bbox":null}`, nil)
 	expectJSON(t, `{"type":"Point"}`, errCoordinatesMissing)
 	expectJSON(t, `{"type":"Point","coordinates":null}`, errCoordinatesInvalid)

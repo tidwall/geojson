@@ -5,7 +5,8 @@ import "testing"
 func TestSimplePointNotSimple(t *testing.T) {
 	p := expectJSONOpts(t, `{"type":"Point","coordinates":[1,2,3]}`, nil, &ParseOptions{AllowSimplePoints: true})
 	expect(t, p.Center() == P(1, 2))
-	expectJSONOpts(t, `{"type":"Point","coordinates":[1,null]}`, errCoordinatesInvalid, &ParseOptions{AllowSimplePoints: true})
+	expectJSONOpts(t, `{"type":"Point","coordinates":[1,"hello"]}`, errCoordinatesInvalid, &ParseOptions{AllowSimplePoints: true})
+	expectJSONOpts(t, `{"type":"Point","coordinates":[1,null]}`, `{"type":"Point","coordinates":[1,null]}`, &ParseOptions{AllowSimplePoints: true})
 	expectJSONOpts(t, `{"type":"Point","coordinates":[1,2],"bbox":null}`, nil, &ParseOptions{AllowSimplePoints: true})
 	expectJSONOpts(t, `{"type":"Point"}`, errCoordinatesMissing, &ParseOptions{AllowSimplePoints: true})
 	expectJSONOpts(t, `{"type":"Point","coordinates":null}`, errCoordinatesInvalid, &ParseOptions{AllowSimplePoints: true})

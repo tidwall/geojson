@@ -1,6 +1,8 @@
 package geojson
 
 import (
+	"math"
+
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
 )
@@ -203,6 +205,12 @@ func parseJSONPointCoords(
 			return false
 		}
 		if value.Type != gjson.Number {
+			if value.Type == gjson.Null {
+				// convert "null" to "NaN"
+				nums[count] = math.NaN()
+				count++
+				return true
+			}
 			err = errCoordinatesInvalid
 			return false
 		}

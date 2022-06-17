@@ -3,6 +3,7 @@ package geojson
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -121,4 +122,19 @@ func cleanJSON(data string) string {
 	opts := *pretty.DefaultOptions
 	opts.Width = 99999999
 	return string(pretty.PrettyOptions(dst, &opts))
+}
+
+func TestValidJSONNumbers(t *testing.T) {
+	p := NewPoint(geometry.Point{X: math.NaN(), Y: math.Inf(1)})
+	expect := `{"type":"Point","coordinates":[null,null]}`
+	if p.JSON() != expect {
+		t.Fatalf("expected '%s', got '%s'", expect, p.JSON())
+	}
+	p2, err := Parse(`{"type":"Point","coordinates":[null,null]}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p2.JSON() != expect {
+		t.Fatalf("expected '%s', got '%s'", expect, p.JSON())
+	}
 }
