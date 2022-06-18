@@ -71,5 +71,5 @@ func TestPolygonVarious(t *testing.T) {
 
 func TestEmptyPolygon(t *testing.T) {
 	p := NewPolygon(nil)
-	println(p.JSON())
+	expect(t, p.JSON() == `{"type":"Polygon","coordinates":[]}`)
 }

@@ -5,18 +5,15 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// Polygon ...
 type Polygon struct {
 	base  *geometry.Poly
 	extra *extra
 }
 
-// NewPolygon ...
 func NewPolygon(poly *geometry.Poly) *Polygon {
 	return &Polygon{base: poly}
 }
 
-// Empty ...
 func (g *Polygon) Empty() bool {
 	if g.base == nil {
 		return true
@@ -24,7 +21,6 @@ func (g *Polygon) Empty() bool {
 	return g.base.Empty()
 }
 
-// Valid ...
 func (g *Polygon) Valid() bool {
 	if g.base == nil {
 		return false
@@ -32,7 +28,6 @@ func (g *Polygon) Valid() bool {
 	return g.base.Valid()
 }
 
-// Rect ...
 func (g *Polygon) Rect() geometry.Rect {
 	if g.base == nil {
 		return geometry.Rect{}
@@ -40,17 +35,14 @@ func (g *Polygon) Rect() geometry.Rect {
 	return g.base.Rect()
 }
 
-// Center ...
 func (g *Polygon) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
-// Base ...
 func (g *Polygon) Base() *geometry.Poly {
 	return g.base
 }
 
-// AppendJSON ...
 func (g *Polygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Polygon","coordinates":[`...)
 	if g.base != nil {
@@ -69,37 +61,30 @@ func (g *Polygon) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// JSON ...
 func (g *Polygon) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *Polygon) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// String ...
 func (g *Polygon) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// Spatial ...
 func (g *Polygon) Spatial() Spatial {
 	return g
 }
 
-// ForEach ...
 func (g *Polygon) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)
 }
 
-// Within ...
 func (g *Polygon) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
-// Contains ...
 func (g *Polygon) Contains(obj Object) bool {
 	if g.base == nil {
 		return false
@@ -107,7 +92,6 @@ func (g *Polygon) Contains(obj Object) bool {
 	return obj.Spatial().WithinPoly(g.base)
 }
 
-// WithinRect ...
 func (g *Polygon) WithinRect(rect geometry.Rect) bool {
 	if g.base == nil {
 		return false
@@ -115,7 +99,6 @@ func (g *Polygon) WithinRect(rect geometry.Rect) bool {
 	return rect.ContainsPoly(g.base)
 }
 
-// WithinPoint ...
 func (g *Polygon) WithinPoint(point geometry.Point) bool {
 	if g.base == nil {
 		return false
@@ -123,7 +106,6 @@ func (g *Polygon) WithinPoint(point geometry.Point) bool {
 	return point.ContainsPoly(g.base)
 }
 
-// WithinLine ...
 func (g *Polygon) WithinLine(line *geometry.Line) bool {
 	if g.base == nil {
 		return false
@@ -131,7 +113,6 @@ func (g *Polygon) WithinLine(line *geometry.Line) bool {
 	return line.ContainsPoly(g.base)
 }
 
-// WithinPoly ...
 func (g *Polygon) WithinPoly(poly *geometry.Poly) bool {
 	if g.base == nil {
 		return false
@@ -139,7 +120,6 @@ func (g *Polygon) WithinPoly(poly *geometry.Poly) bool {
 	return poly.ContainsPoly(g.base)
 }
 
-// Intersects ...
 func (g *Polygon) Intersects(obj Object) bool {
 	if g.base == nil {
 		return false
@@ -147,7 +127,6 @@ func (g *Polygon) Intersects(obj Object) bool {
 	return obj.Spatial().IntersectsPoly(g.base)
 }
 
-// IntersectsPoint ...
 func (g *Polygon) IntersectsPoint(point geometry.Point) bool {
 	if g.base == nil {
 		return false
@@ -155,7 +134,6 @@ func (g *Polygon) IntersectsPoint(point geometry.Point) bool {
 	return g.base.IntersectsPoint(point)
 }
 
-// IntersectsRect ...
 func (g *Polygon) IntersectsRect(rect geometry.Rect) bool {
 	if g.base == nil {
 		return false
@@ -163,7 +141,6 @@ func (g *Polygon) IntersectsRect(rect geometry.Rect) bool {
 	return g.base.IntersectsRect(rect)
 }
 
-// IntersectsLine ...
 func (g *Polygon) IntersectsLine(line *geometry.Line) bool {
 	if g.base == nil {
 		return false
@@ -171,7 +148,6 @@ func (g *Polygon) IntersectsLine(line *geometry.Line) bool {
 	return g.base.IntersectsLine(line)
 }
 
-// IntersectsPoly ...
 func (g *Polygon) IntersectsPoly(poly *geometry.Poly) bool {
 	if g.base == nil {
 		return false
@@ -179,7 +155,6 @@ func (g *Polygon) IntersectsPoly(poly *geometry.Poly) bool {
 	return g.base.IntersectsPoly(poly)
 }
 
-// NumPoints ...
 func (g *Polygon) NumPoints() int {
 	if g.base == nil {
 		return 0
@@ -318,32 +293,26 @@ func parseJSONPolygonCoords(
 	return coords, ex, err
 }
 
-// Distance ...
 func (g *Polygon) Distance(obj Object) float64 {
 	return obj.Spatial().DistancePoly(g.base)
 }
 
-// DistancePoint ...
 func (g *Polygon) DistancePoint(point geometry.Point) float64 {
 	return geoDistancePoints(g.Center(), point)
 }
 
-// DistanceRect ...
 func (g *Polygon) DistanceRect(rect geometry.Rect) float64 {
 	return geoDistancePoints(g.Center(), rect.Center())
 }
 
-// DistanceLine ...
 func (g *Polygon) DistanceLine(line *geometry.Line) float64 {
 	return geoDistancePoints(g.Center(), line.Rect().Center())
 }
 
-// DistancePoly ...
 func (g *Polygon) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }
 
-// HasExtra ...
 func (g *Polygon) HasExtra() bool {
 	return g.extra != nil
 }
