@@ -68,3 +68,8 @@ func TestPolygonVarious(t *testing.T) {
 // 		[5,5],[5,6],[6,5],[5,5]
 // 	]]}`, nil)))
 // }
+
+func TestEmptyPolygon(t *testing.T) {
+	p := NewPolygon(nil)
+	println(p.JSON())
+}

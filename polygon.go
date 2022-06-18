@@ -18,16 +18,25 @@ func NewPolygon(poly *geometry.Poly) *Polygon {
 
 // Empty ...
 func (g *Polygon) Empty() bool {
+	if g.base == nil {
+		return true
+	}
 	return g.base.Empty()
 }
 
 // Valid ...
 func (g *Polygon) Valid() bool {
+	if g.base == nil {
+		return false
+	}
 	return g.base.Valid()
 }
 
 // Rect ...
 func (g *Polygon) Rect() geometry.Rect {
+	if g.base == nil {
+		return geometry.Rect{}
+	}
 	return g.base.Rect()
 }
 
@@ -44,11 +53,13 @@ func (g *Polygon) Base() *geometry.Poly {
 // AppendJSON ...
 func (g *Polygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Polygon","coordinates":[`...)
-	var pidx int
-	dst, pidx = appendJSONSeries(dst, g.base.Exterior, g.extra, pidx)
-	for _, hole := range g.base.Holes {
-		dst = append(dst, ',')
-		dst, pidx = appendJSONSeries(dst, hole, g.extra, pidx)
+	if g.base != nil {
+		var pidx int
+		dst, pidx = appendJSONSeries(dst, g.base.Exterior, g.extra, pidx)
+		for _, hole := range g.base.Holes {
+			dst = append(dst, ',')
+			dst, pidx = appendJSONSeries(dst, hole, g.extra, pidx)
+		}
 	}
 	dst = append(dst, ']')
 	if g.extra != nil {
@@ -90,56 +101,89 @@ func (g *Polygon) Within(obj Object) bool {
 
 // Contains ...
 func (g *Polygon) Contains(obj Object) bool {
+	if g.base == nil {
+		return false
+	}
 	return obj.Spatial().WithinPoly(g.base)
 }
 
 // WithinRect ...
 func (g *Polygon) WithinRect(rect geometry.Rect) bool {
+	if g.base == nil {
+		return false
+	}
 	return rect.ContainsPoly(g.base)
 }
 
 // WithinPoint ...
 func (g *Polygon) WithinPoint(point geometry.Point) bool {
+	if g.base == nil {
+		return false
+	}
 	return point.ContainsPoly(g.base)
 }
 
 // WithinLine ...
 func (g *Polygon) WithinLine(line *geometry.Line) bool {
+	if g.base == nil {
+		return false
+	}
 	return line.ContainsPoly(g.base)
 }
 
 // WithinPoly ...
 func (g *Polygon) WithinPoly(poly *geometry.Poly) bool {
+	if g.base == nil {
+		return false
+	}
 	return poly.ContainsPoly(g.base)
 }
 
 // Intersects ...
 func (g *Polygon) Intersects(obj Object) bool {
+	if g.base == nil {
+		return false
+	}
 	return obj.Spatial().IntersectsPoly(g.base)
 }
 
 // IntersectsPoint ...
 func (g *Polygon) IntersectsPoint(point geometry.Point) bool {
+	if g.base == nil {
+		return false
+	}
 	return g.base.IntersectsPoint(point)
 }
 
 // IntersectsRect ...
 func (g *Polygon) IntersectsRect(rect geometry.Rect) bool {
+	if g.base == nil {
+		return false
+	}
 	return g.base.IntersectsRect(rect)
 }
 
 // IntersectsLine ...
 func (g *Polygon) IntersectsLine(line *geometry.Line) bool {
+	if g.base == nil {
+		return false
+	}
 	return g.base.IntersectsLine(line)
 }
 
 // IntersectsPoly ...
 func (g *Polygon) IntersectsPoly(poly *geometry.Poly) bool {
+	if g.base == nil {
+		return false
+	}
 	return g.base.IntersectsPoly(poly)
 }
 
 // NumPoints ...
 func (g *Polygon) NumPoints() int {
+	if g.base == nil {
+		return 0
+	}
 	n := g.base.Exterior.NumPoints()
 	for _, hole := range g.base.Holes {
 		n += hole.NumPoints()
