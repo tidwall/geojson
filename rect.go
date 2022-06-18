@@ -46,8 +46,7 @@ func (g *Rect) Center() geometry.Point {
 
 // AppendJSON ...
 func (g *Rect) AppendJSON(dst []byte) []byte {
-	var gPoly Polygon
-	gPoly.base.Exterior = g.base
+	gPoly := Polygon{base: &geometry.Poly{Exterior: g.base}}
 	return gPoly.AppendJSON(dst)
 }
 

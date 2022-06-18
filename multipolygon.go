@@ -97,7 +97,7 @@ func parseJSONMultiPolygon(
 		}
 		gopts := toGeometryOpts(opts)
 		poly := geometry.NewPoly(exterior, holes, &gopts)
-		g.children = append(g.children, &Polygon{base: *poly, extra: ex})
+		g.children = append(g.children, &Polygon{base: poly, extra: ex})
 		return true
 	})
 	if err != nil {

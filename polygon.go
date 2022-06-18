@@ -7,13 +7,13 @@ import (
 
 // Polygon ...
 type Polygon struct {
-	base  geometry.Poly
+	base  *geometry.Poly
 	extra *extra
 }
 
 // NewPolygon ...
 func NewPolygon(poly *geometry.Poly) *Polygon {
-	return &Polygon{base: *poly}
+	return &Polygon{base: poly}
 }
 
 // Empty ...
@@ -38,7 +38,7 @@ func (g *Polygon) Center() geometry.Point {
 
 // Base ...
 func (g *Polygon) Base() *geometry.Poly {
-	return &g.base
+	return g.base
 }
 
 // AppendJSON ...
@@ -90,32 +90,32 @@ func (g *Polygon) Within(obj Object) bool {
 
 // Contains ...
 func (g *Polygon) Contains(obj Object) bool {
-	return obj.Spatial().WithinPoly(&g.base)
+	return obj.Spatial().WithinPoly(g.base)
 }
 
 // WithinRect ...
 func (g *Polygon) WithinRect(rect geometry.Rect) bool {
-	return rect.ContainsPoly(&g.base)
+	return rect.ContainsPoly(g.base)
 }
 
 // WithinPoint ...
 func (g *Polygon) WithinPoint(point geometry.Point) bool {
-	return point.ContainsPoly(&g.base)
+	return point.ContainsPoly(g.base)
 }
 
 // WithinLine ...
 func (g *Polygon) WithinLine(line *geometry.Line) bool {
-	return line.ContainsPoly(&g.base)
+	return line.ContainsPoly(g.base)
 }
 
 // WithinPoly ...
 func (g *Polygon) WithinPoly(poly *geometry.Poly) bool {
-	return poly.ContainsPoly(&g.base)
+	return poly.ContainsPoly(g.base)
 }
 
 // Intersects ...
 func (g *Polygon) Intersects(obj Object) bool {
-	return obj.Spatial().IntersectsPoly(&g.base)
+	return obj.Spatial().IntersectsPoly(g.base)
 }
 
 // IntersectsPoint ...
@@ -188,7 +188,7 @@ func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	} else {
 		g := Polygon{}
 		poly := geometry.NewPoly(exterior, holes, &gopts)
-		g.base = *poly
+		g.base = poly
 		g.extra = extra
 		o = &g
 	}
@@ -276,7 +276,7 @@ func parseJSONPolygonCoords(
 
 // Distance ...
 func (g *Polygon) Distance(obj Object) float64 {
-	return obj.Spatial().DistancePoly(&g.base)
+	return obj.Spatial().DistancePoly(g.base)
 }
 
 // DistancePoint ...
