@@ -265,6 +265,11 @@ func (g *Point) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }
 
+// IsSimple returns true if the Point can be converted to a SimplePoint
+func (g *Point) IsSimple() bool {
+	return g.extra == nil
+}
+
 // IsPoint returns true if the object is a {"type":"Point"}
 func IsPoint(obj Object) (z float64, ok bool) {
 	switch pt := obj.(type) {
