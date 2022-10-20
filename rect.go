@@ -135,3 +135,7 @@ func (g *Rect) DistanceLine(line *geometry.Line) float64 {
 func (g *Rect) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
 }
+
+func (g *Rect) Members() string {
+	return ""
+}

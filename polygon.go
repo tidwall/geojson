@@ -278,3 +278,10 @@ func (g *Polygon) DistancePoly(poly *geometry.Poly) float64 {
 func (g *Polygon) HasExtra() bool {
 	return g.extra != nil
 }
+
+func (g *Polygon) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
+}

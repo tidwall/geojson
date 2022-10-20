@@ -18,7 +18,6 @@ type rNode struct {
 	rects [rMaxEntries + 1]rRect
 }
 
-// rTree ...
 type rTree struct {
 	height   int
 	root     rRect
@@ -263,7 +262,6 @@ func (tr *rTree) search(
 	}
 }
 
-// Search ...
 func (tr *rTree) Search(
 	min, max []float64,
 	iter func(min, max []float64, value interface{}) bool,

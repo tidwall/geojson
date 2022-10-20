@@ -35,7 +35,6 @@ func (seg Segment) Rect() Rect {
 	return rect
 }
 
-// CollinearPoint ...
 func (seg Segment) CollinearPoint(point Point) bool {
 	cmpx, cmpy := point.X-seg.A.X, point.Y-seg.A.Y
 	rx, ry := seg.B.X-seg.A.X, seg.B.Y-seg.A.Y
@@ -43,12 +42,10 @@ func (seg Segment) CollinearPoint(point Point) bool {
 	return eqZero(cmpxr)
 }
 
-// ContainsPoint ...
 func (seg Segment) ContainsPoint(point Point) bool {
 	return seg.Raycast(point).On
 }
 
-// // Angle ...
 // func (seg Segment) Angle() float64 {
 // 	return math.Atan2(seg.B.Y-seg.A.Y, seg.B.X-seg.A.X)
 // }

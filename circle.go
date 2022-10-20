@@ -7,7 +7,6 @@ import (
 	"github.com/tidwall/geojson/geometry"
 )
 
-// Circle ...
 type Circle struct {
 	object    Object
 	center    geometry.Point
@@ -32,7 +31,6 @@ func NewCircle(center geometry.Point, meters float64, steps int) *Circle {
 	return g
 }
 
-// AppendJSON ...
 func (g *Circle) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"Feature","geometry":`...)
 	dst = append(dst, `{"type":"Point","coordinates":[`...)
@@ -45,17 +43,14 @@ func (g *Circle) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// JSON ...
 func (g *Circle) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *Circle) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// String ...
 func (g *Circle) String() string {
 	return string(g.AppendJSON(nil))
 }
@@ -135,38 +130,31 @@ func (g *Circle) Intersects(obj Object) bool {
 	}
 }
 
-// Empty ...
 func (g *Circle) Empty() bool {
 	return false
 }
 
-// Valid ...
 func (g *Circle) Valid() bool {
 	return g.getObject().Valid()
 }
 
-// ForEach ...
 func (g *Circle) ForEach(iter func(geom Object) bool) bool {
 	return iter(g)
 }
 
-// NumPoints ...
 func (g *Circle) NumPoints() int {
 	// should this be g.steps?
 	return 1
 }
 
-// Distance ...
 func (g *Circle) Distance(other Object) float64 {
 	return g.getObject().Distance(other)
 }
 
-// Rect ...
 func (g *Circle) Rect() geometry.Rect {
 	return g.getObject().Rect()
 }
 
-// Spatial ...
 func (g *Circle) Spatial() Spatial {
 	return g.getObject().Spatial()
 }
@@ -218,4 +206,8 @@ func makeCircleObject(center geometry.Point, meters float64, steps int) Object {
 			Kind: geometry.None,
 		}),
 	)
+}
+
+func (g *Circle) Members() string {
+	return ""
 }

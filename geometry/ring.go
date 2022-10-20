@@ -10,7 +10,6 @@ import (
 
 const complexRingMinPoints = 16
 
-// Ring ...
 type Ring = Series
 
 func newRing(points []Point, opts *IndexOptions) Ring {

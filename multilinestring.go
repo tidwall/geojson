@@ -5,10 +5,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// MultiLineString ...
 type MultiLineString struct{ collection }
 
-// NewMultiLineString ...
 func NewMultiLineString(lines []*geometry.Line) *MultiLineString {
 	g := new(MultiLineString)
 	for _, line := range lines {
@@ -18,7 +16,6 @@ func NewMultiLineString(lines []*geometry.Line) *MultiLineString {
 	return g
 }
 
-// AppendJSON ...
 func (g *MultiLineString) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiLineString","coordinates":[`...)
 	for i, g := range g.children {
@@ -37,12 +34,10 @@ func (g *MultiLineString) AppendJSON(dst []byte) []byte {
 
 }
 
-// String ...
 func (g *MultiLineString) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// Valid ...
 func (g *MultiLineString) Valid() bool {
 	valid := true
 	for _, p := range g.children {
@@ -53,12 +48,10 @@ func (g *MultiLineString) Valid() bool {
 	return valid
 }
 
-// JSON ...
 func (g *MultiLineString) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *MultiLineString) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
@@ -103,4 +96,11 @@ func parseJSONMultiLineString(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+
+func (g *MultiLineString) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
 }

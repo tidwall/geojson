@@ -6,10 +6,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// GeometryCollection ...
 type GeometryCollection struct{ collection }
 
-// NewGeometryCollection ...
 func NewGeometryCollection(geometries []Object) *GeometryCollection {
 	g := new(GeometryCollection)
 	g.children = geometries
@@ -35,17 +33,14 @@ func (g *GeometryCollection) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// String ...
 func (g *GeometryCollection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
 func (g *GeometryCollection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *GeometryCollection) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
@@ -78,4 +73,11 @@ func parseJSONGeometryCollection(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+
+func (g *GeometryCollection) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
 }

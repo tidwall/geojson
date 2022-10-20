@@ -6,10 +6,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// FeatureCollection ...
 type FeatureCollection struct{ collection }
 
-// NewFeatureCollection ...
 func NewFeatureCollection(features []Object) *FeatureCollection {
 	g := new(FeatureCollection)
 	g.children = features
@@ -35,17 +33,14 @@ func (g *FeatureCollection) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// String ...
 func (g *FeatureCollection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
 func (g *FeatureCollection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *FeatureCollection) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
@@ -78,4 +73,11 @@ func parseJSONFeatureCollection(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+
+func (g *FeatureCollection) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
 }

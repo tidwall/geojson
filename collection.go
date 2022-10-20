@@ -21,7 +21,6 @@ func (g *collection) Children() []Object {
 	return g.children
 }
 
-// ForEach ...
 func (g *collection) ForEach(iter func(geom Object) bool) bool {
 	for _, child := range g.children {
 		if !child.ForEach(iter) {
@@ -31,7 +30,6 @@ func (g *collection) ForEach(iter func(geom Object) bool) bool {
 	return true
 }
 
-// Base ...
 func (g *collection) Base() []Object {
 	return g.children
 }
@@ -59,53 +57,43 @@ func (g *collection) Search(rect geometry.Rect, iter func(child Object) bool) {
 	}
 }
 
-// Empty ...
 func (g *collection) Empty() bool {
 	return g.pempty
 }
 
-// Valid ...
 func (g *collection) Valid() bool {
 	return g.Rect().Valid()
 }
 
-// Rect ...
 func (g *collection) Rect() geometry.Rect {
 	return g.prect
 }
 
-// Center ...
 func (g *collection) Center() geometry.Point {
 	return g.Rect().Center()
 }
 
-// AppendJSON ...
 func (g *collection) AppendJSON(dst []byte) []byte {
 	// this should never be called
 	return append(dst, "null"...)
 }
 
-// JSON ...
 func (g *collection) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *collection) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
 
-// String ...
 func (g *collection) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// Within ...
 func (g *collection) Within(obj Object) bool {
 	return obj.Contains(g)
 }
 
-// Contains ...
 func (g *collection) Contains(obj Object) bool {
 	if g.Empty() {
 		return false
@@ -200,7 +188,6 @@ func (g *collection) WithinPoly(poly *geometry.Poly) bool {
 	return withinCount == len(g.children)
 }
 
-// Intersects ...
 func (g *collection) Intersects(obj Object) bool {
 	// check if any of obj intersects with any of collection
 	var intersects bool
@@ -269,7 +256,6 @@ func (g *collection) IntersectsPoly(poly *geometry.Poly) bool {
 	return intersects
 }
 
-// NumPoints ...
 func (g *collection) NumPoints() int {
 	var n int
 	for _, child := range g.children {
@@ -315,7 +301,6 @@ func (g *collection) parseInitRectIndex(opts *ParseOptions) {
 	}
 }
 
-// Distance ...
 func (g *collection) Distance(obj Object) float64 {
 	return obj.Spatial().DistancePoint(g.Center())
 }
@@ -330,4 +315,11 @@ func (g *collection) DistanceLine(line *geometry.Line) float64 {
 }
 func (g *collection) DistancePoly(poly *geometry.Poly) float64 {
 	return geoDistancePoints(g.Center(), poly.Rect().Center())
+}
+
+func (g *collection) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
 }

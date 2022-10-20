@@ -4,13 +4,11 @@
 
 package geometry
 
-// Poly ...
 type Poly struct {
 	Exterior Ring
 	Holes    []Ring
 }
 
-// NewPoly ...
 func NewPoly(exterior []Point, holes [][]Point, opts *IndexOptions) *Poly {
 	poly := new(Poly)
 	poly.Exterior = newRing(exterior, opts)
@@ -23,7 +21,6 @@ func NewPoly(exterior []Point, holes [][]Point, opts *IndexOptions) *Poly {
 	return poly
 }
 
-// Clockwise ...
 func (poly *Poly) Clockwise() bool {
 	if poly == nil || poly.Exterior == nil {
 		return false
@@ -31,7 +28,6 @@ func (poly *Poly) Clockwise() bool {
 	return poly.Exterior.Clockwise()
 }
 
-// Empty ...
 func (poly *Poly) Empty() bool {
 	if poly == nil || poly.Exterior == nil {
 		return true
@@ -39,7 +35,6 @@ func (poly *Poly) Empty() bool {
 	return poly.Exterior.Empty()
 }
 
-// Valid ...
 func (poly *Poly) Valid() bool {
 	if !poly.Exterior.Valid() {
 		return false
@@ -52,7 +47,6 @@ func (poly *Poly) Valid() bool {
 	return true
 }
 
-// Rect ...
 func (poly *Poly) Rect() Rect {
 	if poly == nil || poly.Exterior == nil {
 		return Rect{}
@@ -91,7 +85,6 @@ func (poly *Poly) Move(deltaX, deltaY float64) *Poly {
 	return npoly
 }
 
-// ContainsPoint ...
 func (poly *Poly) ContainsPoint(point Point) bool {
 	if poly == nil || poly.Exterior == nil {
 		return false
@@ -109,7 +102,6 @@ func (poly *Poly) ContainsPoint(point Point) bool {
 	return contains
 }
 
-// IntersectsPoint ...
 func (poly *Poly) IntersectsPoint(point Point) bool {
 	if poly == nil {
 		return false
@@ -117,7 +109,6 @@ func (poly *Poly) IntersectsPoint(point Point) bool {
 	return poly.ContainsPoint(point)
 }
 
-// ContainsRect ...
 func (poly *Poly) ContainsRect(rect Rect) bool {
 	if poly == nil {
 		return false
@@ -126,7 +117,6 @@ func (poly *Poly) ContainsRect(rect Rect) bool {
 	return poly.ContainsPoly(&Poly{Exterior: rect})
 }
 
-// IntersectsRect ...
 func (poly *Poly) IntersectsRect(rect Rect) bool {
 	if poly == nil {
 		return false
@@ -135,7 +125,6 @@ func (poly *Poly) IntersectsRect(rect Rect) bool {
 	return poly.IntersectsPoly(&Poly{Exterior: rect})
 }
 
-// ContainsLine ...
 func (poly *Poly) ContainsLine(line *Line) bool {
 	if poly == nil || poly.Exterior == nil || line == nil {
 		return false
@@ -151,7 +140,6 @@ func (poly *Poly) ContainsLine(line *Line) bool {
 	return true
 }
 
-// IntersectsLine ...
 func (poly *Poly) IntersectsLine(line *Line) bool {
 	if poly == nil || poly.Exterior == nil || line == nil {
 		return false
@@ -159,7 +147,6 @@ func (poly *Poly) IntersectsLine(line *Line) bool {
 	return ringIntersectsLine(poly.Exterior, line, true)
 }
 
-// ContainsPoly ...
 func (poly *Poly) ContainsPoly(other *Poly) bool {
 	if poly == nil || poly.Exterior == nil ||
 		other == nil || other.Exterior == nil {
@@ -190,7 +177,6 @@ func (poly *Poly) ContainsPoly(other *Poly) bool {
 	return contains
 }
 
-// IntersectsPoly ...
 func (poly *Poly) IntersectsPoly(other *Poly) bool {
 	if poly == nil || poly.Exterior == nil ||
 		other == nil || other.Exterior == nil {

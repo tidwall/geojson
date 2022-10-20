@@ -5,10 +5,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// MultiPolygon ...
 type MultiPolygon struct{ collection }
 
-// NewMultiPolygon ...
 func NewMultiPolygon(polys []*geometry.Poly) *MultiPolygon {
 	g := new(MultiPolygon)
 	for _, poly := range polys {
@@ -18,7 +16,6 @@ func NewMultiPolygon(polys []*geometry.Poly) *MultiPolygon {
 	return g
 }
 
-// AppendJSON ...
 func (g *MultiPolygon) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiPolygon","coordinates":[`...)
 	for i, g := range g.children {
@@ -36,12 +33,10 @@ func (g *MultiPolygon) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// String ...
 func (g *MultiPolygon) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// Valid ...
 func (g *MultiPolygon) Valid() bool {
 	valid := true
 	for _, p := range g.children {
@@ -52,12 +47,10 @@ func (g *MultiPolygon) Valid() bool {
 	return valid
 }
 
-// JSON ...
 func (g *MultiPolygon) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *MultiPolygon) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
@@ -113,4 +106,11 @@ func parseJSONMultiPolygon(
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+
+func (g *MultiPolygon) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
 }

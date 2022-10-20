@@ -5,10 +5,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// MultiPoint ...
 type MultiPoint struct{ collection }
 
-// NewMultiPoint ...
 func NewMultiPoint(points []geometry.Point) *MultiPoint {
 	g := new(MultiPoint)
 	for _, point := range points {
@@ -18,7 +16,6 @@ func NewMultiPoint(points []geometry.Point) *MultiPoint {
 	return g
 }
 
-// AppendJSON ...
 func (g *MultiPoint) AppendJSON(dst []byte) []byte {
 	dst = append(dst, `{"type":"MultiPoint","coordinates":[`...)
 	for i, g := range g.children {
@@ -36,17 +33,14 @@ func (g *MultiPoint) AppendJSON(dst []byte) []byte {
 	return dst
 }
 
-// String ...
 func (g *MultiPoint) String() string {
 	return string(g.AppendJSON(nil))
 }
 
-// JSON ...
 func (g *MultiPoint) JSON() string {
 	return string(g.AppendJSON(nil))
 }
 
-// MarshalJSON ...
 func (g *MultiPoint) MarshalJSON() ([]byte, error) {
 	return g.AppendJSON(nil), nil
 }
@@ -78,4 +72,11 @@ func parseJSONMultiPoint(keys *parseKeys, opts *ParseOptions) (Object, error) {
 	}
 	g.parseInitRectIndex(opts)
 	return &g, nil
+}
+
+func (g *MultiPoint) Members() string {
+	if g.extra != nil {
+		return g.extra.members
+	}
+	return ""
 }

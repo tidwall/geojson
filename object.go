@@ -44,6 +44,7 @@ type Object interface {
 	ForEach(iter func(geom Object) bool) bool
 	Spatial() Spatial
 	MarshalJSON() ([]byte, error)
+	Members() string
 }
 
 var _ = []Object{
@@ -73,7 +74,6 @@ type extra struct {
 	members string
 }
 
-// ParseOptions ...
 type ParseOptions struct {
 	// IndexChildren option will cause the object to index their children
 	// objects when the number of children is greater than or equal to the
@@ -105,7 +105,6 @@ type ParseOptions struct {
 	AllowRects bool
 }
 
-// DefaultParseOptions ...
 var DefaultParseOptions = &ParseOptions{
 	IndexChildren:     64,
 	IndexGeometry:     64,

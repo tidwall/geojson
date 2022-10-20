@@ -16,7 +16,6 @@ const (
 	twoPiR      = 2 * piR
 )
 
-// Haversine ...
 func Haversine(latA, lonA, latB, lonB float64) float64 {
 	φ1 := latA * radians
 	λ1 := lonA * radians
@@ -29,19 +28,16 @@ func Haversine(latA, lonA, latB, lonB float64) float64 {
 	return sΔφ2*sΔφ2 + math.Cos(φ1)*math.Cos(φ2)*sΔλ2*sΔλ2
 }
 
-// NormalizeDistance ...
 func NormalizeDistance(meters float64) float64 {
 	return math.Mod(meters, twoPiR)
 }
 
-// DistanceToHaversine ...
 func DistanceToHaversine(meters float64) float64 {
 	// convert the given distance to its haversine
 	sin := math.Sin(0.5 * meters / earthRadius)
 	return sin * sin
 }
 
-// DistanceFromHaversine ...
 func DistanceFromHaversine(haversine float64) float64 {
 	return earthRadius * 2 * math.Asin(math.Sqrt(haversine))
 }

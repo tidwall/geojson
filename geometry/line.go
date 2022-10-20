@@ -9,7 +9,6 @@ type Line struct {
 	baseSeries
 }
 
-// Valid ...
 func (line *Line) Valid() bool {
 	return line.baseSeries.Valid()
 }
@@ -21,7 +20,6 @@ func NewLine(points []Point, opts *IndexOptions) *Line {
 	return line
 }
 
-// Move ...
 func (line *Line) Move(deltaX, deltaY float64) *Line {
 	if line == nil {
 		return nil
@@ -31,7 +29,6 @@ func (line *Line) Move(deltaX, deltaY float64) *Line {
 	return nline
 }
 
-// ContainsPoint ...
 func (line *Line) ContainsPoint(point Point) bool {
 	if line == nil {
 		return false
@@ -47,7 +44,6 @@ func (line *Line) ContainsPoint(point Point) bool {
 	return contains
 }
 
-// IntersectsPoint ...
 func (line *Line) IntersectsPoint(point Point) bool {
 	if line == nil {
 		return false
@@ -55,7 +51,6 @@ func (line *Line) IntersectsPoint(point Point) bool {
 	return line.ContainsPoint(point)
 }
 
-// ContainsRect ...
 func (line *Line) ContainsRect(rect Rect) bool {
 	if line == nil {
 		return false
@@ -64,7 +59,6 @@ func (line *Line) ContainsRect(rect Rect) bool {
 	return line.ContainsPoly(&Poly{Exterior: rect})
 }
 
-// IntersectsRect ...
 func (line *Line) IntersectsRect(rect Rect) bool {
 	if line == nil {
 		return false
@@ -72,7 +66,6 @@ func (line *Line) IntersectsRect(rect Rect) bool {
 	return rect.IntersectsLine(line)
 }
 
-// ContainsLine ...
 func (line *Line) ContainsLine(other *Line) bool {
 	if line == nil || other == nil || line.Empty() || other.Empty() {
 		return false
@@ -115,7 +108,6 @@ func (line *Line) ContainsLine(other *Line) bool {
 	return true
 }
 
-// IntersectsLine ...
 func (line *Line) IntersectsLine(other *Line) bool {
 	if line == nil || other == nil || line.Empty() || other.Empty() {
 		return false
@@ -144,7 +136,6 @@ func (line *Line) IntersectsLine(other *Line) bool {
 	return false
 }
 
-// ContainsPoly ...
 func (line *Line) ContainsPoly(poly *Poly) bool {
 	if line == nil || poly == nil || line.Empty() || poly.Empty() {
 		return false
@@ -161,7 +152,6 @@ func (line *Line) ContainsPoly(poly *Poly) bool {
 	return line.ContainsLine(&other)
 }
 
-// IntersectsPoly ...
 func (line *Line) IntersectsPoly(poly *Poly) bool {
 	return poly.IntersectsLine(line)
 }

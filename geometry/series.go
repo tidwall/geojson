@@ -36,7 +36,6 @@ type IndexOptions struct {
 	MinPoints int
 }
 
-// DefaultIndexOptions ...
 var DefaultIndexOptions = &IndexOptions{
 	Kind:      QuadTree,
 	MinPoints: 64,
@@ -101,12 +100,10 @@ func makeSeries(
 	return series
 }
 
-// Index ...
 func (series *baseSeries) Index() interface{} {
 	return series.index
 }
 
-// Clockwise ...
 func (series *baseSeries) Clockwise() bool {
 	return series.clockwise
 }
@@ -133,7 +130,6 @@ func (series *baseSeries) Empty() bool {
 	return (series.closed && len(series.points) < 3) || len(series.points) < 2
 }
 
-// Valid ...
 func (series *baseSeries) Valid() bool {
 	for _, point := range series.points {
 		if !point.Valid() {
@@ -197,7 +193,6 @@ func (series *baseSeries) Search(
 	}
 }
 
-// NumSegments ...
 func (series *baseSeries) NumSegments() int {
 	if series.closed {
 		if len(series.points) < 3 {
@@ -214,7 +209,6 @@ func (series *baseSeries) NumSegments() int {
 	return len(series.points) - 1
 }
 
-// SegmentAt ...
 func (series *baseSeries) SegmentAt(index int) Segment {
 	var seg Segment
 	seg.A = series.points[index]
