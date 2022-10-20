@@ -4,12 +4,12 @@ import "testing"
 
 func TestPolygonParse(t *testing.T) {
 	json := `{"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]]}`
-	g := expectJSON(t, json, nil)
+	expectJSON(t, json, nil)
 	json = `{"type":"Polygon","coordinates":[
 		[[0,0],[10,0],[10,10],[0,10],[0,0]],
 		[[2,2],[8,2],[8,8],[2,8],[2,2]]
 	]}`
-	g = expectJSON(t, json, nil)
+	g := expectJSON(t, json, nil)
 	if g.Center() != P(5, 5) {
 		t.Fatalf("expected '%v', got '%v'", P(5, 5), g.Center())
 	}

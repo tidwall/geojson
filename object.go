@@ -19,7 +19,6 @@ var (
 	errTypeMissing              = errors.New("missing type")
 	errCoordinatesInvalid       = errors.New("invalid coordinates")
 	errCoordinatesMissing       = errors.New("missing coordinates")
-	errGeometryInvalid          = errors.New("invalid geometry")
 	errGeometryMissing          = errors.New("missing geometry")
 	errFeaturesMissing          = errors.New("missing features")
 	errFeaturesInvalid          = errors.New("invalid features")

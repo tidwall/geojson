@@ -216,10 +216,7 @@ func (g *collection) Intersects(obj Object) bool {
 			}
 			return true
 		})
-		if intersects {
-			return false
-		}
-		return true
+		return !intersects
 	})
 	return intersects
 }

@@ -115,7 +115,7 @@ func TestCollectionUSASubset(t *testing.T) {
 	T := 6
 
 	// 34 is the lower 48
-	rect := cs[0].Children()[34].(Object).Rect()
+	rect := cs[0].Children()[34].Rect()
 	points := make([]Object, N)
 	for i := 0; i < N; i++ {
 		points[i] = PO(

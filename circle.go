@@ -14,8 +14,6 @@ type Circle struct {
 	meters    float64
 	haversine float64
 	steps     int
-	km        bool
-	extra     *extra
 }
 
 // NewCircle returns an circle object
