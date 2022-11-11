@@ -144,7 +144,15 @@ func (poly *Poly) IntersectsLine(line *Line) bool {
 	if poly == nil || poly.Exterior == nil || line == nil {
 		return false
 	}
-	return ringIntersectsLine(poly.Exterior, line, true)
+	if !ringIntersectsLine(poly.Exterior, line, true) {
+		return false
+	}
+	for _, hole := range poly.Holes {
+		if ringContainsLine(hole, line, false) {
+			return false
+		}
+	}
+	return true
 }
 
 func (poly *Poly) ContainsPoly(other *Poly) bool {

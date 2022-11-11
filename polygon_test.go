@@ -1,6 +1,8 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestPolygonParse(t *testing.T) {
 	json := `{"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]]}`
@@ -72,4 +74,93 @@ func TestPolygonVarious(t *testing.T) {
 func TestEmptyPolygon(t *testing.T) {
 	p := NewPolygon(nil)
 	expect(t, p.JSON() == `{"type":"Polygon","coordinates":[]}`)
+}
+
+// https://github.com/tidwall/tile38/issues/664
+func TestIssue664(t *testing.T) {
+	// original geojson from issue
+	p1, err := Parse(`{"type":"Polygon","coordinates":[[
+			[-0.104364362074306,51.515197601239528],
+			[-0.100183436878063,51.511898267797733],
+			[-0.095787000073766,51.509618100991439],
+			[-0.097554195259807,51.505459855954911],
+			[-0.106390171190011,51.504842793711688],
+			[-0.115829579622766,51.507418302507524],
+			[-0.115527863371491,51.511737318590235],
+			[-0.108157366376052,51.513722319074922],
+			[-0.104364362074306,51.515197601239528]
+		],[
+			[-0.108114264054441,51.51141541846934],
+			[-0.10289888313954,51.511066690771599],
+			[-0.102036836707325,51.507954848516555],
+			[-0.108674594235381,51.507874367018005],
+			[-0.108114264054441,51.51141541846934]
+		]]}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// converted to right-hand rule
+	p2, err := Parse(`{"type":"Polygon","coordinates":[[
+			[-0.104364362074306,51.515197601239528],
+			[-0.108157366376052,51.513722319074922],
+			[-0.115527863371491,51.511737318590235],
+			[-0.115829579622766,51.507418302507524],
+			[-0.106390171190011,51.504842793711688],
+			[-0.097554195259807,51.505459855954911],
+			[-0.095787000073766,51.509618100991439],
+			[-0.100183436878063,51.511898267797733],
+			[-0.104364362074306,51.515197601239528]
+		],[
+			[-0.108114264054441,51.51141541846934],
+			[-0.10289888313954,51.511066690771599],
+			[-0.102036836707325,51.507954848516555],
+			[-0.108674594235381,51.507874367018005],
+			[-0.108114264054441,51.51141541846934]
+		]]}`, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// input lines
+	lines := []string{
+		`{"type": "LineString","coordinates": [[-0.11203657532102,51.509805883746516],[-0.098071423119136,51.509618100991439]]}`,
+		`{"type": "LineString","coordinates": [[-0.106778092084508,51.510235098565985],[-0.104148850466252,51.510208272758227]]}`,
+		`{"type": "LineString","coordinates": [[-0.099235185802626,51.512327462904388],[-0.099235185802626,51.510798436879945]]}`,
+		`{"type": "LineString","coordinates": [[-0.111741852049867,51.510945273705836],[-0.10999491495498,51.512082479942833]]}`,
+	}
+
+	// expected results
+	expect := []bool{
+		true,
+		false,
+		true,
+		true,
+	}
+
+	for i, line := range lines {
+		l, err := Parse(line, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t1 := p1.Intersects(l)
+		t2 := l.Intersects(p1)
+		if t1 != expect[i] || t2 != expect[i] {
+			t.Fatalf("line %d: expected %v/%v, got %v/%v",
+				i, expect[i], expect[i], t1, t2)
+		}
+	}
+
+	for i, line := range lines {
+		l, err := Parse(line, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t1 := p2.Intersects(l)
+		t2 := l.Intersects(p2)
+		if t1 != expect[i] || t2 != expect[i] {
+			t.Fatalf("line %d: expected %v/%v, got %v/%v",
+				i, expect[i], expect[i], t1, t2)
+		}
+	}
 }
