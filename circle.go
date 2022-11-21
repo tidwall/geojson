@@ -159,8 +159,8 @@ func (g *Circle) Spatial() Spatial {
 	return g.getObject().Spatial()
 }
 
-// Primative returns a primative GeoJSON object. Either a Polygon or Point.
-func (g *Circle) Primative() Object {
+// Polygon returns the circle as a GeoJSON Polygon.
+func (g *Circle) Polygon() Object {
 	return g.getObject()
 }
 
@@ -173,7 +173,13 @@ func (g *Circle) getObject() Object {
 
 func makeCircleObject(center geometry.Point, meters float64, steps int) Object {
 	if meters <= 0 {
-		return NewPoint(center)
+		// Use a zero area rectangle
+		gPoly := new(Polygon)
+		gPoly.base.Exterior = geometry.Rect{
+			Min: center,
+			Max: center,
+		}
+		return gPoly
 	}
 	meters = geo.NormalizeDistance(meters)
 	points := make([]geometry.Point, 0, steps+1)
