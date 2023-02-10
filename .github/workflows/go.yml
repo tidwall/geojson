@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  PIPBENCH: 1
+
 jobs:
 
   build:
@@ -33,4 +36,4 @@ jobs:
       run: go build -v .
 
     - name: Test
-      run: go test -v .
+      run: go test -bench=. -v .
