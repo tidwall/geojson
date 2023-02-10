@@ -62,15 +62,16 @@ func TestPointValidLargeY(t *testing.T) {
 }
 
 func BenchmarkPointValid(b *testing.B) {
-	points := make([]*Point, b.N)
-	for i := 0; i < b.N; i++ {
+	// debault b.N is too large
+	points := make([]*Point, 1000000)
+	for i := 0; i < 1000000; i++ {
 		points[i] = NewPoint(geometry.Point{
 			X: rand.Float64()*400 - 200, // some are out of bounds
 			Y: rand.Float64()*200 - 100, // some are out of bounds
 		})
 	}
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < 1000000; i++ {
 		points[i].Valid()
 	}
 }
