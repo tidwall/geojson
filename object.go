@@ -258,7 +258,10 @@ func appendJSONPoint(dst []byte, point geometry.Point, ex *extra, idx int) []byt
 		dims := int(ex.dims)
 		for i := 0; i < dims; i++ {
 			dst = append(dst, ',')
-			dst = appendJSONFloat(dst, ex.values[idx*dims+i])
+			k := idx*dims + i
+			if k < len(ex.values) {
+				dst = appendJSONFloat(dst, ex.values[k])
+			}
 		}
 	}
 	dst = append(dst, ']')
