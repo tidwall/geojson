@@ -231,6 +231,10 @@ func parseJSONPolygonCoords(
 			coords[ii] = append(coords[ii], geometry.Point{X: nums[0], Y: nums[1]})
 			if ex == nil {
 				if count > 2 {
+					if len(coords) > 1 || len(coords[ii]) > 1 {
+						err = errCoordinatesInvalid
+						return false
+					}
 					ex = new(extra)
 					if count > 3 {
 						ex.dims = 2

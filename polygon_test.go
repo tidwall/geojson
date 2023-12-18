@@ -164,3 +164,18 @@ func TestIssue664(t *testing.T) {
 		}
 	}
 }
+
+func TestIssue714(t *testing.T) {
+	_, err := Parse(`{"type":"Polygon","coordinates":[[[0,0],[10,0],[0,10],[0,0]],[[0,0,0],[0,10,0],[10,0,0],[0,0,0]]]}`, nil)
+	if err.Error() != "invalid coordinates" {
+		t.Fatalf("expected '%v', got '%v'", "invalid coordinates", err)
+	}
+	_, err = Parse(`{"type":"Polygon","coordinates":[[[0,0],[10,0,1],[0,10],[0,0]]]}`, nil)
+	if err.Error() != "invalid coordinates" {
+		t.Fatalf("expected '%v', got '%v'", "invalid coordinates", err)
+	}
+	_, err = Parse(`{"type":"LineString","coordinates":[[0,0],[10,0,1],[0,10],[0,0]]}`, nil)
+	if err.Error() != "invalid coordinates" {
+		t.Fatalf("expected '%v', got '%v'", "invalid coordinates", err)
+	}
+}
