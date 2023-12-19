@@ -1,6 +1,7 @@
 package geojson
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -74,6 +75,16 @@ func TestPolygonVarious(t *testing.T) {
 func TestEmptyPolygon(t *testing.T) {
 	p := NewPolygon(nil)
 	expect(t, p.JSON() == `{"type":"Polygon","coordinates":[]}`)
+}
+
+func TestPanic(t *testing.T) {
+	p, err := Parse("{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[10,0],[0,10],[0,0]],[[0,0,0],[0,10,0],[10,0,0],[0,0,0]]]}", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := p.String()
+	e := "{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[10,0],[0,10],[0,0]],[[0,0,0],[0,10,0],[10,0,0],[0,0,0]]]}"
+	assert.Equal(t, e, s)
 }
 
 // https://github.com/tidwall/tile38/issues/664

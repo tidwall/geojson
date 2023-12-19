@@ -2,6 +2,7 @@ package geojson
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -77,7 +78,7 @@ func expectJSONOpts(t testing.TB, data string, expect interface{}, opts *ParseOp
 		exstr = data
 	}
 	obj, err := Parse(data, opts)
-	if err != exerr {
+	if !errors.Is(err, exerr) {
 		if t == nil {
 			panic(fmt.Sprintf("expected '%v', got '%v'", exerr, err))
 		} else {
