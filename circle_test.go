@@ -64,7 +64,11 @@ func TestCircleContains(t *testing.T) {
 			},
 			[][]geometry.Point{})))
 
+	expect(t, g.Contains(g))
+	expect(t, g.Contains(NewCircle(g.Center(), g.meters/2, 64)))
+
 	// Does-not-contain
+	expect(t, !g.Contains(NewCircle(g.Center(), g.meters*3, 64)))
 	expect(t, !g.Contains(PO(-122.265, 37.826)))
 	expect(t, !g.Contains(
 		NewCircle(P(-122.265, 37.826), 100, 64)))
@@ -149,8 +153,12 @@ func TestCircleIntersects(t *testing.T) {
 				P(-122.44, 37.733),
 				P(-122.44, 37.7341129),
 			})})))
+	expect(t, g.Intersects(g))
+	expect(t, g.Intersects(NewCircle(g.Center(), g.meters/2, 64)))
+	expect(t, g.Intersects(NewCircle(g.Center(), g.meters*2, 64)))
 
 	// Does-not-intersect
+	expect(t, !g.Intersects(NewCircle(P(-122.5412, 37.8335), 10000, 64)))
 	expect(t, !g.Intersects(PO(-122.265, 37.826)))
 	expect(t, !g.Intersects(
 		NewCircle(P(-122.265, 37.826), 100, 64)))
