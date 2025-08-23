@@ -25,15 +25,15 @@ func (point Point) Rect() Rect {
 }
 
 func (point Point) ContainsPoint(other Point) bool {
-	return point == other
+	return PointEqual(point, other)
 }
 
 func (point Point) IntersectsPoint(other Point) bool {
-	return point == other
+	return PointEqual(point, other)
 }
 
 func (point Point) ContainsRect(rect Rect) bool {
-	return point.Rect() == rect
+	return RectEqual(point.Rect(), rect)
 }
 
 func (point Point) IntersectsRect(rect Rect) bool {
@@ -44,7 +44,7 @@ func (point Point) ContainsLine(line *Line) bool {
 	if line == nil {
 		return false
 	}
-	return !line.Empty() && line.Rect() == point.Rect()
+	return !line.Empty() && RectEqual(line.Rect(), point.Rect())
 }
 
 func (point Point) IntersectsLine(line *Line) bool {
@@ -58,7 +58,7 @@ func (point Point) ContainsPoly(poly *Poly) bool {
 	if poly == nil {
 		return false
 	}
-	return !poly.Empty() && poly.Rect() == point.Rect()
+	return !poly.Empty() && RectEqual(poly.Rect(), point.Rect())
 }
 
 func (point Point) IntersectsPoly(poly *Poly) bool {
