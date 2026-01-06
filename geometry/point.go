@@ -4,6 +4,8 @@
 
 package geometry
 
+import "math"
+
 type Point struct {
 	X, Y float64
 }
@@ -13,7 +15,7 @@ func (point Point) Move(deltaX, deltaY float64) Point {
 }
 
 func (point Point) Empty() bool {
-	return false
+	return math.IsNaN(point.X) && math.IsNaN(point.Y)
 }
 
 func (point Point) Valid() bool {

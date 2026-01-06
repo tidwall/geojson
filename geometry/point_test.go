@@ -4,10 +4,14 @@
 
 package geometry
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 func TestPointEmpty(t *testing.T) {
 	expect(t, !P(0, 0).Empty())
+	expect(t, P(math.NaN(), math.NaN()).Empty())
 }
 
 func TestPointGeometryDefaults(t *testing.T) {
