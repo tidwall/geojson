@@ -107,7 +107,7 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 		// seg A is not inside ring
 		return false
 	}
-	if seg.B == seg.A {
+	if PointEqual(seg.B, seg.A) {
 		return true
 	}
 	resB := ringContainsPoint(ring, seg.B, allowOnEdge)
@@ -144,10 +144,10 @@ func ringContainsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 
 				rSegA := ring.SegmentAt(resA.idx)
 				rSegB := ring.SegmentAt(resB.idx)
-				if rSegA.A == seg.A || rSegA.B == seg.A ||
-					rSegB.A == seg.A || rSegB.B == seg.A ||
-					rSegA.A == seg.B || rSegA.B == seg.B ||
-					rSegB.A == seg.B || rSegB.B == seg.B {
+				if PointEqual(rSegA.A, seg.A) || PointEqual(rSegA.B, seg.A) ||
+					PointEqual(rSegB.A, seg.A) || PointEqual(rSegB.B, seg.A) ||
+					PointEqual(rSegA.A, seg.B) || PointEqual(rSegA.B, seg.B) ||
+					PointEqual(rSegB.A, seg.B) || PointEqual(rSegB.B, seg.B) {
 					return true
 				}
 
@@ -267,13 +267,13 @@ func ringIntersectsSegment(ring Ring, seg Segment, allowOnEdge bool) bool {
 				// must be taken.
 				if !(seg.CollinearPoint(seg2.A) && seg.CollinearPoint(seg2.B)) {
 					if !segAOn {
-						if seg.A == seg2.A || seg.A == seg2.B {
+						if PointEqual(seg.A, seg2.A) || PointEqual(seg.A, seg2.B) {
 							segAOn = true
 							return true
 						}
 					}
 					if !segBOn {
-						if seg.B == seg2.A || seg.B == seg2.B {
+						if PointEqual(seg.B, seg2.A) || PointEqual(seg.B, seg2.B) {
 							segBOn = true
 							return true
 						}

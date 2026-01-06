@@ -5,7 +5,7 @@
 package geometry
 
 func eqZero(x float64) bool {
-	return !(x < 0 || x > 0)
+	return FloatZero(x)
 }
 
 // Segment is a two point line
@@ -54,50 +54,50 @@ func (seg Segment) ContainsPoint(point Point) bool {
 func (seg Segment) IntersectsSegment(other Segment) bool {
 	a, b, c, d := seg.A, seg.B, other.A, other.B
 	// do the bounding boxes intersect?
-	if a.Y > b.Y {
-		if c.Y > d.Y {
-			if b.Y > c.Y || a.Y < d.Y {
+	if FloatGreater(a.Y, b.Y) {
+		if FloatGreater(c.Y, d.Y) {
+			if FloatGreater(b.Y, c.Y) || FloatLess(a.Y, d.Y) {
 				return false
 			}
 		} else {
-			if b.Y > d.Y || a.Y < c.Y {
+			if FloatGreater(b.Y, d.Y) || FloatLess(a.Y, c.Y) {
 				return false
 			}
 		}
 	} else {
-		if c.Y > d.Y {
-			if a.Y > c.Y || b.Y < d.Y {
+		if FloatGreater(c.Y, d.Y) {
+			if FloatGreater(a.Y, c.Y) || FloatLess(b.Y, d.Y) {
 				return false
 			}
 		} else {
-			if a.Y > d.Y || b.Y < c.Y {
+			if FloatGreater(a.Y, d.Y) || FloatLess(b.Y, c.Y) {
 				return false
 			}
 		}
 	}
-	if a.X > b.X {
-		if c.X > d.X {
-			if b.X > c.X || a.X < d.X {
+	if FloatGreater(a.X, b.X) {
+		if FloatGreater(c.X, d.X) {
+			if FloatGreater(b.X, c.X) || FloatLess(a.X, d.X) {
 				return false
 			}
 		} else {
-			if b.X > d.X || a.X < c.X {
+			if FloatGreater(b.X, d.X) || FloatLess(a.X, c.X) {
 				return false
 			}
 		}
 	} else {
-		if c.X > d.X {
-			if a.X > c.X || b.X < d.X {
+		if FloatGreater(c.X, d.X) {
+			if FloatGreater(a.X, c.X) || FloatLess(b.X, d.X) {
 				return false
 			}
 		} else {
-			if a.X > d.X || b.X < c.X {
+			if FloatGreater(a.X, d.X) || FloatLess(b.X, c.X) {
 				return false
 			}
 		}
 	}
-	if seg.A == other.A || seg.A == other.B ||
-		seg.B == other.A || seg.B == other.B {
+	if PointEqual(seg.A, other.A) || PointEqual(seg.A, other.B) ||
+		PointEqual(seg.B, other.A) || PointEqual(seg.B, other.B) {
 		return true
 	}
 
@@ -107,8 +107,8 @@ func (seg Segment) IntersectsSegment(other Segment) bool {
 	cmpxr := cmpx*ry - cmpy*rx
 	if eqZero(cmpxr) {
 		// Lines are collinear, and so intersect if they have any overlap
-		if !(((c.X-a.X <= 0) != (c.X-b.X <= 0)) ||
-			((c.Y-a.Y <= 0) != (c.Y-b.Y <= 0))) {
+		if !(((FloatLessOrEqual(c.X-a.X, 0)) != (FloatLessOrEqual(c.X-b.X, 0))) ||
+			((FloatLessOrEqual(c.Y-a.Y, 0)) != (FloatLessOrEqual(c.Y-b.Y, 0)))) {
 			return seg.Raycast(other.A).On || seg.Raycast(other.B).On
 			//return false
 		}
@@ -123,11 +123,10 @@ func (seg Segment) IntersectsSegment(other Segment) bool {
 	rxsr := 1 / rxs
 	t := cmpxs * rxsr
 	u := cmpxr * rxsr
-	if !((t >= 0) && (t <= 1) && (u >= 0) && (u <= 1)) {
+	if !((FloatGreaterOrEqual(t, 0)) && (FloatLessOrEqual(t, 1)) && (FloatGreaterOrEqual(u, 0)) && (FloatLessOrEqual(u, 1))) {
 		return false
 	}
 	return true
-
 }
 
 // ContainsSegment returns true if segment contains other segment
