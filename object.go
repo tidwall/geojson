@@ -45,6 +45,7 @@ type Object interface {
 	Spatial() Spatial
 	MarshalJSON() ([]byte, error)
 	Members() string
+	IntersectsPoint(point geometry.Point) bool
 }
 
 var _ = []Object{

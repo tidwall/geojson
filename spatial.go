@@ -15,6 +15,7 @@ type Spatial interface {
 	DistancePoint(point geometry.Point) float64
 	DistanceLine(line *geometry.Line) float64
 	DistancePoly(poly *geometry.Poly) float64
+	Empty() bool
 }
 
 var _ = []Spatial{
@@ -72,4 +73,8 @@ func (s EmptySpatial) DistanceLine(line *geometry.Line) float64 {
 
 func (s EmptySpatial) DistancePoly(poly *geometry.Poly) float64 {
 	return 0
+}
+
+func (s EmptySpatial) Empty() bool {
+	return true
 }

@@ -130,6 +130,10 @@ func (g *Circle) Intersects(obj Object) bool {
 	}
 }
 
+func (g *Circle) IntersectsPoint(point geometry.Point) bool {
+	return g.containsPoint(point)
+}
+
 func (g *Circle) Empty() bool {
 	return false
 }
