@@ -89,14 +89,14 @@ func (line *Line) ContainsLine(other *Line) bool {
 		if lineSeg.ContainsSegment(otherSeg) {
 			continue
 		}
-		if otherSeg.A == lineSeg.A {
+		if PointEqual(otherSeg.A, lineSeg.A) {
 			// reverse it
 			if segIdx == 0 {
 				return false
 			}
 			segIdx--
 			i--
-		} else if otherSeg.A == lineSeg.B {
+		} else if PointEqual(otherSeg.A, lineSeg.B) {
 			// forward it
 			if segIdx == lineNumSegments-1 {
 				return false

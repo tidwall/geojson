@@ -273,22 +273,22 @@ func processPoints(points []Point, closed bool) (
 
 		zCrossProduct := (b.X-a.X)*(c.Y-b.Y) - (b.Y-a.Y)*(c.X-b.X)
 		if dir == 0 {
-			if zCrossProduct < 0 {
+			if FloatLess(zCrossProduct, 0) {
 				dir = -1
-			} else if zCrossProduct > 0 {
+			} else if FloatGreater(zCrossProduct, 0) {
 				dir = 1
 			}
-		} else if zCrossProduct < 0 {
+		} else if FloatLess(zCrossProduct, 0) {
 			if dir == 1 {
 				concave = true
 			}
-		} else if zCrossProduct > 0 {
+		} else if FloatGreater(zCrossProduct, 0) {
 			if dir == -1 {
 				concave = true
 			}
 		}
 	}
-	return !concave, rect, cwc > 0
+	return !concave, rect, FloatGreater(cwc, 0)
 }
 
 func (series *baseSeries) clearIndex() {
