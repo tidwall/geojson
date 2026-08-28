@@ -104,6 +104,32 @@ type ParseOptions struct {
 	// exactly 5 points with the first point being the min x/y and the
 	// following point winding counter clockwise creating a closed rectangle.
 	AllowRects bool
+	// FixWinding rewrites Polygon and MultiPolygon rings during parse so they
+	// follow RFC 7946 §3.1.6: exterior rings counterclockwise, holes clockwise.
+	// Rings already compliant (or degenerate with zero signed area) are left
+	// untouched. When FixWinding runs before the AllowRects fast path, a
+	// clockwise-wound rectangle will be flipped and then recognized as a Rect;
+	// the same input with FixWinding disabled parses as a CW Polygon.
+	//
+	// Ring orientation is computed with the planar shoelace formula, which
+	// does not account for the antimeridian — polygons whose coordinates
+	// straddle ±180° longitude may be misclassified.
+	//
+	// If both FixWinding and RequireWinding are set, RequireWinding takes
+	// precedence (non-compliant rings produce an error and are not rewritten).
+	FixWinding bool
+	// RequireWinding causes parse to fail with errCoordinatesInvalid when any
+	// Polygon or MultiPolygon ring violates RFC 7946 §3.1.6 winding (exterior
+	// CCW, holes CW). Degenerate rings with zero signed area are not rejected.
+	//
+	// Note that RFC 7946 §3.1.6 uses "SHOULD" and says parsers "SHOULD NOT
+	// reject Polygons that do not follow the right-hand rule." Enabling this
+	// option is therefore stricter than the RFC recommends and is intended
+	// for validation pipelines that want explicit winding enforcement.
+	//
+	// Orientation is computed with the planar shoelace formula; antimeridian
+	// polygons may be misclassified. See FixWinding for details.
+	RequireWinding bool
 }
 
 var DefaultParseOptions = &ParseOptions{
@@ -114,6 +140,8 @@ var DefaultParseOptions = &ParseOptions{
 	AllowSimplePoints: false,
 	DisableCircleType: false,
 	AllowRects:        false,
+	FixWinding:        false,
+	RequireWinding:    false,
 }
 
 // Parse a GeoJSON object

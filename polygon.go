@@ -142,6 +142,9 @@ func parseJSONPolygon(keys *parseKeys, opts *ParseOptions) (Object, error) {
 			return nil, errCoordinatesInvalid // must be a linear ring
 		}
 	}
+	if err := applyRFC7946Winding(coords, extra, opts); err != nil {
+		return nil, err
+	}
 	exterior := coords[0]
 	var holes [][]geometry.Point
 	if len(coords) > 1 {

@@ -83,6 +83,9 @@ func parseJSONMultiPolygon(
 				return false
 			}
 		}
+		if err = applyRFC7946Winding(coords, ex, opts); err != nil {
+			return false
+		}
 		exterior := coords[0]
 		var holes [][]geometry.Point
 		if len(coords) > 1 {
