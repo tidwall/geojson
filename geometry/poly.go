@@ -36,12 +36,42 @@ func (poly *Poly) Empty() bool {
 }
 
 func (poly *Poly) Valid() bool {
-	if !poly.Exterior.Valid() {
+	if !ringValid(poly.Exterior) {
 		return false
 	}
 	for _, hole := range poly.Holes {
-		if !hole.Valid() {
+		if !ringValid(hole) {
 			return false
+		}
+	}
+	return true
+}
+
+// ringValid reports whether the ring forms a valid closed polygon boundary:
+// all its points must be valid, it must have at least three distinct points,
+// explicitly close, and no non-adjacent edges may cross.
+func ringValid(ring Ring) bool {
+	if ring == nil || !ring.Valid() {
+		return false
+	}
+	n := ring.NumPoints()
+	if n < 4 || ring.PointAt(0) != ring.PointAt(n-1) {
+		return false
+	}
+	segments := ring.NumSegments()
+	if segments < 3 {
+		return false
+	}
+	for i := 0; i < segments; i++ {
+		a := ring.SegmentAt(i)
+		for j := i + 1; j < segments; j++ {
+			// Adjacent edges share an endpoint and are expected to meet.
+			if j == i+1 || (i == 0 && j == segments-1) {
+				continue
+			}
+			if a.IntersectsSegment(ring.SegmentAt(j)) {
+				return false
+			}
 		}
 	}
 	return true
